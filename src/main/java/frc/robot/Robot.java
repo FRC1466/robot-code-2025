@@ -4,8 +4,16 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.Utils;
+
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -16,6 +24,11 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
   private final RobotContainer m_robotContainer;
+
+    private final StructPublisher<Pose2d> posePublisher =
+        NetworkTableInstance.getDefault()
+                .getStructTopic("Test", Pose2d.struct)
+                .publish();
 
   public Robot() {
     m_robotContainer = new RobotContainer();
@@ -33,11 +46,11 @@ public class Robot extends TimedRobot {
                  est -> {
                                  
                     var estStdDevs = RobotContainer.photonCamera.getEstimationStdDevs();
-
-                    SmartDashboard.putNumber("Pose2dVision X",est.estimatedPose.toPose2d().getX());
-                    SmartDashboard.putNumber("Pose2dVision Y",est.estimatedPose.toPose2d().getY());
-                    SmartDashboard.putNumber("Timestamp", est.timestampSeconds);
-                    RobotContainer.drivetrain.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds, estStdDevs);
+                    SmartDashboard.putNumber( "Timestamp",est.timestampSeconds);
+                    SmartDashboard.putNumber("Vision Pose X", visionEst.get().estimatedPose.toPose2d().getX());
+                    SmartDashboard.putNumber("Vision Pose Y", visionEst.get().estimatedPose.toPose2d().getY());
+                    //RobotContainer.drivetrain.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds);
+                    RobotContainer.drivetrain.addVisionMeasurement(est.estimatedPose.toPose2d(), Utils.fpgaToCurrentTime(est.timestampSeconds), estStdDevs);
                  });
         //SmartDashboard.putBoolean("Camera?", photonCamera.getCamera().isConnected());
         SmartDashboard.putBoolean( "Vision Est",visionEst.isPresent());

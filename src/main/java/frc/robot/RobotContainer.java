@@ -54,9 +54,10 @@ public class RobotContainer {
         initializeChooser();
   
     }
+    
 
     public void initializeChooser(){
-    autoChooser.addOption("Taxi", new PathPlannerAuto("TaxiAuto"));
+    autoChooser.addOption("Taxi", new PathPlannerAuto("Taxi"));
 
   
   SmartDashboard.putData("CHOOSE", autoChooser);
