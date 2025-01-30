@@ -253,7 +253,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 // PID constants for translation
                 new PIDConstants(10, 0, 0),
                 // PID constants for rotation
-                new PIDConstants(7, 0, 0)
+                new PIDConstants(9, 0.4, 0.01)
             ),
             config,
             // Assume the path needs to be flipped for Red vs Blue, this is normally the case
@@ -263,7 +263,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     } catch (Exception ex) {
         DriverStation.reportError("Failed to load PathPlanner config and configure AutoBuilder", ex.getStackTrace());
      }
-}
+    }
+
 
     @Override
     public void periodic() {
