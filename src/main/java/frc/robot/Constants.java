@@ -8,11 +8,26 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.RobotBase;
 
 public final class Constants
 {
-        public static final Translation3d cameraTranslation = new Translation3d(0.28, 0.0, 0.23);
+    public static final Translation3d cameraTranslation = new Translation3d(0.28, 0.0, 0.23);
     public static final Rotation3d cameraRotation = new Rotation3d(0, Math.toRadians(-33.5), 0);
+
+    public static final Mode simMode = Mode.REPLAY;
+    public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
+
+    public static enum Mode {
+        /** Running on a real robot. */
+        REAL,
+
+        /** Running a physics simulator. */
+        SIM,
+
+        /** Replaying from a log file. */
+        REPLAY
+    }
 
     public static final class PoseEstimator {
         /** THANK YOU IRON PANTHERS */
