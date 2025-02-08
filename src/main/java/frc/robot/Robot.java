@@ -4,12 +4,26 @@
 
 package frc.robot;
 
+<<<<<<< Updated upstream
+=======
+import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.AutoLogOutputManager;
+import org.littletonrobotics.junction.LogFileUtil;
+import org.littletonrobotics.junction.LoggedRobot;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
+import org.littletonrobotics.junction.wpilog.WPILOGReader;
+import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+
+>>>>>>> Stashed changes
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.math.Matrix ;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -20,7 +34,15 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
+<<<<<<< Updated upstream
 public class Robot extends TimedRobot {
+=======
+public class Robot extends LoggedRobot {
+
+  @AutoLogOutput(key = "RobotState/EstimatedPose")
+  private Pose2d RobotPose;
+
+>>>>>>> Stashed changes
   private Command m_autonomousCommand;
 
   private final RobotContainer m_robotContainer;
@@ -31,13 +53,36 @@ public class Robot extends TimedRobot {
                 .publish();
 
   public Robot() {
+    
     m_robotContainer = new RobotContainer();
+<<<<<<< Updated upstream
+=======
+    AutoLogOutputManager.addObject(this); // Add this object for logging
+
+
+    Logger.recordMetadata("ProjectName", "Robot-Code-2025"); // Set a metadata value
+
+  if (isReal()) {
+    Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
+    Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
+    new PowerDistribution(1, ModuleType.kRev); // Enables power distribution logging
+    
+  } else {
+    setUseTiming(false); // Run as fast as possible
+    String logPath = LogFileUtil.findReplayLog(); // Pull the replay log from AdvantageScope (or prompt the user)
+    Logger.setReplaySource(new WPILOGReader(logPath)); // Read replay log
+    Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a new log
+  }
+
+Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
+>>>>>>> Stashed changes
   }
 
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run(); 
     var visionEst = RobotContainer.photonCamera.getEstimatedGlobalPose(); 
+
    
 
       
@@ -52,12 +97,16 @@ public class Robot extends TimedRobot {
                     //RobotContainer.drivetrain.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds);
                     RobotContainer.drivetrain.addVisionMeasurement(est.estimatedPose.toPose2d(), Utils.fpgaToCurrentTime(est.timestampSeconds), estStdDevs);
                  });
-        //SmartDashboard.putBoolean("Camera?", photonCamera.getCamera().isConnected());
+        //SmartDashboard.pu Boolean("Camera?", photonCamera.getCamera().isConnected());
         SmartDashboard.putBoolean( "Vision Est",visionEst.isPresent());
+        RobotPose = RobotContainer.drivetrain.getState().Pose;
         SmartDashboard.putNumber("Robot Pose X", RobotContainer.drivetrain.getState().Pose.getX());
         SmartDashboard.putNumber("Robot Pose Y", RobotContainer.drivetrain.getState().Pose.getY());
         SmartDashboard.putNumber("Robot Pose Theta", RobotContainer.drivetrain.getState().Pose.getRotation().getDegrees());
-  }
+        
+      SwerveDriveState driveState = RobotContainer.drivetrain.getState();
+      Logger.recordOutput("SwerveModuleStates", driveState.ModuleStates);
+      }
  
   public void periodic(){
        

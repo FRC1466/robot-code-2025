@@ -40,7 +40,7 @@ public class RobotContainer {
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
     private final SendableChooser<Command> autoChooser = new SendableChooser<>();
-    private final Telemetry logger = new Telemetry(MaxSpeed);
+    final Telemetry logger = new Telemetry(MaxSpeed);
 
     private final CommandJoystick joystick = new CommandJoystick(0);
 
