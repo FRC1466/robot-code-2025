@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Vision;
 
 public class RobotContainer {
@@ -46,6 +47,7 @@ public class RobotContainer {
 
     public final static CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     public final static Vision photonCamera = new Vision();
+    private final static Elevator uppy = new Elevator();
 
 
     public RobotContainer() {
@@ -80,6 +82,10 @@ public class RobotContainer {
 
         // reset the field-centric heading on left bumper press
         joystick.povDown().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+
+        joystick.button(1).onTrue(uppy.setElevatorVoltage(8)).onFalse(uppy.setElevatorVoltage(0));
+        joystick.button(2).onTrue(uppy.setElevatorVoltage(-8)).onFalse(uppy.setElevatorVoltage(0));
+
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
