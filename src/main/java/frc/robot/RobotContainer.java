@@ -24,13 +24,13 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
-import frc.robot.generated.TunerConstantsTester;
+import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Vision;
 
 public class RobotContainer {
-    private double MaxSpeed = TunerConstantsTester.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
@@ -45,7 +45,7 @@ public class RobotContainer {
 
     private final CommandJoystick joystick = new CommandJoystick(0);
 
-    public final static CommandSwerveDrivetrain drivetrain = TunerConstantsTester.createDrivetrain();
+    public final static CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     public final static Vision photonCamera = new Vision();
     public final static Elevator uppy = new Elevator();
 
@@ -84,9 +84,12 @@ public class RobotContainer {
         // reset the field-centric heading on left bumper press
         joystick.povDown().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-        joystick.button(1).onTrue(uppy.setElevatorVoltage(2)).onFalse(uppy.setElevatorVoltage(0));
-        joystick.button(2).onTrue(uppy.setElevatorVoltage(-2)).onFalse(uppy.setElevatorVoltage(0));
-        joystick.button(3).onTrue(uppy.runElevator(10));
+        joystick.button(1).onTrue(uppy.setElevatorVoltage(8)).onFalse(uppy.setElevatorVoltage(0));
+        joystick.button(2).onTrue(uppy.setElevatorVoltage(-8)).onFalse(uppy.setElevatorVoltage(0));
+        joystick.button(3).onTrue(uppy.setGoal(20)).onFalse(uppy.toBottom());
+        joystick.button(4).onTrue(uppy.setGoal(40)).onFalse(uppy.toBottom());
+        
+
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
