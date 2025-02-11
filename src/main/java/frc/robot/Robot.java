@@ -71,6 +71,12 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
   }
 
   @Override
+  public void robotInit() {
+      m_robotContainer.uppy.setSelectedSensorPosition(0);
+      
+  }
+
+  @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run(); 
     var visionEst = RobotContainer.photonCamera.getEstimatedGlobalPose(); 

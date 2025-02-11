@@ -49,13 +49,22 @@ public class Elevator extends SubsystemBase {
         return height;
     }
 
-    public Command setElevatorVoltage(double volts){
-        return runOnce(() -> setMotorVoltage(volts));
+    public void setElevatorPose(double pose){
+        pose = (pose-1)*-.5;
+        masterMotor.setPosition(pose);
+    }
+
+    public Command runElevator(double pose){
+        return runOnce(() -> setElevatorPose(pose));
     }
 
     public void setMotorVoltage(double volts){
         masterMotor.setVoltage(volts);
         leftSlaveFX.setVoltage(-volts);
+    }
+
+    public Command setElevatorVoltage(double volts){
+        return runOnce(() -> setMotorVoltage(volts));
     }
 
     @Override

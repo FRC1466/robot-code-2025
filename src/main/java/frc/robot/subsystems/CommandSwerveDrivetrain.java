@@ -36,7 +36,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotContainer;
-import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
+import frc.robot.generated.TunerConstantsTester.TunerSwerveDrivetrain;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -255,7 +255,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 // PID constants for translation
                 new PIDConstants(10, 0, 0),
                 // PID constants for rotation
-                new PIDConstants(9, 0.4, 0.01)
+                new PIDConstants(5, 0.01, 0.1)
             ),
             config,
             // Assume the path needs to be flipped for Red vs Blue, this is normally the case
@@ -271,8 +271,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     @Override
     public void periodic() {
        
-     
-        
+        SmartDashboard.putNumber("Volatge Module 0", CommandSwerveDrivetrain.super.getModule(0).getSteerMotor().getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Volatge Module 1", CommandSwerveDrivetrain.super.getModule(1).getSteerMotor().getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Volatge Module 2", CommandSwerveDrivetrain.super.getModule(2).getSteerMotor().getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Volatge Module 3", CommandSwerveDrivetrain.super.getModule(3).getSteerMotor().getMotorVoltage().getValueAsDouble());
+
 
                         /*
          * Periodically try to apply the operator perspective.
