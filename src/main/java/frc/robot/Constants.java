@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.RobotBase;
+import webblib.Gains;
 
 public final class Constants
 {
@@ -70,9 +71,12 @@ public final class Constants
         public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
         public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
     }
-    public static class Elevator {
+    public static class ElevatorConstants {
         public static final int masterID = 15;
         public static final int slaveID = 16;
+
+
+        public static final Gains elevatorPosition = new Gains(.07,0.002,0,.01,0,.6);
 
     }
 }

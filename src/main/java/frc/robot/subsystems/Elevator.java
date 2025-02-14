@@ -1,27 +1,33 @@
 package frc.robot.subsystems;
 
 import org.littletonrobotics.junction.Logger;
+import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.hal.HAL.SimPeriodicAfterCallback;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
 import frc.robot.Constants;
 import com.revrobotics.ColorSensorV3;
 
 public class Elevator extends SubsystemBase {
 
-
-
-    private final TalonFX masterMotor, leftSlaveFX;
+    private final TalonFX masterMotor,  leftSlaveFX;
     private static Elevator instance;
+    private PIDController elevatorPID;
+    private double localSetpoint = 0;
+    private DoubleSupplier overrideFeedforward = () -> 0;
     //Will use when we install hall sensor
     //DigitalInput hallBottom = new DigitalInput(0);
 
@@ -29,16 +35,24 @@ public class Elevator extends SubsystemBase {
     //figure out what this is
     private static final double TICKS_PER_INCH = 1;
     //Also figure this out
-    private static final double HOME_POSITION_INCHES = 4;
+    private static final double HOME_POSITION_INCHES = 0;
+    private static final double MAX_POSITION_TICKS = 64;
+    private double peakOutput; 
+
+
 
     public Elevator() {
-        masterMotor = new TalonFX(Constants.Elevator.masterID);
+        masterMotor = new TalonFX(Constants.ElevatorConstants.masterID);
         
-        leftSlaveFX = new TalonFX(Constants.Elevator.slaveID);
+        leftSlaveFX = new TalonFX(Constants.ElevatorConstants.slaveID);
 
-       masterMotor.setVoltage(0);
-       leftSlaveFX.setVoltage(0);
-       setNeutralMode(NeutralModeValue.Brake);
+        peakOutput = Constants.ElevatorConstants.elevatorPosition.peakOutput;
+        elevatorPID = new PIDController(Constants.ElevatorConstants.elevatorPosition.P, Constants.ElevatorConstants.elevatorPosition.I, Constants.ElevatorConstants.elevatorPosition.D);
+        elevatorPID.setTolerance(.15);
+        setGoal(0);
+        masterMotor.setVoltage(0);
+        leftSlaveFX.setVoltage(0);
+        setNeutralMode(NeutralModeValue.Brake);
     }
 
 
@@ -57,13 +71,40 @@ public class Elevator extends SubsystemBase {
         return height;
     }
 
-    public void setElevatorPose(double pose){
-        pose = (pose-1)*-.5;
-        masterMotor.setPosition(pose);
+    public void goToGoal(double goal){
+        localSetpoint = goal;
+        elevatorPID.setSetpoint(goal);
+        SmartDashboard.putNumber("Arm PID Setpoint", goal);
     }
 
-    public Command runElevator(double pose){
-        return runOnce(() -> setElevatorPose(pose));
+    public void setMotor(double percent){
+        masterMotor.set(percent);
+        leftSlaveFX.set(-percent);
+    }
+    public Command setGoal(double goal){
+        return runOnce(() -> goToGoal(goal));
+    }
+
+    public Command toBottom(){
+        return runOnce(() -> goToGoal(01));
+    }
+    public void setArmHold() {
+        var motorOutput =
+            MathUtil.clamp(
+                elevatorPID.calculate(getElevatorHeight(), localSetpoint), 
+                -peakOutput,
+                peakOutput);
+            var feedforward = getElevatorHeight() * Constants.ElevatorConstants.elevatorPosition.F;
+            setMotor(motorOutput + feedforward + overrideFeedforward.getAsDouble());
+        SmartDashboard.putNumber("Elevator PID Output", motorOutput);
+        SmartDashboard.putNumber("Arm Feedforward", feedforward);
+        SmartDashboard.putNumber("Elevator Feedforward Override", overrideFeedforward.getAsDouble());
+
+    }
+    
+
+    public void setFeedforward(DoubleSupplier feedforward){
+        overrideFeedforward = feedforward;
     }
 
     public void setMotorVoltage(double volts){
@@ -77,6 +118,15 @@ public class Elevator extends SubsystemBase {
 
     @Override
     public void periodic(){
+        setArmHold();
+       /*  if(!hallBottom.get()){
+            setSelectedSensorPosition(0);
+        }*/
+        
+        SmartDashboard.putNumber("Elevator Position", getElevatorHeight());
+        SmartDashboard.putNumber("Get Elevator P", elevatorPID.getP());
+        SmartDashboard.putNumber("Elevator Desired Position", elevatorPID.getSetpoint());
+        SmartDashboard.putNumber("Elevator Error", elevatorPID.getPositionError());
 
 
          //if(!hallBottom.get()){
