@@ -1,22 +1,30 @@
 package frc.robot.subsystems;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import com.revrobotics.ColorSensorV3;
 
 public class Elevator extends SubsystemBase {
+
+
 
     private final TalonFX masterMotor, leftSlaveFX;
     private static Elevator instance;
     //Will use when we install hall sensor
-    //private final DigitalInput hallBottom;
+    //DigitalInput hallBottom = new DigitalInput(0);
+
 
     //figure out what this is
     private static final double TICKS_PER_INCH = 1;
@@ -70,10 +78,12 @@ public class Elevator extends SubsystemBase {
     @Override
     public void periodic(){
 
-       /*  if(!hallBottom.get()){
-            setSelectedSensorPosition(0);
-        }*/
-        SmartDashboard.putNumber("Elevator Position", getElevatorHeight());
+
+         //if(!hallBottom.get()){
+         //   setSelectedSensorPosition(0);
+        //}
+
+        Logger.recordOutput("Elevator Position", getElevatorHeight());
 
     }
 }

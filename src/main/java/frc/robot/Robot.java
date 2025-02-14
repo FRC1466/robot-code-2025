@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.util.function.BooleanSupplier;
+
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -15,6 +17,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
+import com.revrobotics.ColorSensorV3;
 
 import edu.wpi.first.math.Matrix ;
 import edu.wpi.first.math.Nat;
@@ -25,16 +28,20 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public class Robot extends LoggedRobot {
-
+  
+  private final I2C.Port i2cPort = I2C.Port.kOnboard;
+  private final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
   @AutoLogOutput(key = "RobotState/EstimatedPose")
   private Pose2d RobotPose;
 
@@ -72,13 +79,17 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
 
   @Override
   public void robotInit() {
-      m_robotContainer.uppy.setSelectedSensorPosition(0);
+    //  m_robotContainer.uppy.setSelectedSensorPosition(0);
       
   }
 
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run(); 
+    Color detectedColor = m_colorSensor.getColor();
+
+    SmartDashboard.putNumber("ColorSensed", m_colorSensor.getProximity());
+    
     var visionEst = RobotContainer.photonCamera.getEstimatedGlobalPose(); 
 
    

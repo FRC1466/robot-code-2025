@@ -47,7 +47,7 @@ public class RobotContainer {
 
     public final static CommandSwerveDrivetrain drivetrain = TunerConstantsTester.createDrivetrain();
     public final static Vision photonCamera = new Vision();
-    public final static Elevator uppy = new Elevator();
+    //public final static Elevator uppy = new Elevator();
 
 
     public RobotContainer() {
@@ -84,9 +84,9 @@ public class RobotContainer {
         // reset the field-centric heading on left bumper press
         joystick.povDown().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-        joystick.button(1).onTrue(uppy.setElevatorVoltage(2)).onFalse(uppy.setElevatorVoltage(0));
+      /*  joystick.button(1).onTrue(uppy.setElevatorVoltage(2)).onFalse(uppy.setElevatorVoltage(0));
         joystick.button(2).onTrue(uppy.setElevatorVoltage(-2)).onFalse(uppy.setElevatorVoltage(0));
-        joystick.button(3).onTrue(uppy.runElevator(10));
+        joystick.button(3).onTrue(uppy.runElevator(10));*/
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
