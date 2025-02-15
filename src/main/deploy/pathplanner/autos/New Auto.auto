@@ -11,21 +11,21 @@
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "intake coral"
+            "pathName": "10 to Station"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "10 to Station"
+            "pathName": "Station to 10"
           }
         }
       ]
     }
   },
-  "resetOdom": false,
+  "resetOdom": true,
   "folder": null,
   "choreoAuto": false
 }

@@ -9,6 +9,7 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.jni.SwerveJNI;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -27,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsTester;
 import frc.robot.subsystems.Mechanisms.Elevator;
+import frc.robot.subsystems.Mechanisms.Intake;
 import frc.robot.subsystems.Mechanisms.RotatyPart;
 import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swervedrive.Vision;
@@ -43,6 +45,8 @@ public class RobotContainer {
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
     private final SendableChooser<Command> autoChooser = new SendableChooser<>();
+    private final Intake intake = new Intake();
+
     private final RotatyPart rotatyPart = new RotatyPart();
     final Telemetry logger = new Telemetry(MaxSpeed);
 
@@ -83,9 +87,21 @@ public class RobotContainer {
     autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));
     autoChooser.addOption("Taxi PID Testing", new PathPlannerAuto("PID Testing"));
     autoChooser.addOption("3 Piece", new PathPlannerAuto("3 Piece Auto"));
+   
     
+    
+  NamedCommands.registerCommand("Raise arm to Station", uppy.toStation());
+  NamedCommands.registerCommand( "raise arm to 1", uppy.toL1());
+  NamedCommands.registerCommand( "raise arm to 2", uppy.toL2());
+  NamedCommands.registerCommand( "raise arm to 3", uppy.toL3());
+  NamedCommands.registerCommand( "raise arm to 4", uppy.toL4());
+  NamedCommands.registerCommand("intake coral", intake.intake());
+  NamedCommands.registerCommand( "reverse intake coral", intake.reverseIntake());
+  NamedCommands.registerCommand( "rotary part", rotatyPart.coralScore());
   
-    SmartDashboard.putData("CHOOSE", autoChooser);
+  
+  
+  SmartDashboard.putData("CHOOSE", autoChooser);
     
 }
 
@@ -106,9 +122,9 @@ public class RobotContainer {
         // reset the field-centric heading on left bumper press
         joystick.povDown().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
                  
-        joystick.button(1).onTrue(uppy.setElevatorVoltage(8)).onFalse(uppy.setElevatorVoltage(0));
-        joystick.button(2).onTrue(uppy.setElevatorVoltage(-8)).onFalse(uppy.setElevatorVoltage(0));
-        joystick.button(3).onTrue(uppy.setGoal(20)).onFalse(uppy.toBottom());
+        joystick.button(1).onTrue(intake.intake()).onFalse(intake.stop());
+        joystick.button(2).onTrue(intake.reverseIntake()).onFalse(intake.stop());
+        joystick.button(3).onTrue(uppy.setGoal(30)).onFalse(uppy.toBottom());
         joystick.button(4).onTrue(uppy.setGoal(40)).onFalse(uppy.toBottom());
         joystick.button(5).onTrue(rotatyPart.coralScore()).onFalse(rotatyPart.store());
         

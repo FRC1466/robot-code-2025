@@ -79,12 +79,12 @@ public final class Constants
      public static final class RotationConstants{
       public static final int armPort = 14, dutyCyclePort = 0;
       //DO NOT TOUCH!!!!
-      public static final Gains rotationPosition = new Gains(.188,0.001,0.001,0.01,0,0.8);
+      public static final Gains rotationPosition = new Gains(.16,0.0017,0.003,0.01,0,0.8);
       public static final double restRadians = .3, coralPosRadians = .505;
 
       public static final double maxRadians = (7*Math.PI/12)+.7;
       public static final double gravityFF = 0.02;
-      public static final double absolutePositionOffset = -0.319;
+      public static final double absolutePositionOffset = -0.3211;
       public static final boolean encoderInverted = true;
       public static final double dutyCycleResolution = 1.0;
       public static final class RotationConfig {
@@ -126,7 +126,7 @@ public final class Constants
         public static final int slaveID = 16;
 
 
-        public static final Gains elevatorPosition = new Gains(.07,0.002,0,.01,0,.6);
+        public static final Gains elevatorPosition = new Gains(.09,0.002,0,.01,0,.5);
 
     }
 }
