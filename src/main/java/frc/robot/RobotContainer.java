@@ -76,6 +76,8 @@ public class RobotContainer {
 
 
     public void initializeChooser(){
+    addChooser("Recenter Bot", "Recenter");
+    addChooser("Best 3 Piece", "3 Piece Auto Better");
     addChooser("2 Piece Inverted", "Invert 2 Piece Auto");
     autoChooser.addOption("Taxi", new PathPlannerAuto("Taxi"));
     autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));

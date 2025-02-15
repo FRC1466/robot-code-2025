@@ -7,13 +7,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Center to 10"
+            "pathName": "Center to 11"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.25
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "10 to Station"
+            "pathName": "11 to Station"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.25
           }
         },
         {
@@ -25,7 +37,7 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 2.0
+            "waitTime": 0.25
           }
         },
         {
@@ -35,9 +47,15 @@
           }
         },
         {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.25
+          }
+        },
+        {
           "type": "path",
           "data": {
-            "pathName": "Station to 10"
+            "pathName": "Station to 9"
           }
         }
       ]
