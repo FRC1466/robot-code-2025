@@ -25,9 +25,11 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.Elevator;
-import frc.robot.subsystems.Vision;
+import frc.robot.generated.TunerConstantsTester;
+import frc.robot.subsystems.Mechanisms.Elevator;
+import frc.robot.subsystems.Mechanisms.RotatyPart;
+import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
+import frc.robot.subsystems.swervedrive.Vision;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -41,30 +43,48 @@ public class RobotContainer {
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
     private final SendableChooser<Command> autoChooser = new SendableChooser<>();
+    private final RotatyPart rotatyPart = new RotatyPart();
     final Telemetry logger = new Telemetry(MaxSpeed);
 
     private final CommandJoystick joystick = new CommandJoystick(0);
 
-    public final static CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+    public static CommandSwerveDrivetrain drivetrain;
     public final static Vision photonCamera = new Vision();
-    //public final static Elevator uppy = new Elevator();
+    public final static Elevator uppy = new Elevator();
 
 
     public RobotContainer() {
-
+        if (Constants.getMode() != Constants.Mode.REPLAY) {
+            switch (Constants.getRobot()) {
+                          case COMPBOT -> {
+                            drivetrain = TunerConstants.createDrivetrain();
+                          }
+                          case DEVBOT -> {
+                            drivetrain = TunerConstantsTester.createDrivetrain();
+                          }
+                            case SIMBOT -> throw new UnsupportedOperationException("Unimplemented case: " + Constants.getRobot());
+                            default -> throw new IllegalArgumentException("Unexpected value: " + Constants.getRobot());
+            }
+        }
         configureBindings();
         initializeChooser();
-  
     }
-    
+  
+    public void addChooser(String name, String autoName){
+        autoChooser.addOption(name, new PathPlannerAuto(autoName));
+    }
+
 
     public void initializeChooser(){
+    addChooser("2 Piece Inverted", "Invert 2 Piece Auto");
     autoChooser.addOption("Taxi", new PathPlannerAuto("Taxi"));
     autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));
     autoChooser.addOption("Taxi PID Testing", new PathPlannerAuto("PID Testing"));
-
+    autoChooser.addOption("3 Piece", new PathPlannerAuto("3 Piece Auto"));
+    
   
-  SmartDashboard.putData("CHOOSE", autoChooser);
+    SmartDashboard.putData("CHOOSE", autoChooser);
+    
 }
 
     private void configureBindings() {
@@ -83,11 +103,11 @@ public class RobotContainer {
 
         // reset the field-centric heading on left bumper press
         joystick.povDown().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
-        /*         
+                 
         joystick.button(1).onTrue(uppy.setElevatorVoltage(8)).onFalse(uppy.setElevatorVoltage(0));
         joystick.button(2).onTrue(uppy.setElevatorVoltage(-8)).onFalse(uppy.setElevatorVoltage(0));
         joystick.button(3).onTrue(uppy.setGoal(20)).onFalse(uppy.toBottom());
-        joystick.button(4).onTrue(uppy.setGoal(40)).onFalse(uppy.toBottom());*/
+        joystick.button(4).onTrue(uppy.setGoal(40)).onFalse(uppy.toBottom());
         
 
 

@@ -14,6 +14,7 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import org.photonvision.PhotonCamera;
 
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
@@ -22,6 +23,9 @@ import com.revrobotics.ColorSensorV3;
 import edu.wpi.first.math.Matrix ;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
@@ -36,7 +40,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
+import frc.robot.subsystems.swervedrive.Vision;
 
 public class Robot extends LoggedRobot {
   
@@ -46,7 +51,7 @@ public class Robot extends LoggedRobot {
   private Pose2d RobotPose;
 
   private Command m_autonomousCommand;
-
+  private Vision vision;
   private final RobotContainer m_robotContainer;
 
     private final StructPublisher<Pose2d> posePublisher =
@@ -80,22 +85,31 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
   @Override
   public void robotInit() {
     //  m_robotContainer.uppy.setSelectedSensorPosition(0);
-      
+    vision = new Vision();
   }
 
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run(); 
+    vision.logSeenAprilTags();
     Color detectedColor = m_colorSensor.getColor();
 
     SmartDashboard.putNumber("ColorSensed", m_colorSensor.getProximity());
+
+    boolean closeCoral = m_colorSensor.getProximity() > 700;
+    if(closeCoral){
+
+    }
     
+
+       
     var visionEst = RobotContainer.photonCamera.getEstimatedGlobalPose(); 
+    
 
    
 
-      
-     
+
+    RobotPose = RobotContainer.drivetrain.getState().Pose;
         visionEst.ifPresent(
                  est -> {
                                  
@@ -103,12 +117,12 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
                     SmartDashboard.putNumber( "Timestamp",est.timestampSeconds);
                     SmartDashboard.putNumber("Vision Pose X", visionEst.get().estimatedPose.toPose2d().getX());
                     SmartDashboard.putNumber("Vision Pose Y", visionEst.get().estimatedPose.toPose2d().getY());
-                    //RobotContainer.drivetrain.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds);
+                    //RobotContainer.drivetrain.addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds);    With Vision: With Vision: addVisionMeasurement(est.estimatedPose.toPose2d(), Without Vision: RobotPose.getRotation()), Without Vision: addVisionMeasurement(new Pose2d(est.estimatedPose.toPose2d().getTranslation(), RobotPose.getRotation()),
                     RobotContainer.drivetrain.addVisionMeasurement(est.estimatedPose.toPose2d(), Utils.fpgaToCurrentTime(est.timestampSeconds), estStdDevs);
                  });
         //SmartDashboard.pu Boolean("Camera?", photonCamera.getCamera().isConnected());
         SmartDashboard.putBoolean( "Vision Est",visionEst.isPresent());
-        RobotPose = RobotContainer.drivetrain.getState().Pose;
+        
         SmartDashboard.putNumber("Robot Pose X", RobotContainer.drivetrain.getState().Pose.getX());
         SmartDashboard.putNumber("Robot Pose Y", RobotContainer.drivetrain.getState().Pose.getY());
         SmartDashboard.putNumber("Robot Pose Theta", RobotContainer.drivetrain.getState().Pose.getRotation().getDegrees());

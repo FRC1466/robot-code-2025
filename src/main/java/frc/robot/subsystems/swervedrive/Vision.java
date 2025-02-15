@@ -22,22 +22,26 @@
  * SOFTWARE.
  */
 
- package frc.robot.subsystems;
+ package frc.robot.subsystems.swervedrive;
 
  import static frc.robot.Constants.Vision.*;
  
  import edu.wpi.first.math.Matrix;
  import edu.wpi.first.math.VecBuilder;
  import edu.wpi.first.math.geometry.Pose2d;
- import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
  import edu.wpi.first.math.numbers.N1;
  import edu.wpi.first.math.numbers.N3;
  import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import frc.robot.Robot;
 
+import java.util.ArrayList;
 import java.util.List;
  import java.util.Optional;
- import org.photonvision.EstimatedRobotPose;
+
+import org.littletonrobotics.junction.Logger;
+import org.photonvision.EstimatedRobotPose;
  import org.photonvision.PhotonCamera;
  import org.photonvision.PhotonPoseEstimator;
  import org.photonvision.PhotonPoseEstimator.PoseStrategy;
@@ -84,7 +88,18 @@ import java.util.List;
              cameraSim.enableDrawWireframe(true);
          }
      }
- 
+     public void logSeenAprilTags() {
+        var result = camera.getLatestResult();
+        if (result.hasTargets()) {
+            List<Pose3d> seenTagPoses = new ArrayList<>();
+            for (PhotonTrackedTarget target : result.getTargets()) {
+                var tagPose = kTagLayout.getTagPose(target.getFiducialId());
+                tagPose.ifPresent(seenTagPoses::add);
+            }
+            // Log the array of Pose3d objects
+            Logger.recordOutput("SeenAprilTags", seenTagPoses.toArray(new Pose3d[0]));
+        }
+    }
      /**
       * The latest estimated robot pose on the field from vision data. This may be empty. This should
       * only be called once per loop.

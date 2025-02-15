@@ -1,0 +1,58 @@
+{
+  "NetworkTables": {
+    "Retained Values": {
+      "open": false
+    },
+    "transitory": {
+      "AdvantageKit": {
+        "RealOutputs": {
+          "PhotonResults": {
+            "open": true
+          },
+          "open": true
+        },
+        "open": true
+      },
+      "CameraPublisher": {
+        "open": true
+      },
+      "photonvision": {
+        "Global_Shutter_Camera": {
+          "open": true
+        },
+        "open": true
+      }
+    },
+    "types": {
+      "/AdvantageKit/RealOutputs/Alerts": "Alerts",
+      "/FMSInfo": "FMSInfo",
+      "/Pose": "Field2d",
+      "/SmartDashboard/Alerts": "Alerts",
+      "/SmartDashboard/Module 0": "Mechanism2d",
+      "/SmartDashboard/Module 1": "Mechanism2d",
+      "/SmartDashboard/Module 2": "Mechanism2d",
+      "/SmartDashboard/Module 3": "Mechanism2d"
+    }
+  },
+  "NetworkTables Info": {
+    "Clients": {
+      "open": true
+    },
+    "Server": {
+      "open": true
+    },
+    "photonvision@4": {
+      "Publishers": {
+        "open": true
+      },
+      "Subscribers": {
+        "open": true
+      }
+    }
+  },
+  "NetworkTables Settings": {
+    "mode": "Client (NT4)",
+    "serverTeam": "1466",
+    "visible": false
+  }
+}

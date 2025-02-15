@@ -1,4 +1,7 @@
 package frc.robot;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
@@ -8,6 +11,8 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
 import webblib.Gains;
 
@@ -17,8 +22,18 @@ public final class Constants
     public static final Rotation3d cameraRotation = new Rotation3d(0, Math.toRadians(-33.5), 0);
 
     public static final Mode simMode = Mode.REPLAY;
+    private static RobotType robotType = RobotType.COMPBOT;
     public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
+     public static RobotType getRobot() {
+    return robotType;
+  }
 
+  public static Mode getMode() {
+    return switch (robotType) {
+      case DEVBOT, COMPBOT -> RobotBase.isReal() ? Mode.REAL : Mode.REPLAY;
+      case SIMBOT -> Mode.SIM;
+    };
+  }
     public static enum Mode {
         /** Running on a real robot. */
         REAL,
@@ -29,6 +44,11 @@ public final class Constants
         /** Replaying from a log file. */
         REPLAY
     }
+    public enum RobotType {
+        SIMBOT,
+        DEVBOT,
+        COMPBOT
+      }
 
     public static final class PoseEstimator {
         /** THANK YOU IRON PANTHERS */
@@ -56,6 +76,35 @@ public final class Constants
         public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(.1, .2, .3);
         public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(.1, .1, .2);
     }
+     public static final class RotationConstants{
+      public static final int armPort = 14, dutyCyclePort = 0;
+      public static final Gains rotationPosition = new Gains(.05,0.00,0.00,0,0,0.1);
+      public static final double restRadians = .0;
+
+      public static final double maxRadians = (7*Math.PI/12)+.7;
+      public static final double gravityFF = 0.02;
+      public static final double absolutePositionOffset = -0.319;
+      public static final boolean encoderInverted = true;
+      public static final double dutyCycleResolution = 1.0;
+      public static final class RotationConfig {
+      public static final CurrentLimitsConfigs supplyCurrent;
+
+      public static final TalonFXConfiguration motorConfig;
+
+      static {
+        supplyCurrent = new CurrentLimitsConfigs();
+    
+    
+
+        motorConfig = new TalonFXConfiguration();
+        motorConfig.CurrentLimits = supplyCurrent;
+
+    
+      }
+      
+    }
+      
+  }
     public static class Vision {
         public static final String kCameraName = "Global_Shutter_Camera";
         // Cam mounted facing forward, half a meter forward of center, half a meter up from center.

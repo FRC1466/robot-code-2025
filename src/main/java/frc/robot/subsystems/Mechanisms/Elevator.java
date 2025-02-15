@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.Mechanisms;
 
 import org.littletonrobotics.junction.Logger;
 import java.util.function.DoubleSupplier;
