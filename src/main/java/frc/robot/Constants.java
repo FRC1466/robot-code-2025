@@ -78,8 +78,9 @@ public final class Constants
     }
      public static final class RotationConstants{
       public static final int armPort = 14, dutyCyclePort = 0;
-      public static final Gains rotationPosition = new Gains(.05,0.00,0.00,0,0,0.1);
-      public static final double restRadians = .0;
+      //DO NOT TOUCH!!!!
+      public static final Gains rotationPosition = new Gains(.188,0.001,0.001,0.01,0,0.8);
+      public static final double restRadians = .3, coralPosRadians = .505;
 
       public static final double maxRadians = (7*Math.PI/12)+.7;
       public static final double gravityFF = 0.02;
@@ -121,7 +122,7 @@ public final class Constants
         public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
     }
     public static class ElevatorConstants {
-        public static final int masterID = 15;
+        public static final int masterID = 17;
         public static final int slaveID = 16;
 
 
