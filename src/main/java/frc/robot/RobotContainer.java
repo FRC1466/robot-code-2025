@@ -108,6 +108,7 @@ public class RobotContainer {
         joystick.button(2).onTrue(uppy.setElevatorVoltage(-8)).onFalse(uppy.setElevatorVoltage(0));
         joystick.button(3).onTrue(uppy.setGoal(20)).onFalse(uppy.toBottom());
         joystick.button(4).onTrue(uppy.setGoal(40)).onFalse(uppy.toBottom());
+        joystick.button(5).onTrue(rotatyPart.coralScore()).onFalse(rotatyPart.store());
         
 
 

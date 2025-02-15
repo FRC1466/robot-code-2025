@@ -31,7 +31,6 @@ public class RotatyPart extends SubsystemBase{
   private double armPID_P;
   private double armPID_output;
   private double absoluteDistanceFromSpeaker;
-  private double podiumRadians;
   private Rotation2d localSetpoint;
   private DoubleSupplier overrideFeedforward = () -> 0.0;
   private boolean disabled = false;
@@ -86,9 +85,6 @@ public class RotatyPart extends SubsystemBase{
   @Override
   public void simulationPeriodic() {
     //sim.update(armMotor.get());
-  }
-  public void setPodiumRadians(double rad){
-    podiumRadians = rad;
   }
 
 
@@ -145,7 +141,10 @@ public class RotatyPart extends SubsystemBase{
   }
 
   public void setMotor(double percent) {
-    armMotor.set(percent);
+    if(percent>.35){
+      percent = .35;
+    }
+    armMotor.set(-percent);
 
   }
 
@@ -154,10 +153,7 @@ public class RotatyPart extends SubsystemBase{
     overrideFeedforward = ff;
   }
 
-  public Command podium() {
-    return run(() -> setGoal(Rotation2d.fromRadians(podiumRadians)))
-       .andThen(holdUntilSetpoint());
-  }
+
 
 
   
@@ -165,6 +161,11 @@ public class RotatyPart extends SubsystemBase{
 
   public Command store() {
     return runOnce(() -> setGoal(storedPosRad))
+       .andThen(holdUntilSetpoint());
+  }
+
+  public Command coralScore() {
+    return runOnce(() -> setGoal(Rotation2d.fromRadians(RotationConstants.coralPosRadians)))
        .andThen(holdUntilSetpoint());
   }
 
@@ -214,7 +215,6 @@ public class RotatyPart extends SubsystemBase{
    setArmHold();
 
     SmartDashboard.putData(absoluteArmEncoder);
-    SmartDashboard.putNumber("PodiumRadians", podiumRadians);
     SmartDashboard.putNumber("Arm Raw Absolute Encoder", absoluteArmEncoder.get());
     SmartDashboard.putNumber("Arm Processed Absolute Encoder", getPosition().getRadians());
     SmartDashboard.putNumber("Get Shifted Absolute Position", getShiftedAbsoluteDistance().getRadians());

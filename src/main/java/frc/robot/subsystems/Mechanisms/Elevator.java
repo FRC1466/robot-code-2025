@@ -86,7 +86,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public Command toBottom(){
-        return runOnce(() -> goToGoal(01));
+        return runOnce(() -> goToGoal(5));
     }
     public void setArmHold() {
         var motorOutput =
