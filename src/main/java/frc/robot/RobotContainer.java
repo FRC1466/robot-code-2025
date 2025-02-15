@@ -110,7 +110,7 @@ public class RobotContainer {
         joystick.button(4).onTrue(uppy.setGoal(40)).onFalse(uppy.toBottom());
         
 
-
+        
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
