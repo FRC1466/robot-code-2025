@@ -5,6 +5,8 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.wpilibj2.command.Commands.run;
+import static edu.wpi.first.wpilibj2.command.Commands.runEnd;
 
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -47,14 +49,15 @@ public class RobotContainer {
     private final SendableChooser<Command> autoChooser = new SendableChooser<>();
     private final Intake intake = new Intake();
 
-    private final RotatyPart rotatyPart = new RotatyPart();
+    public final RotatyPart rotatyPart = new RotatyPart();
     final Telemetry logger = new Telemetry(MaxSpeed);
 
-    private final CommandJoystick joystick = new CommandJoystick(0);
+    public final CommandJoystick joystick = new CommandJoystick(0);
 
     public static CommandSwerveDrivetrain drivetrain;
     public final static Vision photonCamera = new Vision();
     public final static Elevator uppy = new Elevator();
+    public static boolean sliderEnabled = false;
 
 
     public RobotContainer() {
@@ -80,7 +83,7 @@ public class RobotContainer {
 
 
     public void initializeChooser(){
-    addChooser("Recenter Bot", "Recenter");
+    addChooser("Recenter bot", "Recenter");
     addChooser("Best 3 Piece", "3 Piece Auto Better");
     addChooser("2 Piece Inverted", "Invert 2 Piece Auto");
     autoChooser.addOption("Taxi", new PathPlannerAuto("Taxi"));
@@ -122,17 +125,35 @@ public class RobotContainer {
         // reset the field-centric heading on left bumper press
         joystick.povDown().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
                  
-        joystick.button(1).onTrue(intake.intake()).onFalse(intake.stop());
-        joystick.button(2).onTrue(intake.reverseIntake()).onFalse(intake.stop());
-        joystick.button(3).onTrue(uppy.setGoal(30)).onFalse(uppy.toBottom());
-        joystick.button(4).onTrue(uppy.setGoal(40)).onFalse(uppy.toBottom());
+        //Intake Coral
+        joystick.button(1).onTrue(uppy.toBottom().alongWith(rotatyPart.store()).alongWith(intake.intake())).onFalse(intake.stop());
+        //L2
+        joystick.button(3).onTrue(uppy.toL2().alongWith(rotatyPart.coralScore())).onFalse(intake.intake().alongWith(Commands.waitSeconds(2)).andThen(uppy.toBottom()).andThen(intake.stop()));
+        //L3
+        joystick.button(2).onTrue(uppy.toL3().alongWith(rotatyPart.coralScore())).onFalse(intake.intake().alongWith(Commands.waitSeconds(2)).andThen(uppy.toBottom()).andThen(intake.stop()));
+        //L4
+        joystick.button(4).onTrue(rotatyPart.coralScore().alongWith(intake.hold()).alongWith(Commands.waitSeconds(.5)).andThen(uppy.toL4()).alongWith(Commands.waitSeconds(4)).andThen(rotatyPart.l4coralScore())).onFalse(intake.intake().alongWith(Commands.waitSeconds(2)).andThen(rotatyPart.coralScore()).andThen(uppy.toBottom()).andThen(intake.stop()));
+        //joystick.button(2).onTrue(intake.intake()).onFalse(intake.stop());
+        //joystick.button(3).onTrue(rotatyPart.l4coralScore()).onFalse(rotatyPart.store());
+        //joystick.button(4).onTrue(rotatyPart.algaeGrab()).onFalse(rotatyPart.store());
         joystick.button(5).onTrue(rotatyPart.coralScore()).onFalse(rotatyPart.store());
-        
+        joystick.button(6).onTrue(intake.reverseIntake()).onFalse(intake.stop());
+        joystick.button(7).onTrue(intake.hold()).onFalse(intake.stop());
+        joystick.button(9).onTrue(uppy.toL2()).onFalse(uppy.toBottom());
+        joystick.button(11).onTrue(uppy.toL4()).onFalse(uppy.toBottom());
+        joystick.button(12).onTrue(switchState(true)).onFalse(switchState(false));
 
         
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
+    public Command switchState(boolean bool){
+        return run(() -> changeState(bool));
+    }
+
+    public void changeState(boolean bool){
+        sliderEnabled = bool;
+    }
     public Command getAutonomousCommand() {
         return autoChooser.getSelected();
     }

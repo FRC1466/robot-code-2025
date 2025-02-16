@@ -49,7 +49,7 @@ public class Elevator extends SubsystemBase {
         peakOutput = Constants.ElevatorConstants.elevatorPosition.peakOutput;
         elevatorPID = new PIDController(Constants.ElevatorConstants.elevatorPosition.P, Constants.ElevatorConstants.elevatorPosition.I, Constants.ElevatorConstants.elevatorPosition.D);
         elevatorPID.setTolerance(.15);
-        setGoal(0);
+        setGoal(1);
         masterMotor.setVoltage(0);
         leftSlaveFX.setVoltage(0);
         setNeutralMode(NeutralModeValue.Brake);
@@ -66,6 +66,15 @@ public class Elevator extends SubsystemBase {
         leftSlaveFX.setPosition(position);
     }
 
+    public void setP(double p) {
+        elevatorPID.setP(p);
+    }
+
+
+    public void setPeakOutput(double peak) {
+        peakOutput = peak;
+    }
+
     public double getElevatorHeight(){
         double height = masterMotor.getPosition().getValueAsDouble();
         return height;
@@ -74,7 +83,7 @@ public class Elevator extends SubsystemBase {
     public void goToGoal(double goal){
         localSetpoint = goal;
         elevatorPID.setSetpoint(goal);
-        SmartDashboard.putNumber("Arm PID Setpoint", goal);
+        SmartDashboard.putNumber("Elevator PID Setpoint", goal);
     }
 
     public void setMotor(double percent){
@@ -84,9 +93,9 @@ public class Elevator extends SubsystemBase {
     public Command setGoal(double goal){
         return runOnce(() -> goToGoal(goal));
     }
-
+    //lower this and lower PID
     public Command toBottom(){
-        return runOnce(() -> goToGoal(5));
+        return runOnce(() -> goToGoal(2));
     }
 
     public Command toL1(){
@@ -94,21 +103,28 @@ public class Elevator extends SubsystemBase {
     }
 
     public Command toL2(){
-        return runOnce(() -> goToGoal(10));
+        return runOnce(() -> goToGoal(15));
     }
 
     public Command toL3(){
-        return runOnce(() -> goToGoal(10));
+        return runOnce(() -> goToGoal(32));
     }
 
     public Command toL4(){
-        return runOnce(() -> goToGoal(10));
+        return runOnce(() -> goToGoal(60));
     }
 
     public Command toStation(){
         return runOnce(() -> goToGoal(10));
     }
 
+    public Command removeAlgaeLow(){
+        return runOnce(() -> goToGoal(10));
+    }
+
+    public Command removeAlgaeHigh(){
+        return runOnce(() -> goToGoal(10));
+    }
     public void setArmHold() {
         var motorOutput =
             MathUtil.clamp(
@@ -146,6 +162,7 @@ public class Elevator extends SubsystemBase {
         
         SmartDashboard.putNumber("Elevator Position", getElevatorHeight());
         SmartDashboard.putNumber("Get Elevator P", elevatorPID.getP());
+        SmartDashboard.putNumber("Get Elevator PeakOutput", peakOutput);
         SmartDashboard.putNumber("Elevator Desired Position", elevatorPID.getSetpoint());
         SmartDashboard.putNumber("Elevator Error", elevatorPID.getPositionError());
 
@@ -157,4 +174,7 @@ public class Elevator extends SubsystemBase {
         Logger.recordOutput("Elevator Position", getElevatorHeight());
 
     }
+
+
+    
 }

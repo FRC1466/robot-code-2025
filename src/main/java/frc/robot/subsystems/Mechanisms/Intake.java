@@ -32,11 +32,14 @@ public class Intake extends SubsystemBase {
     return runOnce(() -> setVoltage(0)); 
   }
   public Command reverseIntake() {
-    return runOnce(() -> setVoltage(2));
+    return runOnce(() -> setVoltage(4));
   }
 
+  public Command hold(){
+    return runOnce(() -> setVoltage(.15));
+  }
   public Command intake() {
-    return runOnce(() -> setVoltage(-5));
+    return runOnce(() -> setVoltage(-8));
   }
 
 

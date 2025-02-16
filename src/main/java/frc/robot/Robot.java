@@ -36,6 +36,7 @@ import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -53,6 +54,8 @@ public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
   private Vision vision;
   private final RobotContainer m_robotContainer;
+
+  private Timer timer = new Timer();
 
     private final StructPublisher<Pose2d> posePublisher =
         NetworkTableInstance.getDefault()
@@ -84,7 +87,7 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
 
   @Override
   public void robotInit() {
-    //  m_robotContainer.uppy.setSelectedSensorPosition(0);
+    m_robotContainer.uppy.setSelectedSensorPosition(0);
     vision = new Vision();
   }
 
@@ -164,13 +167,25 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
+    timer.restart();
   }
 
   @Override
   public void teleopPeriodic() {
       /*SmartDashboard.putData
     ("Robot Pose", Telemetry.telemeterize.getPose());*/
+    if(m_robotContainer.sliderEnabled){
+      m_robotContainer.uppy.goToGoal(((m_robotContainer.joystick.getRawAxis(3)+1)/2)*65);
+    }
+    Logger.recordOutput("Elevator Slider Position",(((m_robotContainer.joystick.getRawAxis(3)+1)/2)*75 ));
+    if(m_robotContainer.uppy.getElevatorHeight()<7 || m_robotContainer.uppy.getElevatorHeight()<52 ){
+      m_robotContainer.uppy.setP(.05);
+      m_robotContainer.uppy.setPeakOutput(.25);
+    }else{
+    m_robotContainer.uppy.setP(Constants.ElevatorConstants.elevatorPosition.P);
+      m_robotContainer.uppy.setPeakOutput(Constants.ElevatorConstants.elevatorPosition.peakOutput);
   }
+}
 
   @Override
   public void teleopExit() {}

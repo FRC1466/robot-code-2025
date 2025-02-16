@@ -38,6 +38,7 @@ public class RotatyPart extends SubsystemBase{
   private boolean storedInPerimeter = false;
 
 
+
   public RotatyPart() {
     armMotor = new TalonFX(RotationConstants.armPort);
 
@@ -52,9 +53,9 @@ public class RotatyPart extends SubsystemBase{
         new ArmPIDController(
             RotationConstants.rotationPosition.P,RotationConstants.rotationPosition.I, RotationConstants.rotationPosition.D);
     armPID.setAvoidanceRange(
-        Rotation2d.fromRadians(RotationConstants.restRadians),
+        Rotation2d.fromRadians(0),
         Rotation2d.fromRadians(RotationConstants.maxRadians));
-    armPID.setTolerance(0.15);
+    armPID.setTolerance(0.1);
 
   /*   if (Robot.isSimulation()) {
       sim = new VirtualFourBarSimulation(absoluteArmEncoder);
@@ -132,7 +133,7 @@ public class RotatyPart extends SubsystemBase{
             armPID.calculate(getPosition(), localSetpoint),
             -peakOutput,
             peakOutput);
-    var feedforward = getPosition().getCos() * RotationConstants.gravityFF;
+    var feedforward = getPosition().getSin() * RotationConstants.gravityFF;
     setMotor(motorOutput + feedforward + overrideFeedforward.getAsDouble());
 
     SmartDashboard.putNumber("Arm PID Output", motorOutput);
@@ -147,6 +148,7 @@ public class RotatyPart extends SubsystemBase{
     armMotor.set(-percent);
 
   }
+
 
   public void setFeedforward(DoubleSupplier ff) {
     System.out.println("ff: " + ff.toString());
@@ -168,6 +170,16 @@ public class RotatyPart extends SubsystemBase{
     return runOnce(() -> setGoal(Rotation2d.fromRadians(RotationConstants.coralPosRadians)))
        .andThen(holdUntilSetpoint());
   }
+  public Command l4coralScore() {
+    return runOnce(() -> setGoal(Rotation2d.fromRadians(RotationConstants.l4coralPosRadians)))
+       .andThen(holdUntilSetpoint());
+  }
+
+  public Command algaeGrab() {
+    return runOnce(() -> setGoal(Rotation2d.fromRadians(RotationConstants.algaePosition)))
+       .andThen(holdUntilSetpoint());
+  }
+
 
   public void setStoreSetpoint() {
     if (storedInPerimeter) {

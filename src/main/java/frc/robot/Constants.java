@@ -22,7 +22,7 @@ public final class Constants
     public static final Rotation3d cameraRotation = new Rotation3d(0, Math.toRadians(-33.5), 0);
 
     public static final Mode simMode = Mode.REPLAY;
-    private static RobotType robotType = RobotType.DEVBOT;
+    private static RobotType robotType = RobotType.COMPBOT;
     public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
      public static RobotType getRobot() {
     return robotType;
@@ -79,11 +79,11 @@ public final class Constants
      public static final class RotationConstants{
       public static final int armPort = 14, dutyCyclePort = 0;
       //DO NOT TOUCH!!!!
-      public static final Gains rotationPosition = new Gains(.16,0.0017,0.003,0.01,0,0.8);
-      public static final double restRadians = .3, coralPosRadians = .505;
+      public static final Gains rotationPosition = new Gains(.138,0.005,0.008,0.0,0,1);
+      public static final double restRadians = .05, coralPosRadians = .505, l4coralPosRadians = 1, algaePosition = 3;
 
-      public static final double maxRadians = (7*Math.PI/12)+.7;
-      public static final double gravityFF = 0.02;
+      public static final double maxRadians = Math.PI;
+      public static final double gravityFF = 0.01;
       public static final double absolutePositionOffset = -0.3211;
       public static final boolean encoderInverted = true;
       public static final double dutyCycleResolution = 1.0;
@@ -126,7 +126,7 @@ public final class Constants
         public static final int slaveID = 16;
 
 
-        public static final Gains elevatorPosition = new Gains(.09,0.002,0,.01,0,.5);
+        public static final Gains elevatorPosition = new Gains(.15,0.002,0,.0,0,.5);
 
     }
 }
