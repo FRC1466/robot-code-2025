@@ -90,13 +90,14 @@ public class Robot extends LoggedRobot {
   
     @Override
     public void robotInit() {
-      m_robotContainer.uppy.setSelectedSensorPosition(0);
+      m_robotContainer.elevator.setSelectedSensorPosition(0);
       vision = new Vision();
     }
     public static Trigger getColorTrigger()
     {
       return colorTrigger;
   }
+  
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run(); 
