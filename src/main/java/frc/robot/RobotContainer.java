@@ -126,7 +126,7 @@ public class RobotContainer {
         joystick.povDown().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
                  
         //Intake Coral
-        joystick.button(1).onTrue(elevator.toBottom().alongWith(rotatyPart.store()).alongWith(intake.intake())).onFalse(intake.stop().alongWith(rotatyPart.coralScore()));
+        joystick.button(1).and(Robot.getColorTrigger()).whileTrue(elevator.toBottom().alongWith(rotatyPart.store()).alongWith(intake.intake())).onFalse(intake.stop().alongWith(rotatyPart.coralScore()));
         //L2
         joystick.button(3).onTrue(elevator.toL2().alongWith(rotatyPart.coralScore())).onFalse(intake.intake().alongWith(Commands.waitSeconds(2)).andThen(elevator.toBottom()).andThen(intake.stop()));
         //L3

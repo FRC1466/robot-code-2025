@@ -41,6 +41,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swervedrive.Vision;
 
@@ -50,49 +51,52 @@ public class Robot extends LoggedRobot {
   private final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
   @AutoLogOutput(key = "RobotState/EstimatedPose")
   private Pose2d RobotPose;
-
-  private Command m_autonomousCommand;
-  private Vision vision;
-  private int i = 0;
-  private final RobotContainer m_robotContainer;
-
-  private Timer timer = new Timer();
-
-    private final StructPublisher<Pose2d> posePublisher =
-        NetworkTableInstance.getDefault()
-                .getStructTopic("Test", Pose2d.struct)
-                .publish();
-
-  public Robot() {
-    
-    m_robotContainer = new RobotContainer();
-    AutoLogOutputManager.addObject(this); // Add this object for logging
-
-
-    Logger.recordMetadata("ProjectName", "Robot-Code-2025"); // Set a metadata value
-
-  if (isReal()) {
-    Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
-    Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
-    new PowerDistribution(1, ModuleType.kRev); // Enables power distribution logging
-    
-  } else {
-    setUseTiming(false); // Run as fast as possible
-    String logPath = LogFileUtil.findReplayLog(); // Pull the replay log from AdvantageScope (or prompt the user)
-    Logger.setReplaySource(new WPILOGReader(logPath)); // Read replay log
-    Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a new log
+  public static boolean colorProximity;
+  private static Trigger colorTrigger;
+  
+    private Command m_autonomousCommand;
+    private Vision vision;
+    private final RobotContainer m_robotContainer;
+  
+    private Timer timer = new Timer();
+  
+      private final StructPublisher<Pose2d> posePublisher =
+          NetworkTableInstance.getDefault()
+                  .getStructTopic("Test", Pose2d.struct)
+                  .publish();
+  
+    public Robot() {
+      
+      m_robotContainer = new RobotContainer();
+      AutoLogOutputManager.addObject(this); // Add this object for logging
+  
+  
+      Logger.recordMetadata("ProjectName", "Robot-Code-2025"); // Set a metadata value
+  
+    if (isReal()) {
+      Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
+      Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
+      new PowerDistribution(1, ModuleType.kRev); // Enables power distribution logging
+      
+    } else {
+      setUseTiming(false); // Run as fast as possible
+      String logPath = LogFileUtil.findReplayLog(); // Pull the replay log from AdvantageScope (or prompt the user)
+      Logger.setReplaySource(new WPILOGReader(logPath)); // Read replay log
+      Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a new log
+    }
+  
+  Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
+    }
+  
+    @Override
+    public void robotInit() {
+      m_robotContainer.uppy.setSelectedSensorPosition(0);
+      vision = new Vision();
+    }
+    public static Trigger getColorTrigger()
+    {
+      return colorTrigger;
   }
-
-Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
-  }
-
-  @Override
-  public void robotInit() {
-    m_robotContainer.elevator.setSelectedSensorPosition(0);
-    vision = new Vision();
-    
-  }
-
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run(); 
@@ -101,10 +105,8 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
 
     SmartDashboard.putNumber("ColorSensed", m_colorSensor.getProximity());
 
-    boolean closeCoral = m_colorSensor.getProximity() > 700;
-    if(closeCoral){
-
-    }
+    colorProximity = m_colorSensor.getProximity() <= 120;
+    colorTrigger = new Trigger(() -> colorProximity);
     
 
        
@@ -171,10 +173,7 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
-    
-    i++;
-    Logger.recordOutput("Teleop run time",i);
-
+    timer.restart();
   }
 
   @Override
