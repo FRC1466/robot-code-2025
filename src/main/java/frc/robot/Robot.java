@@ -144,7 +144,11 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    m_robotContainer.elevator.goToGoal(2);
+    //fix later
+  //  m_robotContainer.rotatyPart.setGoal(Rotation2d.fromRadians(.05));
+  }
 
   @Override
   public void disabledPeriodic() {

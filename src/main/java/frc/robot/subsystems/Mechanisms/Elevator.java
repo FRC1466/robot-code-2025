@@ -48,8 +48,8 @@ public class Elevator extends SubsystemBase {
 
         peakOutput = Constants.ElevatorConstants.elevatorPosition.peakOutput;
         elevatorPID = new PIDController(Constants.ElevatorConstants.elevatorPosition.P, Constants.ElevatorConstants.elevatorPosition.I, Constants.ElevatorConstants.elevatorPosition.D);
-        elevatorPID.setTolerance(.15);
-        setGoal(1);
+        elevatorPID.setTolerance(.1);
+        setGoal(.5);
         masterMotor.setVoltage(0);
         leftSlaveFX.setVoltage(0);
         setNeutralMode(NeutralModeValue.Brake);
@@ -95,7 +95,7 @@ public class Elevator extends SubsystemBase {
     }
     //lower this and lower PID
     public Command toBottom(){
-        return runOnce(() -> goToGoal(2));
+        return runOnce(() -> goToGoal(.5));
     }
 
     public Command toL1(){
