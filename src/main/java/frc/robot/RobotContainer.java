@@ -56,7 +56,7 @@ public class RobotContainer {
 
     public static CommandSwerveDrivetrain drivetrain;
     public final static Vision photonCamera = new Vision();
-    public final static Elevator uppy = new Elevator();
+    public final static Elevator elevator = new Elevator();
     public static boolean sliderEnabled = false;
 
 
@@ -93,11 +93,11 @@ public class RobotContainer {
    
     
     
-  NamedCommands.registerCommand("Raise arm to Station", uppy.toStation());
-  NamedCommands.registerCommand( "raise arm to 1", uppy.toL1());
-  NamedCommands.registerCommand( "raise arm to 2", uppy.toL2());
-  NamedCommands.registerCommand( "raise arm to 3", uppy.toL3());
-  NamedCommands.registerCommand( "raise arm to 4", uppy.toL4());
+  NamedCommands.registerCommand("Raise arm to Station", elevator.toStation());
+  NamedCommands.registerCommand( "raise arm to 1", elevator.toL1());
+  NamedCommands.registerCommand( "raise arm to 2", elevator.toL2());
+  NamedCommands.registerCommand( "raise arm to 3", elevator.toL3());
+  NamedCommands.registerCommand( "raise arm to 4", elevator.toL4());
   NamedCommands.registerCommand("intake coral", intake.intake());
   NamedCommands.registerCommand( "reverse intake coral", intake.reverseIntake());
   NamedCommands.registerCommand( "rotary part", rotatyPart.coralScore());
@@ -126,21 +126,21 @@ public class RobotContainer {
         joystick.povDown().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
                  
         //Intake Coral
-        joystick.button(1).onTrue(uppy.toBottom().alongWith(rotatyPart.store()).alongWith(intake.intake())).onFalse(intake.stop());
+        joystick.button(1).onTrue(elevator.toBottom().alongWith(rotatyPart.store()).alongWith(intake.intake())).onFalse(intake.stop().alongWith(rotatyPart.coralScore()));
         //L2
-        joystick.button(3).onTrue(uppy.toL2().alongWith(rotatyPart.coralScore())).onFalse(intake.intake().alongWith(Commands.waitSeconds(2)).andThen(uppy.toBottom()).andThen(intake.stop()));
+        joystick.button(3).onTrue(elevator.toL2().alongWith(rotatyPart.coralScore())).onFalse(intake.intake().alongWith(Commands.waitSeconds(2)).andThen(elevator.toBottom()).andThen(intake.stop()));
         //L3
-        joystick.button(2).onTrue(uppy.toL3().alongWith(rotatyPart.coralScore())).onFalse(intake.intake().alongWith(Commands.waitSeconds(2)).andThen(uppy.toBottom()).andThen(intake.stop()));
+        joystick.button(2).onTrue(elevator.toL3().alongWith(rotatyPart.coralScore())).onFalse(intake.intake().alongWith(Commands.waitSeconds(2)).andThen(elevator.toBottom()).andThen(intake.stop()));
         //L4
-        joystick.button(4).onTrue(rotatyPart.coralScore().alongWith(intake.hold()).alongWith(Commands.waitSeconds(.5)).andThen(uppy.toL4()).alongWith(Commands.waitSeconds(4)).andThen(rotatyPart.l4coralScore())).onFalse(intake.intake().alongWith(Commands.waitSeconds(2)).andThen(rotatyPart.coralScore()).andThen(uppy.toBottom()).andThen(intake.stop()));
+        joystick.button(4).onTrue(rotatyPart.coralScore().alongWith(intake.hold()).alongWith(Commands.waitSeconds(.5)).andThen(elevator.toL4()).alongWith(Commands.waitSeconds(4)).andThen(rotatyPart.l4coralScore())).onFalse(intake.intake().alongWith(Commands.waitSeconds(2)).andThen(rotatyPart.coralScore()).andThen(elevator.toBottom()).andThen(intake.stop()));
         //joystick.button(2).onTrue(intake.intake()).onFalse(intake.stop());
         //joystick.button(3).onTrue(rotatyPart.l4coralScore()).onFalse(rotatyPart.store());
         //joystick.button(4).onTrue(rotatyPart.algaeGrab()).onFalse(rotatyPart.store());
         joystick.button(5).onTrue(rotatyPart.coralScore()).onFalse(rotatyPart.store());
         joystick.button(6).onTrue(intake.reverseIntake()).onFalse(intake.stop());
         joystick.button(7).onTrue(intake.hold()).onFalse(intake.stop());
-        joystick.button(9).onTrue(uppy.toL2()).onFalse(uppy.toBottom());
-        joystick.button(11).onTrue(uppy.toL4()).onFalse(uppy.toBottom());
+        joystick.button(9).onTrue(elevator.toL2()).onFalse(elevator.toBottom());
+        joystick.button(11).onTrue(elevator.toL4()).onFalse(elevator.toBottom());
         joystick.button(12).onTrue(switchState(true)).onFalse(switchState(false));
 
         
@@ -156,6 +156,11 @@ public class RobotContainer {
     }
     public Command getAutonomousCommand() {
         return autoChooser.getSelected();
+    }
+
+    public void resetPID(){
+        elevator.reset();
+        rotatyPart.reset();
     }
 
 }

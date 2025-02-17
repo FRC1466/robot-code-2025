@@ -34,7 +34,7 @@
   "eventMarkers": [
     {
       "name": "Raise arm to Station",
-      "waypointRelativePos": 0.8,
+      "waypointRelativePos": 0.5707395498392287,
       "endWaypointRelativePos": null,
       "command": null
     }

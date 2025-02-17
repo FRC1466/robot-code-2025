@@ -153,6 +153,10 @@ public class Elevator extends SubsystemBase {
         return runOnce(() -> setMotorVoltage(volts));
     }
 
+    public void reset(){
+        elevatorPID.reset();
+    }
+
     @Override
     public void periodic(){
         setArmHold();

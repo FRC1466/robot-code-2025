@@ -53,6 +53,7 @@ public class Robot extends LoggedRobot {
 
   private Command m_autonomousCommand;
   private Vision vision;
+  private int i = 0;
   private final RobotContainer m_robotContainer;
 
   private Timer timer = new Timer();
@@ -87,8 +88,9 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
 
   @Override
   public void robotInit() {
-    m_robotContainer.uppy.setSelectedSensorPosition(0);
+    m_robotContainer.elevator.setSelectedSensorPosition(0);
     vision = new Vision();
+    
   }
 
   @Override
@@ -142,7 +144,9 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
   public void disabledInit() {}
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    m_robotContainer.resetPID();
+  }
 
   @Override
   public void disabledExit() {}
@@ -167,7 +171,10 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
-    timer.restart();
+    
+    i++;
+    Logger.recordOutput("Teleop run time",i);
+
   }
 
   @Override
@@ -175,15 +182,15 @@ Logger.start(); // Start logging! No more data receivers, replay sources, or met
       /*SmartDashboard.putData
     ("Robot Pose", Telemetry.telemeterize.getPose());*/
     if(m_robotContainer.sliderEnabled){
-      m_robotContainer.uppy.goToGoal(((m_robotContainer.joystick.getRawAxis(3)+1)/2)*65);
+      m_robotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3)+1)/2)*65);
     }
     Logger.recordOutput("Elevator Slider Position",(((m_robotContainer.joystick.getRawAxis(3)+1)/2)*75 ));
-    if(m_robotContainer.uppy.getElevatorHeight()<7 || m_robotContainer.uppy.getElevatorHeight()<52 ){
-      m_robotContainer.uppy.setP(.05);
-      m_robotContainer.uppy.setPeakOutput(.25);
+    if(m_robotContainer.elevator.getElevatorHeight()<7 || m_robotContainer.elevator.getElevatorHeight()<52 ){
+      m_robotContainer.elevator.setP(.05);
+      m_robotContainer.elevator.setPeakOutput(.25);
     }else{
-    m_robotContainer.uppy.setP(Constants.ElevatorConstants.elevatorPosition.P);
-      m_robotContainer.uppy.setPeakOutput(Constants.ElevatorConstants.elevatorPosition.peakOutput);
+    m_robotContainer.elevator.setP(Constants.ElevatorConstants.elevatorPosition.P);
+      m_robotContainer.elevator.setPeakOutput(Constants.ElevatorConstants.elevatorPosition.peakOutput);
   }
 }
 

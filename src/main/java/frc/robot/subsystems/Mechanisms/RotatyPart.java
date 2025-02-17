@@ -219,6 +219,10 @@ public class RotatyPart extends SubsystemBase{
     return armPID.atSetpoint();
   }
 
+  public void reset(){
+    armPID.reset();
+}
+
 
 
 

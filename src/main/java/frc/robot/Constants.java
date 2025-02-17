@@ -79,7 +79,7 @@ public final class Constants
      public static final class RotationConstants{
       public static final int armPort = 14, dutyCyclePort = 0;
       //DO NOT TOUCH!!!!
-      public static final Gains rotationPosition = new Gains(.138,0.005,0.008,0.0,0,1);
+      public static final Gains rotationPosition = new Gains(.18,0.086,0.0765,0.0,0,2);
       public static final double restRadians = .05, coralPosRadians = .505, l4coralPosRadians = 1, algaePosition = 3;
 
       public static final double maxRadians = Math.PI;
@@ -126,7 +126,7 @@ public final class Constants
         public static final int slaveID = 16;
 
 
-        public static final Gains elevatorPosition = new Gains(.15,0.002,0,.0,0,.5);
+        public static final Gains elevatorPosition = new Gains(.15,0.004,0.001,.0,0,.5);
 
     }
 }
