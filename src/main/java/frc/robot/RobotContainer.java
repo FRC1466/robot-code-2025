@@ -19,12 +19,14 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
@@ -38,7 +40,7 @@ import frc.robot.subsystems.swervedrive.Vision;
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-
+    public static DigitalInput limitSwitch = new DigitalInput(1);
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(.1).withRotationalDeadband(.1) // Add a 10% deadband
@@ -121,25 +123,29 @@ public class RobotContainer {
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
-
+        Trigger intakeProximityTrigger = new Trigger(() -> intake.getIntakeDistanceBool());
+        Trigger falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
         // reset the field-centric heading on left bumper press
         joystick.povDown().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
                  
         //Intake Coral
-        joystick.button(1).and(Robot.getColorTrigger()).whileTrue(elevator.toBottom().alongWith(rotatyPart.store()).alongWith(intake.intake())).onFalse(intake.stop().alongWith(rotatyPart.coralScore()));
+        //joystick.button(1).and(intakeProximityTrigger).whileTrue(elevator.toBottom().alongWith(rotatyPart.store()).alongWith(intake.intake())).onFalse(intake.stop().alongWith(rotatyPart.coralScore()));
+        joystick.button(1).and(intakeProximityTrigger).whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom())).onFalse(Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));
         //L2
-        joystick.button(3).onTrue(elevator.toL2().alongWith(rotatyPart.coralScore())).onFalse(intake.intake().alongWith(Commands.waitSeconds(2)).andThen(elevator.toBottom()).andThen(intake.stop()));
+        joystick.button(3).onTrue(elevator.toL2().alongWith(rotatyPart.coralScore())).onFalse(intake.outTake());
+        (intakeProximityTrigger).onTrue(elevator.toBottom().andThen(intake.stop()));
         //L3
-        joystick.button(2).onTrue(elevator.toL3().alongWith(rotatyPart.coralScore())).onFalse(intake.intake().alongWith(Commands.waitSeconds(2)).andThen(elevator.toBottom()).andThen(intake.stop()));
+        joystick.button(2).onTrue(elevator.toL3().alongWith(rotatyPart.coralScore())).onFalse(intake.intake());
         //L4
-        joystick.button(4).onTrue(rotatyPart.coralScore().alongWith(intake.hold()).alongWith(Commands.waitSeconds(.5)).andThen(elevator.toL4()).alongWith(Commands.waitSeconds(4)).andThen(rotatyPart.l4coralScore())).onFalse(intake.intake().alongWith(Commands.waitSeconds(2)).andThen(rotatyPart.coralScore()).andThen(elevator.toBottom()).andThen(intake.stop()));
-        //joystick.button(2).onTrue(intake.intake()).onFalse(intake.stop());
-        //joystick.button(3).onTrue(rotatyPart.l4coralScore()).onFalse(rotatyPart.store());
-        //joystick.button(4).onTrue(rotatyPart.algaeGrab()).onFalse(rotatyPart.store());
+        joystick.button(4).onTrue(rotatyPart.coralScore().alongWith(intake.hold()));
+        //.alongWith(Commands.waitSeconds(.5)).andThen(elevator.toL4()).alongWith(Commands.waitSeconds(4)).andThen(rotatyPart.l4coralScore())).onFalse(intake.intake().alongWith(Commands.waitSeconds(2)).andThen(rotatyPart.coralScore()).andThen(elevator.toBottom()).andThen(intake.stop()));
+
         joystick.button(5).onTrue(rotatyPart.coralScore()).onFalse(rotatyPart.store());
         joystick.button(6).onTrue(intake.reverseIntake()).onFalse(intake.stop());
         joystick.button(7).onTrue(intake.hold()).onFalse(intake.stop());
+        joystick.button(8).onTrue(rotatyPart.algaeGrab()).onFalse(rotatyPart.coralScore());
         joystick.button(9).onTrue(elevator.toL2()).onFalse(elevator.toBottom());
+        joystick.button(10).onTrue(intake.reverseIntake()).onFalse(intake.stop());
         joystick.button(11).onTrue(elevator.toL4()).onFalse(elevator.toBottom());
         joystick.button(12).onTrue(switchState(true)).onFalse(switchState(false));
 

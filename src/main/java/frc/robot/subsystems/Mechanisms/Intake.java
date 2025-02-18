@@ -4,10 +4,13 @@ import static edu.wpi.first.wpilibj2.command.Commands.waitSeconds;
 
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.revrobotics.ColorSensorV3;
 
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -16,9 +19,8 @@ public class Intake extends SubsystemBase {
   private final TalonFX intakeMotor;
   private final LinearFilter currentFilter = LinearFilter.movingAverage(10);
   private double filteredCurrent;
-
-
-
+  private final I2C.Port i2cPort = I2C.Port.kOnboard;
+  private final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
   /** Create a new Gripper subsystem. */
  public Intake() {
     intakeMotor = new TalonFX(15);
@@ -36,19 +38,27 @@ public class Intake extends SubsystemBase {
   }
 
   public Command hold(){
-    return runOnce(() -> setVoltage(.15));
+    return runOnce(() -> setVoltage(.2));
   }
   public Command intake() {
     return runOnce(() -> setVoltage(-2));
   }
 
+  public Command outTake() {
+    return runOnce(() -> setVoltage(-6));
+  }
 
+  public boolean getIntakeDistanceBool() {
+    return (m_colorSensor.getProximity() <= 120);
+  }
 
   public double getCurrent(TalonFX intakeMotor) {
     return (intakeMotor.getSupplyCurrent()).getValueAsDouble();
   }
   public void periodic() {
     filteredCurrent = currentFilter.calculate(getCurrent(intakeMotor));
+    SmartDashboard.putNumber("ColorSensed", m_colorSensor.getProximity());
+    SmartDashboard.putBoolean("ColorSensed boolean", (m_colorSensor.getProximity() <= 120));
   }
 
 } 

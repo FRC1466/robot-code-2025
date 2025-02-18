@@ -47,18 +47,17 @@ import frc.robot.subsystems.swervedrive.Vision;
 
 public class Robot extends LoggedRobot {
   
-  private final I2C.Port i2cPort = I2C.Port.kOnboard;
-  private final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
+  
   @AutoLogOutput(key = "RobotState/EstimatedPose")
   private Pose2d RobotPose;
-  public static boolean colorProximity;
-  private static Trigger colorTrigger;
+
   
     private Command m_autonomousCommand;
     private Vision vision;
     private final RobotContainer m_robotContainer;
   
     private Timer timer = new Timer();
+    private boolean limitSwitchCounter = false;
   
       private final StructPublisher<Pose2d> posePublisher =
           NetworkTableInstance.getDefault()
@@ -93,30 +92,31 @@ public class Robot extends LoggedRobot {
       m_robotContainer.elevator.setSelectedSensorPosition(0);
       vision = new Vision();
     }
-    public static Trigger getColorTrigger()
-    {
-      return colorTrigger;
-  }
+  
   
   @Override
   public void robotPeriodic() {
-    CommandScheduler.getInstance().run(); 
+     
     vision.logSeenAprilTags();
-    Color detectedColor = m_colorSensor.getColor();
+   // Color detectedColor = m_colorSensor.getColor();
 
-    SmartDashboard.putNumber("ColorSensed", m_colorSensor.getProximity());
-
-    colorProximity = m_colorSensor.getProximity() <= 120;
-    colorTrigger = new Trigger(() -> colorProximity);
     
 
+
+   /*  if(m_robotContainer.limitSwitch.get() != limitSwitchCounter){
+      if(limitSwitchCounter == false && m_robotContainer.elevator.getElevatorHeight() < 3){
+        m_robotContainer.elevator.setSelectedSensorPosition(2.15);
+      }
+      limitSwitchCounter = m_robotContainer.limitSwitch.get();
+    }*/
        
     var visionEst = RobotContainer.photonCamera.getEstimatedGlobalPose(); 
+    SmartDashboard.putBoolean("booleanSwitch",m_robotContainer.limitSwitch.get());
+
+
     
-
-   
-
-
+    
+    CommandScheduler.getInstance().run();
     RobotPose = RobotContainer.drivetrain.getState().Pose;
         visionEst.ifPresent(
                  est -> {
@@ -145,7 +145,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void disabledInit() {
-    m_robotContainer.elevator.goToGoal(2);
+    m_robotContainer.elevator.goToGoal(.5);
     //fix later
   //  m_robotContainer.rotatyPart.setGoal(Rotation2d.fromRadians(.05));
   }
