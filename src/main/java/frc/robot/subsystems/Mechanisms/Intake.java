@@ -2,6 +2,8 @@ package frc.robot.subsystems.Mechanisms;
 
 import static edu.wpi.first.wpilibj2.command.Commands.waitSeconds;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.ColorSensorV3;
@@ -17,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Intake extends SubsystemBase {
   private final TalonFX intakeMotor;
+  private double prevMotorPose = 0;
   private final LinearFilter currentFilter = LinearFilter.movingAverage(10);
   private double filteredCurrent;
   private final I2C.Port i2cPort = I2C.Port.kOnboard;
@@ -35,6 +38,10 @@ public class Intake extends SubsystemBase {
   }
   public Command reverseIntake() {
     return runOnce(() -> setVoltage(4));
+  }
+
+  public Command algaeHold() {
+    return runOnce(() -> setVoltage(.75));
   }
 
   public Command hold(){
@@ -59,6 +66,9 @@ public class Intake extends SubsystemBase {
     filteredCurrent = currentFilter.calculate(getCurrent(intakeMotor));
     SmartDashboard.putNumber("ColorSensed", m_colorSensor.getProximity());
     SmartDashboard.putBoolean("ColorSensed boolean", (m_colorSensor.getProximity() <= 120));
+    Logger.recordOutput("Angle Change", (intakeMotor.getPosition().getValueAsDouble()-prevMotorPose));
+    prevMotorPose = intakeMotor.getPosition().getValueAsDouble();
+    
   }
 
 } 

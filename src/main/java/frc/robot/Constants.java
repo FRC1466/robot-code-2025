@@ -79,11 +79,11 @@ public final class Constants
      public static final class RotationConstants{
       public static final int armPort = 14, dutyCyclePort = 0;
       //DO NOT TOUCH!!!!
-      public static final Gains rotationPosition = new Gains(.18,0.086,0.22,0.0,0,2);
+      public static final Gains rotationPosition = new Gains(.16,0.13,0.05,0.0,0,.2);
       public static final double restRadians = .05, coralPosRadians = .505, l4coralPosRadians = 1, algaePosition = 3;
 
       public static final double maxRadians = Math.PI;
-      public static final double gravityFF = 0.01;
+      public static final double gravityFF = 0.014;
       public static final double absolutePositionOffset = -0.3211;
       public static final boolean encoderInverted = true;
       public static final double dutyCycleResolution = 1.0;

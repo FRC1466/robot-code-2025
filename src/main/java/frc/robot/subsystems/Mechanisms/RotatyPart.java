@@ -3,6 +3,10 @@ package frc.robot.subsystems.Mechanisms;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.Logger;
+
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -12,7 +16,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.networktables.NetworkTableInstance.NetworkMode;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
@@ -36,8 +39,7 @@ public class RotatyPart extends SubsystemBase{
   private boolean disabled = false;
   private Rotation2d storedPosRad = Rotation2d.fromRadians(RotationConstants.restRadians);
   private boolean storedInPerimeter = false;
-
-
+  private CurrentLimitsConfigs limitsConfigs = new CurrentLimitsConfigs();
 
   public RotatyPart() {
     armMotor = new TalonFX(RotationConstants.armPort);
@@ -46,6 +48,11 @@ public class RotatyPart extends SubsystemBase{
     peakOutput = RotationConstants.rotationPosition.peakOutput;
     absoluteArmEncoder = new DutyCycleEncoder(RotationConstants.dutyCyclePort);
     absoluteArmEncoder.setDutyCycleRange(0, 1);
+    limitsConfigs.StatorCurrentLimit = 40;
+    limitsConfigs.StatorCurrentLimitEnable = true;
+    TalonFXConfigurator talonFXConfigurator = armMotor.getConfigurator();
+    talonFXConfigurator.apply(limitsConfigs);
+
     //figure this out later
     //absoluteArmEncoder.setDistancePerRotation(1.0);
 
@@ -55,13 +62,13 @@ public class RotatyPart extends SubsystemBase{
     armPID.setAvoidanceRange(
         Rotation2d.fromRadians(0),
         Rotation2d.fromRadians(RotationConstants.maxRadians));
-    armPID.setTolerance(0.1);
+    armPID.setTolerance(0.15);
 
   /*   if (Robot.isSimulation()) {
       sim = new VirtualFourBarSimulation(absoluteArmEncoder);
-      SmartDashboard.putData("Arm Sim", sim.getMech2d());
+      Logger.putData("Arm Sim", sim.getMech2d());
     }*/
-
+  
   setGoal(Rotation2d.fromRadians(RotationConstants.restRadians));
   setDefaultCommand(hold());
   armMotor.setNeutralMode(NeutralModeValue.Brake);
@@ -124,7 +131,7 @@ public class RotatyPart extends SubsystemBase{
   public void setGoal(Rotation2d setpoint) {
     localSetpoint = setpoint;
     armPID.setSetpoint(setpoint);
-    SmartDashboard.putNumber("Arm PID Setpoint", setpoint.getRadians());
+    Logger.recordOutput("Arm PID Setpoint", setpoint.getRadians());
   }
 
   public void setArmHold() {
@@ -136,9 +143,9 @@ public class RotatyPart extends SubsystemBase{
     var feedforward = getPosition().getSin() * RotationConstants.gravityFF;
     setMotor(motorOutput + feedforward + overrideFeedforward.getAsDouble());
 
-    SmartDashboard.putNumber("Arm PID Output", motorOutput);
-    SmartDashboard.putNumber("Arm Feedforward", feedforward);
-    SmartDashboard.putNumber("Arm Feedforward Override", overrideFeedforward.getAsDouble());
+    Logger.recordOutput("Arm PID Output", motorOutput);
+    Logger.recordOutput("Arm Feedforward", feedforward);
+    Logger.recordOutput("Arm Feedforward Override", overrideFeedforward.getAsDouble());
   }
 
   public void setMotor(double percent) {
@@ -188,7 +195,7 @@ public class RotatyPart extends SubsystemBase{
       storedPosRad = Rotation2d.fromRadians(RotationConstants.restRadians);
     }
     System.out.println("Override changed.");
-    SmartDashboard.putBoolean("In Frame Perimeter", storedInPerimeter);
+    Logger.recordOutput("In Frame Perimeter", storedInPerimeter);
     storedInPerimeter = !storedInPerimeter;
   }
 
@@ -215,7 +222,7 @@ public class RotatyPart extends SubsystemBase{
    * @return if arm is at setpoint.
    */
   public boolean isAtSetpoint() {
-    SmartDashboard.putBoolean("Arm PID at setpoint", armPID.atSetpoint());
+    Logger.recordOutput("Arm PID at setpoint", armPID.atSetpoint());
     return armPID.atSetpoint();
   }
 
@@ -230,14 +237,14 @@ public class RotatyPart extends SubsystemBase{
   public void periodic() {
    setArmHold();
 
-    SmartDashboard.putData(absoluteArmEncoder);
-    SmartDashboard.putNumber("Arm Raw Absolute Encoder", absoluteArmEncoder.get());
-    SmartDashboard.putNumber("Arm Processed Absolute Encoder", getPosition().getRadians());
-    SmartDashboard.putNumber("Get Shifted Absolute Position", getShiftedAbsoluteDistance().getRadians());
-    SmartDashboard.putNumber("Get Arm P", armPID_P);
-    SmartDashboard.putNumber("Get Arm Output", peakOutput);
-    SmartDashboard.putNumber("Arm PID error", armPID.getPositionError());
-    SmartDashboard.putBoolean("Arm Disabled", disabled);
+    //Logger.putData(absoluteArmEncoder);
+    Logger.recordOutput("Arm Raw Absolute Encoder", absoluteArmEncoder.get());
+    Logger.recordOutput("Arm Processed Absolute Encoder", getPosition().getRadians());
+    Logger.recordOutput("Get Shifted Absolute Position", getShiftedAbsoluteDistance().getRadians());
+    Logger.recordOutput("Get Arm P", armPID_P);
+    Logger.recordOutput("Get Arm Output", peakOutput);
+    Logger.recordOutput("Arm PID error", armPID.getPositionError());
+    Logger.recordOutput("Arm Disabled", disabled);
 }
 
 }

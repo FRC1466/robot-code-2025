@@ -111,7 +111,7 @@ public class Robot extends LoggedRobot {
     }*/
        
     var visionEst = RobotContainer.photonCamera.getEstimatedGlobalPose(); 
-    SmartDashboard.putBoolean("booleanSwitch",m_robotContainer.limitSwitch.get());
+  //  SmartDashboard.putBoolean("booleanSwitch",m_robotContainer.limitSwitch.get());
 
 
     
@@ -153,6 +153,7 @@ public class Robot extends LoggedRobot {
   @Override
   public void disabledPeriodic() {
     m_robotContainer.resetPID();
+    CommandScheduler.getInstance().cancelAll();
   }
 
   @Override

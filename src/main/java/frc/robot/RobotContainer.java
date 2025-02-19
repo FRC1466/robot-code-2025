@@ -40,7 +40,7 @@ import frc.robot.subsystems.swervedrive.Vision;
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-    public static DigitalInput limitSwitch = new DigitalInput(1);
+
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(.1).withRotationalDeadband(.1) // Add a 10% deadband
@@ -63,7 +63,7 @@ public class RobotContainer {
 
 
     public RobotContainer() {
-        if (Constants.getMode() != Constants.Mode.REPLAY) {
+       
             switch (Constants.getRobot()) {
                           case COMPBOT -> {
                             drivetrain = TunerConstants.createDrivetrain();
@@ -71,10 +71,10 @@ public class RobotContainer {
                           case DEVBOT -> {
                             drivetrain = TunerConstantsTester.createDrivetrain();
                           }
-                            case SIMBOT -> throw new UnsupportedOperationException("Unimplemented case: " + Constants.getRobot());
+                            
                             default -> throw new IllegalArgumentException("Unexpected value: " + Constants.getRobot());
             }
-        }
+        
         configureBindings();
         initializeChooser();
     }
@@ -124,6 +124,7 @@ public class RobotContainer {
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
         Trigger intakeProximityTrigger = new Trigger(() -> intake.getIntakeDistanceBool());
+        Trigger algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight()>20);
         Trigger falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
         // reset the field-centric heading on left bumper press
         joystick.povDown().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
@@ -140,12 +141,14 @@ public class RobotContainer {
         joystick.button(4).onTrue(rotatyPart.coralScore().alongWith(intake.hold()));
         //.alongWith(Commands.waitSeconds(.5)).andThen(elevator.toL4()).alongWith(Commands.waitSeconds(4)).andThen(rotatyPart.l4coralScore())).onFalse(intake.intake().alongWith(Commands.waitSeconds(2)).andThen(rotatyPart.coralScore()).andThen(elevator.toBottom()).andThen(intake.stop()));
 
-        joystick.button(5).onTrue(rotatyPart.coralScore()).onFalse(rotatyPart.store());
-        joystick.button(6).onTrue(intake.reverseIntake()).onFalse(intake.stop());
-        joystick.button(7).onTrue(intake.hold()).onFalse(intake.stop());
+        joystick.button(5).onTrue(rotatyPart.coralScore());
+        joystick.button(6).onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae())).onFalse(elevator.toL2().alongWith(intake.algaeHold()));
+        joystick.button(6).and(algaeHeightReady).onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
+
+        joystick.button(7).onTrue(intake.intake()).onFalse(intake.stop().alongWith(rotatyPart.coralScore()));
         joystick.button(8).onTrue(rotatyPart.algaeGrab()).onFalse(rotatyPart.coralScore());
         joystick.button(9).onTrue(elevator.toL2()).onFalse(elevator.toBottom());
-        joystick.button(10).onTrue(intake.reverseIntake()).onFalse(intake.stop());
+        joystick.button(10).onTrue(intake.reverseIntake()).onFalse(intake.algaeHold());
         joystick.button(11).onTrue(elevator.toL4()).onFalse(elevator.toBottom());
         joystick.button(12).onTrue(switchState(true)).onFalse(switchState(false));
 
