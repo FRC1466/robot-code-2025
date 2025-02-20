@@ -24,9 +24,10 @@ import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
 import frc.robot.constants.Constants.RobotType;
 import frc.robot.subsystems.swervedrive.Vision;
+import java.io.File;
+import java.util.stream.Stream;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.AutoLogOutputManager;
-import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.rlog.RLOGServer;
@@ -100,11 +101,17 @@ public class Robot extends LoggedRobot {
         break;
 
       case REPLAY:
-        // Replaying a log, set up replay source
-        setUseTiming(false); // Run as fast as possible
-        String logPath = "D:/logs";
+        setUseTiming(false);
+        File logsDir = new File("D:/logs");
+        File latestLog =
+            Stream.of(logsDir.listFiles())
+                .filter(file -> file.getName().endsWith(".wpilog"))
+                .max((f1, f2) -> Long.compare(f1.lastModified(), f2.lastModified()))
+                .orElseThrow(() -> new RuntimeException("No .wpilog files found in D:/logs"));
+
+        String logPath = latestLog.getAbsolutePath();
         Logger.setReplaySource(new WPILOGReader(logPath));
-        Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
+        Logger.addDataReceiver(new WPILOGWriter(logPath.replace(".wpilog", "_sim.wpilog")));
         break;
     }
 

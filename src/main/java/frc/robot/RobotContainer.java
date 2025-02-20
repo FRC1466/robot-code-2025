@@ -90,21 +90,8 @@ public class RobotContainer {
     initializeChooser();
   }
 
-  // Add autonomous options to chooser
-  public void addChooser(String name, String autoName) {
-    autoChooser.addOption(name, new PathPlannerAuto(autoName));
-  }
-
   // Initialize autonomous chooser with options
   public void initializeChooser() {
-    addChooser("Recenter bot", "Recenter");
-    addChooser("Best 3 Piece", "3 Piece Auto Better");
-    addChooser("2 Piece Inverted", "Invert 2 Piece Auto");
-    autoChooser.addOption("Taxi", new PathPlannerAuto("Taxi"));
-    autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));
-    autoChooser.addOption("Taxi PID Testing", new PathPlannerAuto("PID Testing"));
-    autoChooser.addOption("3 Piece", new PathPlannerAuto("3 Piece Auto"));
-
     NamedCommands.registerCommand("Raise arm to Station", elevator.toStation());
     NamedCommands.registerCommand("raise arm to 1", elevator.toL1());
     NamedCommands.registerCommand("raise arm to 2", elevator.toL2());
@@ -113,6 +100,12 @@ public class RobotContainer {
     NamedCommands.registerCommand("intake coral", intake.intake());
     NamedCommands.registerCommand("reverse intake coral", intake.reverseIntake());
     NamedCommands.registerCommand("rotary part", rotatyPart.coralScore());
+
+    autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));
+    autoChooser.addOption("2 Piece Inverted", new PathPlannerAuto("Invert 2 Piece Auto"));
+    autoChooser.addOption("3 Piece", new PathPlannerAuto("3 Piece Auto Better"));
+    autoChooser.addOption("Recenter bot", new PathPlannerAuto("Recenter"));
+    autoChooser.addOption("Taxi", new PathPlannerAuto("Taxi"));
 
     SmartDashboard.putData("CHOOSE", autoChooser);
   }
