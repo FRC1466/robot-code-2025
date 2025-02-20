@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
 import frc.robot.subsystems.swervedrive.Vision;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -48,7 +49,13 @@ public class Robot extends LoggedRobot {
     m_robotContainer = new RobotContainer();
     AutoLogOutputManager.addObject(this); // Add this object for logging
 
-    Logger.recordMetadata("ProjectName", "Robot-Code-2025"); // Set a metadata value
+    // Record metadata
+    Logger.recordMetadata("ProjectName", "Robot-Code-2025");
+    Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
+    Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
+    Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
+    Logger.recordMetadata("GitDate", BuildConstants.GIT_DATE);
+    Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
 
     if (isReal()) {
       Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")

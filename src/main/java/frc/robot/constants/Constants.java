@@ -13,6 +13,8 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
 import webblib.Gains;
 
@@ -24,7 +26,13 @@ public final class Constants {
   private static RobotType robotType = RobotType.COMPBOT;
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
+  @SuppressWarnings("resource")
   public static RobotType getRobot() {
+    if (!disableHAL && RobotBase.isReal() && robotType == RobotType.SIMBOT) {
+      new Alert("Invalid robot selected, using competition robot as default.", AlertType.kError)
+          .set(true);
+      robotType = RobotType.COMPBOT;
+    }
     return robotType;
   }
 
@@ -36,13 +44,8 @@ public final class Constants {
   }
 
   public static enum Mode {
-    /** Running on a real robot. */
     REAL,
-
-    /** Running a physics simulator. */
     SIM,
-
-    /** Replaying from a log file. */
     REPLAY
   }
 
@@ -50,6 +53,12 @@ public final class Constants {
     SIMBOT,
     DEVBOT,
     COMPBOT
+  }
+
+  public static boolean disableHAL = false;
+
+  public static void disableHAL() {
+    disableHAL = true;
   }
 
   public static final class PoseEstimator {
