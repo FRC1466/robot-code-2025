@@ -217,4 +217,9 @@ public class RobotContainer {
         !DriverStation.isJoystickConnected(joystick.getHID().getPort())
             || !DriverStation.getJoystickIsXbox(joystick.getHID().getPort()));
   }
+
+  // Update dashboard data
+  public void updateDashboardOutputs() {
+    SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
+  }
 }
