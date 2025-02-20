@@ -23,6 +23,8 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
 import frc.robot.constants.Constants.RobotType;
+import frc.robot.generated.TunerConstants;
+import frc.robot.generated.TunerConstantsTester;
 import frc.robot.subsystems.swervedrive.Vision;
 import java.io.File;
 import java.util.stream.Stream;
@@ -64,6 +66,10 @@ public class Robot extends LoggedRobot {
       new Alert(
           "Battery voltage is very low, consider turning off the robot or replacing the battery.",
           AlertType.kWarning);
+
+  private final Alert typeSwitchAlert =
+      new Alert(
+          "Cannot switch robot type while enabled. Disable the robot first.", AlertType.kWarning);
 
   public Robot() {
     m_robotContainer = new RobotContainer();
@@ -142,6 +148,32 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotPeriodic() {
+    Constants.RobotType selectedType = m_robotContainer.getSelectedRobotType();
+    if (selectedType != Constants.getRobot()) {
+      if (DriverStation.isEnabled()) {
+        // If robot is enabled, show warning and don't switch
+        typeSwitchAlert.set(true);
+        // Reset chooser to current type to prevent future attempts
+        m_robotContainer.robotTypeChooser.addDefaultOption(
+            Constants.getRobot().toString(), Constants.getRobot());
+        // Reset chooser to current type to prevent future attempts
+        m_robotContainer.robotTypeChooser.addDefaultOption(
+            Constants.getRobot().toString(), Constants.getRobot());
+      } else {
+        // Only switch when disabled
+        Constants.setRobot(selectedType);
+        // Reinitialize drivetrain if robot type changes
+        if (RobotContainer.drivetrain != null) {
+          switch (selectedType) {
+            case COMPBOT -> RobotContainer.drivetrain = TunerConstants.createDrivetrain();
+            case DEVBOT -> RobotContainer.drivetrain = TunerConstantsTester.createDrivetrain();
+            default -> throw new IllegalArgumentException("Unexpected value: " + selectedType);
+          }
+        }
+      }
+    }
+
+    // Rest of robotPeriodic...
     vision.logSeenAprilTags();
     // Color detectedColor = m_colorSensor.getColor();
 

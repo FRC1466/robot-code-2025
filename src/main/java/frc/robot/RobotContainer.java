@@ -59,6 +59,10 @@ public class RobotContainer {
   private final LoggedDashboardChooser<Command> autoChooser =
       new LoggedDashboardChooser<>("Auto Routine");
 
+  // Add new field
+  public final LoggedDashboardChooser<Constants.RobotType> robotTypeChooser =
+      new LoggedDashboardChooser<>("Robot Type");
+
   // Subsystems
   private final Intake intake = new Intake();
   public final RotatyPart rotatyPart = new RotatyPart();
@@ -76,6 +80,7 @@ public class RobotContainer {
   public static boolean sliderEnabled = false;
 
   public RobotContainer() {
+    configureRobotTypeChooser();
     // Initialize drivetrain based on robot type
     switch (Constants.getRobot()) {
       case COMPBOT -> {
@@ -89,6 +94,20 @@ public class RobotContainer {
 
     configureBindings();
     initializeChooser();
+  }
+
+  private void configureRobotTypeChooser() {
+    robotTypeChooser.addOption("Competition Robot", Constants.RobotType.COMPBOT);
+    robotTypeChooser.addOption("Development Robot", Constants.RobotType.DEVBOT);
+    robotTypeChooser.addOption("Simulated Robot", Constants.RobotType.SIMBOT);
+
+    // Set default to current robot type
+    robotTypeChooser.addDefaultOption(Constants.getRobot().toString(), Constants.getRobot());
+  }
+
+  // Add getter method
+  public Constants.RobotType getSelectedRobotType() {
+    return robotTypeChooser.get();
   }
 
   // Initialize autonomous chooser with options

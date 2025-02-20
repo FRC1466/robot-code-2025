@@ -37,6 +37,10 @@ public final class Constants {
     return robotType;
   }
 
+  public static void setRobot(RobotType type) {
+    robotType = type;
+  }
+
   public static Mode getMode() {
     return switch (robotType) {
       case DEVBOT, COMPBOT -> RobotBase.isReal() ? Mode.REAL : Mode.REPLAY;
