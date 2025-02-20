@@ -23,9 +23,9 @@ public final class Constants {
   public static final Translation3d cameraTranslation = new Translation3d(0.28, 0.0, 0.23);
   public static final Rotation3d cameraRotation = new Rotation3d(0, Math.toRadians(-33.5), 0);
 
-  public static final Mode simMode = Mode.REPLAY;
-  private static RobotType robotType = RobotType.COMPBOT;
-  public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
+  public static final Mode simMode = Mode.SIM;
+  private static RobotType robotType = RobotType.SIMBOT;
+  public static Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
   @SuppressWarnings("resource")
   public static RobotType getRobot() {
@@ -46,6 +46,10 @@ public final class Constants {
       case DEVBOT, COMPBOT -> RobotBase.isReal() ? Mode.REAL : Mode.REPLAY;
       case SIMBOT -> Mode.SIM;
     };
+  }
+
+  public static void setMode(Mode mode) {
+    currentMode = mode;
   }
 
   public static enum Mode {

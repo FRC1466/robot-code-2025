@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
+import frc.robot.constants.Constants.Mode;
 import frc.robot.constants.Constants.RobotType;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsTester;
@@ -109,8 +110,12 @@ public class Robot extends LoggedRobot {
       case REPLAY:
         setUseTiming(false);
         File logsDir = new File("D:/logs");
+        File[] logFiles = logsDir.listFiles();
+        if (logFiles == null) {
+          throw new RuntimeException("Logs directory D:/logs does not exist or is not accessible");
+        }
         File latestLog =
-            Stream.of(logsDir.listFiles())
+            Stream.of(logFiles)
                 .filter(file -> file.getName().endsWith(".wpilog"))
                 .max((f1, f2) -> Long.compare(f1.lastModified(), f2.lastModified()))
                 .orElseThrow(() -> new RuntimeException("No .wpilog files found in D:/logs"));
@@ -156,17 +161,24 @@ public class Robot extends LoggedRobot {
         // Reset chooser to current type to prevent future attempts
         m_robotContainer.robotTypeChooser.addDefaultOption(
             Constants.getRobot().toString(), Constants.getRobot());
-        // Reset chooser to current type to prevent future attempts
-        m_robotContainer.robotTypeChooser.addDefaultOption(
-            Constants.getRobot().toString(), Constants.getRobot());
       } else {
         // Only switch when disabled
         Constants.setRobot(selectedType);
         // Reinitialize drivetrain if robot type changes
         if (RobotContainer.drivetrain != null) {
           switch (selectedType) {
-            case COMPBOT -> RobotContainer.drivetrain = TunerConstants.createDrivetrain();
-            case DEVBOT -> RobotContainer.drivetrain = TunerConstantsTester.createDrivetrain();
+            case COMPBOT -> {
+              Constants.setMode(Mode.REPLAY);
+              RobotContainer.drivetrain = TunerConstants.createDrivetrain();
+            }
+            case DEVBOT -> {
+              Constants.setMode(Mode.REPLAY);
+              RobotContainer.drivetrain = TunerConstantsTester.createDrivetrain();
+            }
+            case SIMBOT -> {
+              Constants.setMode(Mode.SIM);
+              RobotContainer.drivetrain = TunerConstants.createDrivetrain();
+            }
             default -> throw new IllegalArgumentException("Unexpected value: " + selectedType);
           }
         }
