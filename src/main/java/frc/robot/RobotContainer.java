@@ -27,6 +27,8 @@ import frc.robot.subsystems.Mechanisms.Intake;
 import frc.robot.subsystems.Mechanisms.RotatyPart;
 import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swervedrive.Vision;
+
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
@@ -85,12 +87,15 @@ public class RobotContainer {
     switch (Constants.getRobot()) {
       case COMPBOT -> {
         drivetrain = TunerConstants.createDrivetrain();
+        Logger.recordOutput("Constant File", "Using TunerConstants for Compbot");
       }
       case DEVBOT -> {
         drivetrain = TunerConstantsTester.createDrivetrain();
+        Logger.recordOutput("Constant File", "Using TunerConstantsTester for Devbot");
       }
       case SIMBOT -> {
         drivetrain = TunerConstants.createDrivetrain(); // Use TunerConstants for simulation
+        Logger.recordOutput("Constant File", "Using TunerConstants for simulation");
       }
       default -> throw new IllegalArgumentException("Unexpected value: " + Constants.getRobot());
     }
