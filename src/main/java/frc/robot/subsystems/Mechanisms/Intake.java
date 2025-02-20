@@ -1,21 +1,15 @@
+// Copyright (c) 2025 FRC 1466
+// https://github.com/FRC1466
 package frc.robot.subsystems.Mechanisms;
 
-import static edu.wpi.first.wpilibj2.command.Commands.waitSeconds;
-
-import org.littletonrobotics.junction.Logger;
-
-import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.ColorSensorV3;
-
-import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.wpilibj.I2C;
-import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
+import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
   private final TalonFX intakeMotor;
@@ -24,18 +18,20 @@ public class Intake extends SubsystemBase {
   private double filteredCurrent;
   private final I2C.Port i2cPort = I2C.Port.kOnboard;
   private final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
+
   /** Create a new Gripper subsystem. */
- public Intake() {
+  public Intake() {
     intakeMotor = new TalonFX(15);
-
   }
 
-  public void setVoltage(double outputVoltage){
-   intakeMotor.setVoltage(outputVoltage);
+  public void setVoltage(double outputVoltage) {
+    intakeMotor.setVoltage(outputVoltage);
   }
+
   public Command stop() {
-    return runOnce(() -> setVoltage(0)); 
+    return runOnce(() -> setVoltage(0));
   }
+
   public Command reverseIntake() {
     return runOnce(() -> setVoltage(4));
   }
@@ -44,9 +40,10 @@ public class Intake extends SubsystemBase {
     return runOnce(() -> setVoltage(.75));
   }
 
-  public Command hold(){
+  public Command hold() {
     return runOnce(() -> setVoltage(.2));
   }
+
   public Command intake() {
     return runOnce(() -> setVoltage(-2));
   }
@@ -62,13 +59,13 @@ public class Intake extends SubsystemBase {
   public double getCurrent(TalonFX intakeMotor) {
     return (intakeMotor.getSupplyCurrent()).getValueAsDouble();
   }
+
   public void periodic() {
     filteredCurrent = currentFilter.calculate(getCurrent(intakeMotor));
     SmartDashboard.putNumber("ColorSensed", m_colorSensor.getProximity());
     SmartDashboard.putBoolean("ColorSensed boolean", (m_colorSensor.getProximity() <= 120));
-    Logger.recordOutput("Angle Change", (intakeMotor.getPosition().getValueAsDouble()-prevMotorPose));
+    Logger.recordOutput(
+        "Angle Change", (intakeMotor.getPosition().getValueAsDouble() - prevMotorPose));
     prevMotorPose = intakeMotor.getPosition().getValueAsDouble();
-    
   }
-
-} 
+}

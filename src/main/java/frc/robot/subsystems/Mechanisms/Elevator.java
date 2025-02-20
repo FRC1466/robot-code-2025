@@ -1,189 +1,173 @@
+// Copyright (c) 2025 FRC 1466
+// https://github.com/FRC1466
 package frc.robot.subsystems.Mechanisms;
 
-import org.littletonrobotics.junction.Logger;
-import java.util.function.DoubleSupplier;
-
-import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-
-import edu.wpi.first.hal.HAL.SimPeriodicAfterCallback;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
-import frc.robot.Constants;
-import com.revrobotics.ColorSensorV3;
+import frc.robot.constants.Constants;
+import java.util.function.DoubleSupplier;
+import org.littletonrobotics.junction.Logger;
 
 public class Elevator extends SubsystemBase {
 
-    private final TalonFX masterMotor,  leftSlaveFX;
-    private static Elevator instance;
-    private PIDController elevatorPID;
-    private double localSetpoint = 0;
-    private DoubleSupplier overrideFeedforward = () -> 0;
-    //Will use when we install hall sensor
-    //DigitalInput hallBottom = new DigitalInput(0);
+  private final TalonFX masterMotor, leftSlaveFX;
+  private static Elevator instance;
+  private PIDController elevatorPID;
+  private double localSetpoint = 0;
+  private DoubleSupplier overrideFeedforward = () -> 0;
+  // Will use when we install hall sensor
+  // DigitalInput hallBottom = new DigitalInput(0);
 
+  // figure out what this is
+  private static final double TICKS_PER_INCH = 1;
+  // Also figure this out
+  private static final double HOME_POSITION_INCHES = 0;
+  private static final double MAX_POSITION_TICKS = 64;
+  private double peakOutput;
 
-    //figure out what this is
-    private static final double TICKS_PER_INCH = 1;
-    //Also figure this out
-    private static final double HOME_POSITION_INCHES = 0;
-    private static final double MAX_POSITION_TICKS = 64;
-    private double peakOutput; 
+  public Elevator() {
+    masterMotor = new TalonFX(Constants.ElevatorConstants.masterID);
 
+    leftSlaveFX = new TalonFX(Constants.ElevatorConstants.slaveID);
 
+    peakOutput = Constants.ElevatorConstants.elevatorPosition.peakOutput;
+    elevatorPID =
+        new PIDController(
+            Constants.ElevatorConstants.elevatorPosition.P,
+            Constants.ElevatorConstants.elevatorPosition.I,
+            Constants.ElevatorConstants.elevatorPosition.D);
+    elevatorPID.setTolerance(.1);
+    setGoal(.5);
+    masterMotor.setVoltage(0);
+    leftSlaveFX.setVoltage(0);
+    setNeutralMode(NeutralModeValue.Brake);
+  }
 
-    public Elevator() {
-        masterMotor = new TalonFX(Constants.ElevatorConstants.masterID);
-        
-        leftSlaveFX = new TalonFX(Constants.ElevatorConstants.slaveID);
+  private void setNeutralMode(NeutralModeValue neutralMode) {
+    masterMotor.setNeutralMode(neutralMode);
+    leftSlaveFX.setNeutralMode(neutralMode);
+  }
 
-        peakOutput = Constants.ElevatorConstants.elevatorPosition.peakOutput;
-        elevatorPID = new PIDController(Constants.ElevatorConstants.elevatorPosition.P, Constants.ElevatorConstants.elevatorPosition.I, Constants.ElevatorConstants.elevatorPosition.D);
-        elevatorPID.setTolerance(.1);
-        setGoal(.5);
-        masterMotor.setVoltage(0);
-        leftSlaveFX.setVoltage(0);
-        setNeutralMode(NeutralModeValue.Brake);
-    }
+  public void setSelectedSensorPosition(double position) {
+    masterMotor.setPosition(position);
+    leftSlaveFX.setPosition(position);
+  }
 
+  public void setP(double p) {
+    elevatorPID.setP(p);
+  }
 
-    private void setNeutralMode(NeutralModeValue neutralMode){
-        masterMotor.setNeutralMode(neutralMode);
-        leftSlaveFX.setNeutralMode(neutralMode);
-    }
+  public void setPeakOutput(double peak) {
+    peakOutput = peak;
+  }
 
-    public void setSelectedSensorPosition(double position){
-        masterMotor.setPosition(position);
-        leftSlaveFX.setPosition(position);
-    }
+  public double getElevatorHeight() {
+    double height = masterMotor.getPosition().getValueAsDouble();
+    return height;
+  }
 
-    public void setP(double p) {
-        elevatorPID.setP(p);
-    }
+  public void goToGoal(double goal) {
+    localSetpoint = goal;
+    elevatorPID.setSetpoint(goal);
+    SmartDashboard.putNumber("Elevator PID Setpoint", goal);
+  }
 
+  public void setMotor(double percent) {
+    masterMotor.set(percent);
+    leftSlaveFX.set(-percent);
+  }
 
-    public void setPeakOutput(double peak) {
-        peakOutput = peak;
-    }
+  public Command setGoal(double goal) {
+    return runOnce(() -> goToGoal(goal));
+  }
 
-    public double getElevatorHeight(){
-        double height = masterMotor.getPosition().getValueAsDouble();
-        return height;
-    }
+  // lower this and lower PID
+  public Command toBottom() {
+    return runOnce(() -> goToGoal(.5));
+  }
 
-    public void goToGoal(double goal){
-        localSetpoint = goal;
-        elevatorPID.setSetpoint(goal);
-        SmartDashboard.putNumber("Elevator PID Setpoint", goal);
-    }
+  public Command toL1() {
+    return runOnce(() -> goToGoal(10));
+  }
 
-    public void setMotor(double percent){
-        masterMotor.set(percent);
-        leftSlaveFX.set(-percent);
-    }
-    public Command setGoal(double goal){
-        return runOnce(() -> goToGoal(goal));
-    }
-    //lower this and lower PID
-    public Command toBottom(){
-        return runOnce(() -> goToGoal(.5));
-    }
+  public Command toL2() {
+    return runOnce(() -> goToGoal(15));
+  }
 
-    public Command toL1(){
-        return runOnce(() -> goToGoal(10));
-    }
+  public Command toL2Algae() {
+    return runOnce(() -> goToGoal(25));
+  }
 
-    public Command toL2(){
-        return runOnce(() -> goToGoal(15));
-    }
+  public Command toL3() {
+    return runOnce(() -> goToGoal(32));
+  }
 
-    public Command toL2Algae(){
-        return runOnce(() -> goToGoal(25));
-    }
+  public Command toL4() {
+    return runOnce(() -> goToGoal(60));
+  }
 
+  public Command toStation() {
+    return runOnce(() -> goToGoal(10));
+  }
 
-    public Command toL3(){
-        return runOnce(() -> goToGoal(32));
-    }
+  public Command removeAlgaeLow() {
+    return runOnce(() -> goToGoal(10));
+  }
 
-    public Command toL4(){
-        return runOnce(() -> goToGoal(60));
-    }
+  public Command removeAlgaeHigh() {
+    return runOnce(() -> goToGoal(10));
+  }
 
-    public Command toStation(){
-        return runOnce(() -> goToGoal(10));
-    }
+  public void setArmHold() {
+    var motorOutput =
+        MathUtil.clamp(
+            elevatorPID.calculate(getElevatorHeight(), localSetpoint), -peakOutput, peakOutput);
+    var feedforward = getElevatorHeight() * Constants.ElevatorConstants.elevatorPosition.F;
+    setMotor(motorOutput + feedforward + overrideFeedforward.getAsDouble());
+    SmartDashboard.putNumber("Elevator PID Output", motorOutput);
+    SmartDashboard.putNumber("Arm Feedforward", feedforward);
+    SmartDashboard.putNumber("Elevator Feedforward Override", overrideFeedforward.getAsDouble());
+  }
 
-    public Command removeAlgaeLow(){
-        return runOnce(() -> goToGoal(10));
-    }
+  public void setFeedforward(DoubleSupplier feedforward) {
+    overrideFeedforward = feedforward;
+  }
 
-    public Command removeAlgaeHigh(){
-        return runOnce(() -> goToGoal(10));
-    }
-    public void setArmHold() {
-        var motorOutput =
-            MathUtil.clamp(
-                elevatorPID.calculate(getElevatorHeight(), localSetpoint), 
-                -peakOutput,
-                peakOutput);
-            var feedforward = getElevatorHeight() * Constants.ElevatorConstants.elevatorPosition.F;
-            setMotor(motorOutput + feedforward + overrideFeedforward.getAsDouble());
-        SmartDashboard.putNumber("Elevator PID Output", motorOutput);
-        SmartDashboard.putNumber("Arm Feedforward", feedforward);
-        SmartDashboard.putNumber("Elevator Feedforward Override", overrideFeedforward.getAsDouble());
+  public void setMotorVoltage(double volts) {
+    masterMotor.setVoltage(volts);
+    leftSlaveFX.setVoltage(-volts);
+  }
 
-    }
-    
+  public Command setElevatorVoltage(double volts) {
+    return runOnce(() -> setMotorVoltage(volts));
+  }
 
-    public void setFeedforward(DoubleSupplier feedforward){
-        overrideFeedforward = feedforward;
-    }
+  public void reset() {
+    elevatorPID.reset();
+  }
 
-    public void setMotorVoltage(double volts){
-        masterMotor.setVoltage(volts);
-        leftSlaveFX.setVoltage(-volts);
-    }
+  @Override
+  public void periodic() {
+    setArmHold();
+    /*  if(!hallBottom.get()){
+        setSelectedSensorPosition(0);
+    }*/
 
-    public Command setElevatorVoltage(double volts){
-        return runOnce(() -> setMotorVoltage(volts));
-    }
+    SmartDashboard.putNumber("Elevator Position", getElevatorHeight());
+    SmartDashboard.putNumber("Get Elevator P", elevatorPID.getP());
+    SmartDashboard.putNumber("Get Elevator PeakOutput", peakOutput);
+    SmartDashboard.putNumber("Elevator Desired Position", elevatorPID.getSetpoint());
+    SmartDashboard.putNumber("Elevator Error", elevatorPID.getPositionError());
 
-    public void reset(){
-        elevatorPID.reset();
-    }
+    // if(!hallBottom.get()){
+    //   setSelectedSensorPosition(0);
+    // }
 
-    @Override
-    public void periodic(){
-        setArmHold();
-       /*  if(!hallBottom.get()){
-            setSelectedSensorPosition(0);
-        }*/
-        
-        SmartDashboard.putNumber("Elevator Position", getElevatorHeight());
-        SmartDashboard.putNumber("Get Elevator P", elevatorPID.getP());
-        SmartDashboard.putNumber("Get Elevator PeakOutput", peakOutput);
-        SmartDashboard.putNumber("Elevator Desired Position", elevatorPID.getSetpoint());
-        SmartDashboard.putNumber("Elevator Error", elevatorPID.getPositionError());
-
-
-         //if(!hallBottom.get()){
-         //   setSelectedSensorPosition(0);
-        //}
-
-        Logger.recordOutput("Elevator Position", getElevatorHeight());
-
-    }
-
-
-    
+    Logger.recordOutput("Elevator Position", getElevatorHeight());
+  }
 }
