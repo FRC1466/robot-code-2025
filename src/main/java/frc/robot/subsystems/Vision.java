@@ -1,7 +1,7 @@
 // Copyright (c) 2025 FRC Team 1466
 // https://github.com/FRC1466
  
-package frc.robot.subsystems.swervedrive;
+package frc.robot.subsystems;
 
 import static frc.robot.constants.Constants.Vision.*;
 

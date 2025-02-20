@@ -25,9 +25,8 @@ import frc.robot.generated.TunerConstantsTester;
 import frc.robot.subsystems.Mechanisms.Elevator;
 import frc.robot.subsystems.Mechanisms.Intake;
 import frc.robot.subsystems.Mechanisms.RotatyPart;
+import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
-import frc.robot.subsystems.swervedrive.Vision;
-
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 

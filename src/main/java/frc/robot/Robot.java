@@ -26,7 +26,7 @@ import frc.robot.constants.Constants.Mode;
 import frc.robot.constants.Constants.RobotType;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsTester;
-import frc.robot.subsystems.swervedrive.Vision;
+import frc.robot.subsystems.Vision;
 import java.io.File;
 import java.util.stream.Stream;
 import org.littletonrobotics.junction.AutoLogOutput;
