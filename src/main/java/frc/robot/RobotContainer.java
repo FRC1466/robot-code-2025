@@ -89,6 +89,9 @@ public class RobotContainer {
       case DEVBOT -> {
         drivetrain = TunerConstantsTester.createDrivetrain();
       }
+      case SIMBOT -> {
+        drivetrain = TunerConstants.createDrivetrain(); // Use TunerConstants for simulation
+      }
       default -> throw new IllegalArgumentException("Unexpected value: " + Constants.getRobot());
     }
 
