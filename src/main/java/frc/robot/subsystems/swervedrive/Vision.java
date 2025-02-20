@@ -25,6 +25,7 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
+import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 public class Vision {
@@ -67,16 +68,18 @@ public class Vision {
   }
 
   public void logSeenAprilTags() {
-    var result = camera.getLatestResult();
-    if (result.hasTargets()) {
-      List<Pose3d> seenTagPoses = new ArrayList<>();
-      for (PhotonTrackedTarget target : result.getTargets()) {
-        var tagPose = kTagLayout.getTagPose(target.getFiducialId());
-        tagPose.ifPresent(seenTagPoses::add);
+    List<PhotonPipelineResult> results = camera.getAllUnreadResults();
+    List<Pose3d> seenTagPoses = new ArrayList<>();
+    for (PhotonPipelineResult result : results) {
+      if (result.hasTargets()) {
+          for (PhotonTrackedTarget target : result.getTargets()) {
+              var tagPose = kTagLayout.getTagPose(target.getFiducialId());
+              tagPose.ifPresent(seenTagPoses::add);
+          }
       }
+  }
       // Log the array of Pose3d objects
       Logger.recordOutput("SeenAprilTags", seenTagPoses.toArray(new Pose3d[0]));
-    }
   }
 
   /**
@@ -90,7 +93,7 @@ public class Vision {
    *     used for estimation.
    */
   public Optional<EstimatedRobotPose> getEstimatedGlobalPose() {
-    camera.getLatestResult();
+    camera.getAllUnreadResults();
     Optional<EstimatedRobotPose> visionEst = Optional.empty();
     for (var change : camera.getAllUnreadResults()) {
       visionEst = photonEstimator.update(change);

@@ -173,7 +173,7 @@ public class Elevator extends SubsystemBase {
     SmartDashboard.putNumber("Get Elevator P", elevatorPID.getP());
     SmartDashboard.putNumber("Get Elevator PeakOutput", peakOutput);
     SmartDashboard.putNumber("Elevator Desired Position", elevatorPID.getSetpoint());
-    SmartDashboard.putNumber("Elevator Error", elevatorPID.getPositionError());
+    SmartDashboard.putNumber("Elevator Error", elevatorPID.getError());
 
     // if(!hallBottom.get()){
     //   setSelectedSensorPosition(0);
