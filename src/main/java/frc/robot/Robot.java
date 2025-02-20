@@ -26,6 +26,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 public class Robot extends LoggedRobot {
 
+  // AutoLog output for the estimated robot state pose.
   @AutoLogOutput(key = "RobotState/EstimatedPose")
   private Pose2d RobotPose;
 
@@ -34,13 +35,16 @@ public class Robot extends LoggedRobot {
   private final RobotContainer m_robotContainer;
 
   private Timer timer = new Timer();
+
+  @SuppressWarnings("unused")
   private boolean limitSwitchCounter = false;
 
+  @SuppressWarnings("unused")
   private final StructPublisher<Pose2d> posePublisher =
       NetworkTableInstance.getDefault().getStructTopic("Test", Pose2d.struct).publish();
 
+  @SuppressWarnings("resource")
   public Robot() {
-
     m_robotContainer = new RobotContainer();
     AutoLogOutputManager.addObject(this); // Add this object for logging
 
@@ -50,7 +54,6 @@ public class Robot extends LoggedRobot {
       Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
       Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
       new PowerDistribution(1, ModuleType.kRev); // Enables power distribution logging
-
     } else {
       setUseTiming(false); // Run as fast as possible
       String logPath =
@@ -68,28 +71,30 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotInit() {
-    m_robotContainer.elevator.setSelectedSensorPosition(0);
+    RobotContainer.elevator.setSelectedSensorPosition(0);
     vision = new Vision();
   }
 
   @Override
   public void robotPeriodic() {
-
     vision.logSeenAprilTags();
     // Color detectedColor = m_colorSensor.getColor();
 
-    /*  if(m_robotContainer.limitSwitch.get() != limitSwitchCounter){
-      if(limitSwitchCounter == false && m_robotContainer.elevator.getElevatorHeight() < 3){
-        m_robotContainer.elevator.setSelectedSensorPosition(2.15);
-      }
-      limitSwitchCounter = m_robotContainer.limitSwitch.get();
-    }*/
+    /*
+     if (m_robotContainer.limitSwitch.get() != limitSwitchCounter) {
+       if (limitSwitchCounter == false && m_robotContainer.elevator.getElevatorHeight() < 3) {
+         m_robotContainer.elevator.setSelectedSensorPosition(2.15);
+       }
+       limitSwitchCounter = m_robotContainer.limitSwitch.get();
+     }
+    */
 
     var visionEst = RobotContainer.photonCamera.getEstimatedGlobalPose();
-    //  SmartDashboard.putBoolean("booleanSwitch",m_robotContainer.limitSwitch.get());
+    // SmartDashboard.putBoolean("booleanSwitch", m_robotContainer.limitSwitch.get());
 
     CommandScheduler.getInstance().run();
     RobotPose = RobotContainer.drivetrain.getState().Pose;
+
     visionEst.ifPresent(
         est -> {
           var estStdDevs = RobotContainer.photonCamera.getEstimationStdDevs();
@@ -98,11 +103,10 @@ public class Robot extends LoggedRobot {
               "Vision Pose X", visionEst.get().estimatedPose.toPose2d().getX());
           SmartDashboard.putNumber(
               "Vision Pose Y", visionEst.get().estimatedPose.toPose2d().getY());
-          // RobotContainer.drivetrain.addVisionMeasurement(est.estimatedPose.toPose2d(),
-          // est.timestampSeconds);    With Vision: With Vision:
-          // addVisionMeasurement(est.estimatedPose.toPose2d(), Without Vision:
-          // RobotPose.getRotation()), Without Vision: addVisionMeasurement(new
-          // Pose2d(est.estimatedPose.toPose2d().getTranslation(), RobotPose.getRotation()),
+          // With Vision: addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds,
+          // stdDevs)
+          // Without Vision: addVisionMeasurement(new
+          // Pose2d(est.estimatedPose.toPose2d().getTranslation(), RobotPose.getRotation())
           RobotContainer.drivetrain.addVisionMeasurement(
               est.estimatedPose.toPose2d(),
               Utils.fpgaToCurrentTime(est.timestampSeconds),
@@ -124,9 +128,9 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void disabledInit() {
-    m_robotContainer.elevator.goToGoal(.5);
+    RobotContainer.elevator.goToGoal(.5);
     // fix later
-    //  m_robotContainer.rotatyPart.setGoal(Rotation2d.fromRadians(.05));
+    // m_robotContainer.rotatyPart.setGoal(Rotation2d.fromRadians(.05));
   }
 
   @Override
@@ -141,7 +145,6 @@ public class Robot extends LoggedRobot {
   @Override
   public void autonomousInit() {
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
@@ -163,20 +166,19 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void teleopPeriodic() {
-    /*SmartDashboard.putData
-    ("Robot Pose", Telemetry.telemeterize.getPose());*/
-    if (m_robotContainer.sliderEnabled) {
-      m_robotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
+    if (RobotContainer.sliderEnabled) {
+      RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
     }
     Logger.recordOutput(
         "Elevator Slider Position", (((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 75));
-    if (m_robotContainer.elevator.getElevatorHeight() < 7
-        || m_robotContainer.elevator.getElevatorHeight() < 52) {
-      m_robotContainer.elevator.setP(.05);
-      m_robotContainer.elevator.setPeakOutput(.25);
+
+    if (RobotContainer.elevator.getElevatorHeight() < 7
+        || RobotContainer.elevator.getElevatorHeight() < 52) {
+      RobotContainer.elevator.setP(.05);
+      RobotContainer.elevator.setPeakOutput(.25);
     } else {
-      m_robotContainer.elevator.setP(Constants.ElevatorConstants.elevatorPosition.P);
-      m_robotContainer.elevator.setPeakOutput(
+      RobotContainer.elevator.setP(Constants.ElevatorConstants.elevatorPosition.P);
+      RobotContainer.elevator.setPeakOutput(
           Constants.ElevatorConstants.elevatorPosition.peakOutput);
     }
   }

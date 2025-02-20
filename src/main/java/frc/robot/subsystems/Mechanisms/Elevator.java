@@ -16,18 +16,28 @@ import org.littletonrobotics.junction.Logger;
 public class Elevator extends SubsystemBase {
 
   private final TalonFX masterMotor, leftSlaveFX;
+
+  @SuppressWarnings("unused")
   private static Elevator instance;
+
   private PIDController elevatorPID;
   private double localSetpoint = 0;
   private DoubleSupplier overrideFeedforward = () -> 0;
+
   // Will use when we install hall sensor
   // DigitalInput hallBottom = new DigitalInput(0);
 
   // figure out what this is
+  @SuppressWarnings("unused")
   private static final double TICKS_PER_INCH = 1;
+
   // Also figure this out
+  @SuppressWarnings("unused")
   private static final double HOME_POSITION_INCHES = 0;
+
+  @SuppressWarnings("unused")
   private static final double MAX_POSITION_TICKS = 64;
+
   private double peakOutput;
 
   public Elevator() {

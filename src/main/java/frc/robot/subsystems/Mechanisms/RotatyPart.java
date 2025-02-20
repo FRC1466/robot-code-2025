@@ -24,8 +24,13 @@ public class RotatyPart extends SubsystemBase {
   private double peakOutput;
   private ArmPIDController armPID;
   private double armPID_P;
+
+  @SuppressWarnings("unused")
   private double armPID_output;
+
+  @SuppressWarnings("unused")
   private double absoluteDistanceFromSpeaker;
+
   private Rotation2d localSetpoint;
   private DoubleSupplier overrideFeedforward = () -> 0.0;
   private boolean disabled = false;
