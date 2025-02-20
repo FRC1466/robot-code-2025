@@ -129,6 +129,9 @@ public class RobotContainer {
     autoChooser.addOption("3 Piece", new PathPlannerAuto("3 Piece Auto Better"));
     autoChooser.addOption("Recenter bot", new PathPlannerAuto("Recenter"));
     autoChooser.addOption("Taxi", new PathPlannerAuto("Taxi"));
+
+    // Publish the chooser to the dashboard
+    SmartDashboard.putData("Auto Selector", autoChooser.getSendableChooser());
   }
 
   // Configure joystick bindings
