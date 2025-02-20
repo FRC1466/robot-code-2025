@@ -72,14 +72,14 @@ public class Vision {
     List<Pose3d> seenTagPoses = new ArrayList<>();
     for (PhotonPipelineResult result : results) {
       if (result.hasTargets()) {
-          for (PhotonTrackedTarget target : result.getTargets()) {
-              var tagPose = kTagLayout.getTagPose(target.getFiducialId());
-              tagPose.ifPresent(seenTagPoses::add);
-          }
+        for (PhotonTrackedTarget target : result.getTargets()) {
+          var tagPose = kTagLayout.getTagPose(target.getFiducialId());
+          tagPose.ifPresent(seenTagPoses::add);
+        }
       }
-  }
-      // Log the array of Pose3d objects
-      Logger.recordOutput("SeenAprilTags", seenTagPoses.toArray(new Pose3d[0]));
+    }
+    // Log the array of Pose3d objects
+    Logger.recordOutput("SeenAprilTags", seenTagPoses.toArray(new Pose3d[0]));
   }
 
   /**
