@@ -213,9 +213,7 @@ public class RobotContainer {
   // Update alerts
   public void updateAlerts() {
     // Controller disconnected alerts
-    driverDisconnected.set(
-        !DriverStation.isJoystickConnected(joystick.getHID().getPort())
-            || !DriverStation.getJoystickIsXbox(joystick.getHID().getPort()));
+    driverDisconnected.set(!DriverStation.isJoystickConnected(joystick.getHID().getPort()));
   }
 
   // Update dashboard data
