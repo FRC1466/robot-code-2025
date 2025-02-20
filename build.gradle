@@ -145,7 +145,7 @@ spotless {
         removeUnusedImports()
         trimTrailingWhitespace()
         endWithNewline()
-        licenseHeader("// Copyright (c) 2025 FRC 1466\n// https://github.com/FRC1466")
+        licenseHeader("// Copyright (c) 2025 FRC Team 1466\n// https://github.com/FRC1466\n ")
     }
     groovyGradle {
         target fileTree(".") {

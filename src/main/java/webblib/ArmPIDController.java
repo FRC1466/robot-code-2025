@@ -1,5 +1,6 @@
-// Copyright (c) 2025 FRC 1466
+// Copyright (c) 2025 FRC Team 1466
 // https://github.com/FRC1466
+ 
 package webblib;
 
 import edu.wpi.first.math.MathUtil;

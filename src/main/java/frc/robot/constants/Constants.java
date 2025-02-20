@@ -1,5 +1,6 @@
-// Copyright (c) 2025 FRC 1466
+// Copyright (c) 2025 FRC Team 1466
 // https://github.com/FRC1466
+ 
 package frc.robot.constants;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -59,6 +60,16 @@ public final class Constants {
 
   public static void disableHAL() {
     disableHAL = true;
+  }
+
+  /** Checks whether the correct robot is selected when deploying. */
+  public static class CheckDeploy {
+    public static void main(String... args) {
+      if (robotType == RobotType.SIMBOT) {
+        System.err.println("Cannot deploy, invalid robot selected: " + robotType);
+        System.exit(1);
+      }
+    }
   }
 
   public static final class PoseEstimator {
