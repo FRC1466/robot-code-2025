@@ -14,7 +14,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -28,6 +27,7 @@ import frc.robot.subsystems.Mechanisms.Intake;
 import frc.robot.subsystems.Mechanisms.RotatyPart;
 import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swervedrive.Vision;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
   // Warnings
@@ -56,7 +56,8 @@ public class RobotContainer {
   private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
   // Autonomous chooser
-  private final SendableChooser<Command> autoChooser = new SendableChooser<>();
+  private final LoggedDashboardChooser<Command> autoChooser =
+      new LoggedDashboardChooser<>("Auto Routine");
 
   // Subsystems
   private final Intake intake = new Intake();
@@ -106,8 +107,6 @@ public class RobotContainer {
     autoChooser.addOption("3 Piece", new PathPlannerAuto("3 Piece Auto Better"));
     autoChooser.addOption("Recenter bot", new PathPlannerAuto("Recenter"));
     autoChooser.addOption("Taxi", new PathPlannerAuto("Taxi"));
-
-    SmartDashboard.putData("CHOOSE", autoChooser);
   }
 
   // Configure joystick bindings
@@ -194,7 +193,7 @@ public class RobotContainer {
 
   // Get autonomous command
   public Command getAutonomousCommand() {
-    return autoChooser.getSelected();
+    return autoChooser.get();
   }
 
   // Reset PID controllers
