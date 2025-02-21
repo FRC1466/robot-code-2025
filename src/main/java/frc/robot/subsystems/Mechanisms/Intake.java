@@ -22,6 +22,7 @@ public class Intake extends SubsystemBase {
   private double prevMotorPose = 0;
   private final LinearFilter currentFilter = LinearFilter.movingAverage(10);
   private double filteredCurrent;
+  private boolean highCurrentBool;
   private final I2C.Port i2cPort = I2C.Port.kOnboard;
   private final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
   /** Create a new Gripper subsystem. */
@@ -62,12 +63,22 @@ public class Intake extends SubsystemBase {
   public double getCurrent(TalonFX intakeMotor) {
     return (intakeMotor.getSupplyCurrent()).getValueAsDouble();
   }
+
+  public boolean getHighCurrent(){
+    if(intakeMotor.getTorqueCurrent().getValueAsDouble() > 10){
+      highCurrentBool = true;
+    }
+    else if(intakeMotor.getTorqueCurrent().getValueAsDouble() < 3){
+      highCurrentBool = false;
+    }
+    return highCurrentBool;
+
+  }
   public void periodic() {
     filteredCurrent = currentFilter.calculate(getCurrent(intakeMotor));
     SmartDashboard.putNumber("ColorSensed", m_colorSensor.getProximity());
     SmartDashboard.putBoolean("ColorSensed boolean", (m_colorSensor.getProximity() <= 120));
-    Logger.recordOutput("Angle Change", (intakeMotor.getPosition().getValueAsDouble()-prevMotorPose));
-    prevMotorPose = intakeMotor.getPosition().getValueAsDouble();
+    Logger.recordOutput("motor current", intakeMotor.getTorqueCurrent().getValueAsDouble());
     
   }
 

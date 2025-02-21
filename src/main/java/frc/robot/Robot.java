@@ -58,7 +58,7 @@ public class Robot extends LoggedRobot {
   
     private Timer timer = new Timer();
     private boolean limitSwitchCounter = false;
-  
+    private boolean checkState = false; 
       private final StructPublisher<Pose2d> posePublisher =
           NetworkTableInstance.getDefault()
                   .getStructTopic("Test", Pose2d.struct)
@@ -184,12 +184,26 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void teleopPeriodic() {
-      /*SmartDashboard.putData
+    double radians = m_robotContainer.rotatyPart.getPosition().getRadians();
+    if(((radians > 0 && radians < .3)  || (radians > -2 && radians < -1)) && checkState){
+      m_robotContainer.rotatyPart.reset();
+      m_robotContainer.rotatyPart.setMotor(0);
+      checkState = false;
+    }
+    else if((radians > 0 && radians < .3)  || (radians > -2 && radians < -1)){
+      
+    }  
+    else{
+      checkState = true;
+    }
+    Logger.recordOutput("Check State",checkState);
+    Logger.recordOutput("Coral State",m_robotContainer.coralMode);
+    /*SmartDashboard.putData
     ("Robot Pose", Telemetry.telemeterize.getPose());*/
     if(m_robotContainer.sliderEnabled){
       m_robotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3)+1)/2)*65);
     }
-    Logger.recordOutput("Elevator Slider Position",(((m_robotContainer.joystick.getRawAxis(3)+1)/2)*75 ));
+    Logger.recordOutput("Elevator Slider Position",(((m_robotContainer.joystick.getRawAxis(3)+1)/2)*65 ));
     if(m_robotContainer.elevator.getElevatorHeight()<7 || m_robotContainer.elevator.getElevatorHeight()<52 ){
       m_robotContainer.elevator.setP(.05);
       m_robotContainer.elevator.setPeakOutput(.25);

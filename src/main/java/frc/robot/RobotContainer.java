@@ -5,8 +5,10 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.wpilibj2.command.Commands.none;
 import static edu.wpi.first.wpilibj2.command.Commands.run;
 import static edu.wpi.first.wpilibj2.command.Commands.runEnd;
+import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -24,6 +26,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -50,7 +53,7 @@ public class RobotContainer {
 
     private final SendableChooser<Command> autoChooser = new SendableChooser<>();
     private final Intake intake = new Intake();
-
+    public static boolean coralMode = true;
     public final RotatyPart rotatyPart = new RotatyPart();
     final Telemetry logger = new Telemetry(MaxSpeed);
 
@@ -125,11 +128,11 @@ public class RobotContainer {
         // Note that each routine should be run exactly once in a single log.
         Trigger intakeProximityTrigger = new Trigger(() -> intake.getIntakeDistanceBool());
         Trigger algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight()>20);
-        Trigger falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
+        Trigger currentIntakeSwitch = new Trigger(() -> intake.getHighCurrent());
         // reset the field-centric heading on left bumper press
         joystick.povDown().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
-                 
-        //Intake Coral
+        if(coralMode){
+                  //Intake Coral
         //joystick.button(1).and(intakeProximityTrigger).whileTrue(elevator.toBottom().alongWith(rotatyPart.store()).alongWith(intake.intake())).onFalse(intake.stop().alongWith(rotatyPart.coralScore()));
         joystick.button(1).and(intakeProximityTrigger).whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom())).onFalse(Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));
         //L2
@@ -150,19 +153,31 @@ public class RobotContainer {
         joystick.button(9).onTrue(elevator.toL2()).onFalse(elevator.toBottom());
         joystick.button(10).onTrue(intake.reverseIntake()).onFalse(intake.algaeHold());
         joystick.button(11).onTrue(elevator.toL4()).onFalse(elevator.toBottom());
-        joystick.button(12).onTrue(switchState(true)).onFalse(switchState(false));
 
-        
+        joystick.button(15).onTrue(changeMode());
+        }
+        else{
+          joystick.button(6).onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()));
+          joystick.button(6).and(algaeHeightReady).onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
+          joystick.button(6).and(currentIntakeSwitch).onFalse(elevator.toL2().alongWith(intake.algaeHold()));
+          joystick.button(15).onTrue(changeMode());
+  
+        }
+
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
-    public Command switchState(boolean bool){
-        return run(() -> changeState(bool));
+    
+    public Command changeMode(){
+      return Commands.runOnce(() -> changeModeMethod());
+    }
+   
+
+    public void changeModeMethod(){
+      coralMode = !coralMode;
     }
 
-    public void changeState(boolean bool){
-        sliderEnabled = bool;
-    }
+    
     public Command getAutonomousCommand() {
         return autoChooser.getSelected();
     }
