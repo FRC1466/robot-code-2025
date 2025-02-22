@@ -214,14 +214,20 @@ public class Robot extends LoggedRobot {
               "Vision Pose X", visionEst.get().estimatedPose.toPose2d().getX());
           SmartDashboard.putNumber(
               "Vision Pose Y", visionEst.get().estimatedPose.toPose2d().getY());
-          // With Vision: addVisionMeasurement(est.estimatedPose.toPose2d(), est.timestampSeconds,
-          // stdDevs)
-          // Without Vision: addVisionMeasurement(new
-          // Pose2d(est.estimatedPose.toPose2d().getTranslation(), RobotPose.getRotation())
-          RobotContainer.drivetrain.addVisionMeasurement(
-              est.estimatedPose.toPose2d(),
-              Utils.fpgaToCurrentTime(est.timestampSeconds),
-              estStdDevs);
+
+          if (RobotContainer.visionEnabled) {
+            // With vision - use full pose estimate
+            RobotContainer.drivetrain.addVisionMeasurement(
+                est.estimatedPose.toPose2d(),
+                Utils.fpgaToCurrentTime(est.timestampSeconds),
+                estStdDevs);
+          } else {
+            // Without vision - maintain current rotation
+            RobotContainer.drivetrain.addVisionMeasurement(
+                new Pose2d(est.estimatedPose.toPose2d().getTranslation(), RobotPose.getRotation()),
+                Utils.fpgaToCurrentTime(est.timestampSeconds),
+                estStdDevs);
+          }
         });
     // SmartDashboard.pu Boolean("Camera?", photonCamera.getCamera().isConnected());
     SmartDashboard.putBoolean("Vision Est", visionEst.isPresent());
@@ -307,6 +313,9 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void teleopPeriodic() {
+    SmartDashboard.putBoolean(
+        "Drive Command Running", RobotContainer.drivetrain.getDefaultCommand().isScheduled());
+
     if (RobotContainer.sliderEnabled) {
       RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
     }

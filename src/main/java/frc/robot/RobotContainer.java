@@ -27,6 +27,7 @@ import frc.robot.subsystems.Mechanisms.Intake;
 import frc.robot.subsystems.Mechanisms.RotatyPart;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -50,8 +51,6 @@ public class RobotContainer {
           .withDriveRequestType(
               DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
-  private final Command testPathCommand = TestPath.getPathCommand(drivetrain);
-
   @SuppressWarnings("unused")
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
@@ -72,13 +71,15 @@ public class RobotContainer {
   public static final Vision photonCamera = new Vision();
   public static final Elevator elevator = new Elevator();
 
+  @AutoLogOutput public static boolean visionEnabled = true;
+
   // Joystick and telemetry
   public final CommandJoystick joystick = new CommandJoystick(0);
   final Telemetry logger = new Telemetry(MaxSpeed);
 
   // Drivetrain
   public static CommandSwerveDrivetrain drivetrain;
-
+  private final Command testPathCommand;
   // State
   public static boolean sliderEnabled = false;
 
@@ -100,6 +101,7 @@ public class RobotContainer {
       }
       default -> throw new IllegalArgumentException("Unexpected value: " + Constants.getRobot());
     }
+    testPathCommand = TestPath.getPathCommand(drivetrain);
 
     configureBindings();
     initializeChooser();
@@ -167,7 +169,27 @@ public class RobotContainer {
     Trigger algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 20);
     Trigger falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
     // Reset the field-centric heading on left bumper press
-    joystick.povDown().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+    joystick
+        .povDown()
+        .onTrue(
+            drivetrain.runOnce(
+                () -> {
+                  visionEnabled = true;
+                  drivetrain.seedFieldCentric();
+                  // Add debug output
+                  SmartDashboard.putBoolean("Reset Complete", true);
+                }));
+
+    joystick
+        .povUp()
+        .onTrue(
+            drivetrain.runOnce(
+                () -> {
+                  visionEnabled = false;
+                  drivetrain.seedFieldCentric();
+                  // Add debug output
+                  SmartDashboard.putBoolean("Reset Complete", true);
+                }));
 
     joystick.button(1).onTrue(testPathCommand);
 
