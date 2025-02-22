@@ -12,6 +12,8 @@ import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Threads;
@@ -33,7 +35,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.rlog.RLOGServer;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
@@ -72,6 +74,7 @@ public class Robot extends LoggedRobot {
       new Alert(
           "Cannot switch robot type while enabled. Disable the robot first.", AlertType.kWarning);
 
+  @SuppressWarnings("resource")
   public Robot() {
     m_robotContainer = new RobotContainer();
     AutoLogOutputManager.addObject(this); // Add this object for logging
@@ -97,14 +100,13 @@ public class Robot extends LoggedRobot {
 
     switch (Constants.getMode()) {
       case REAL:
-        // Running on a real robot, log to a USB stick ("/U/logs")
-        Logger.addDataReceiver(new WPILOGWriter());
-        Logger.addDataReceiver(new RLOGServer());
-        break;
+        Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
+        Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
+        new PowerDistribution(1, ModuleType.kRev); // Enables power distribution logging
 
       case SIM:
         // Running a physics simulator, log to NT
-        Logger.addDataReceiver(new RLOGServer());
+        // Logger.addDataReceiver(new RLOGServer());
         break;
 
       case REPLAY:
@@ -135,14 +137,14 @@ public class Robot extends LoggedRobot {
     // Set up auto logging for RobotState
     AutoLogOutputManager.addObject(RobotState.class);
 
-    // Start AdvantageKit Logger
-    Logger.start();
-
     DriverStation.silenceJoystickConnectionWarning(true);
     disabledTimer.restart();
 
     // Switch thread to high priority to improve loop timing
     Threads.setCurrentThreadPriority(true, 5);
+
+    // Start AdvantageKit Logger
+    Logger.start();
   }
 
   @Override

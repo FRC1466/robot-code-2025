@@ -104,9 +104,9 @@ public class RobotContainer {
   }
 
   private void configureRobotTypeChooser() {
-    robotTypeChooser.addOption("Competition Robot", Constants.RobotType.COMPBOT);
-    robotTypeChooser.addOption("Development Robot", Constants.RobotType.DEVBOT);
-    robotTypeChooser.addOption("Simulated Robot", Constants.RobotType.SIMBOT);
+    robotTypeChooser.addOption("COMPBOT", Constants.RobotType.COMPBOT);
+    robotTypeChooser.addOption("DEVBOT", Constants.RobotType.DEVBOT);
+    robotTypeChooser.addOption("SIMBOT", Constants.RobotType.SIMBOT);
 
     // Set default to current robot type
     robotTypeChooser.addDefaultOption(Constants.getRobot().toString(), Constants.getRobot());

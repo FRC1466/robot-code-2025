@@ -14,13 +14,47 @@ class VirtualThrustmaster:
     def __init__(self, root):
         # Initialize vJoy device (using device ID 1)
         self.joystick = pyvjoy.VJoyDevice(1)
+        self.ui_scale = 1.0  # Add UI scale factor
         self.clear_states()
 
-        # Build UI sections
+        # Remove scale slider and keep other UI sections
         self.create_x_slider(root)
         self.create_y_slider(root)
         self.create_buttons_frame(root)
         self.create_hat_switch_frame(root)
+
+        # Add keyboard bindings for scaling
+        root.bind('<Control-plus>', self.increase_scale)
+        root.bind('<Control-minus>', self.decrease_scale)
+        root.bind('<Control-equal>', self.increase_scale)  # For keyboards where + is on =
+
+    def increase_scale(self, event):
+        self.ui_scale = min(2.0, self.ui_scale + 0.1)
+        self.apply_scale()
+
+    def decrease_scale(self, event):
+        self.ui_scale = max(0.5, self.ui_scale - 0.1)
+        self.apply_scale()
+
+    def apply_scale(self):
+        # Scale all the UI elements
+        scaled_length = int(300 * self.ui_scale)
+        self.x_slider.config(length=scaled_length)
+        self.y_slider.config(length=scaled_length)
+        
+        # Scale button sizes
+        button_width = int(10 * self.ui_scale)
+        for btn in self.button_widgets.values():
+            btn.config(width=button_width)
+        
+        for btn in self.hat_buttons.values():
+            btn.config(width=button_width)
+        
+        # Scale hat visualization
+        new_size = int(150 * self.ui_scale)
+        self.hat_canvas.config(width=new_size, height=new_size)
+        self.hat_canvas_size = new_size
+        self.update_hat_visualization(self.current_hat)
 
     def clear_states(self):
         # Center main stick axes and clear button states.
@@ -48,8 +82,15 @@ class VirtualThrustmaster:
         self.x_slider.bind("<ButtonRelease-1>", self.on_x_release)
 
     def on_x_change(self, value):
-        x_val = int(value)
-        self.joystick.set_axis(pyvjoy.HID_USAGE_X, x_val)
+        x_val = int(float(value))
+        # Apply scaling relative to center
+        center = AXIS_MAX // 2
+        offset = x_val - center
+        scaled_offset = int(offset * self.ui_scale)
+        scaled_value = center + scaled_offset
+        # Ensure value stays within valid range
+        scaled_value = max(0, min(AXIS_MAX, scaled_value))
+        self.joystick.set_axis(pyvjoy.HID_USAGE_X, scaled_value)
 
     def on_x_release(self, event):
         # Reset slider to center
@@ -68,8 +109,15 @@ class VirtualThrustmaster:
         self.y_slider.bind("<ButtonRelease-1>", self.on_y_release)
 
     def on_y_change(self, value):
-        y_val = int(value)
-        self.joystick.set_axis(pyvjoy.HID_USAGE_Y, y_val)
+        y_val = int(float(value))
+        # Apply scaling relative to center
+        center = AXIS_MAX // 2
+        offset = y_val - center
+        scaled_offset = int(offset * self.ui_scale)
+        scaled_value = center + scaled_offset
+        # Ensure value stays within valid range
+        scaled_value = max(0, min(AXIS_MAX, scaled_value))
+        self.joystick.set_axis(pyvjoy.HID_USAGE_Y, scaled_value)
 
     def on_y_release(self, event):
         # Reset slider to center
