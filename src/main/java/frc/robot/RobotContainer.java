@@ -16,12 +16,12 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.Constants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsTester;
+import frc.robot.onTheFlyPaths.TestPath;
 import frc.robot.subsystems.Mechanisms.Elevator;
 import frc.robot.subsystems.Mechanisms.Intake;
 import frc.robot.subsystems.Mechanisms.RotatyPart;
@@ -49,6 +49,8 @@ public class RobotContainer {
           .withRotationalDeadband(.1) // Add a 10% deadband
           .withDriveRequestType(
               DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+
+  private final Command testPathCommand = TestPath.getPathCommand(drivetrain);
 
   @SuppressWarnings("unused")
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
@@ -139,6 +141,7 @@ public class RobotContainer {
   }
 
   // Configure joystick bindings
+  @SuppressWarnings("unused")
   private void configureBindings() {
     // Note that X is defined as forward according to WPILib convention,
     // and Y is defined as to the left according to WPILib convention.
@@ -162,12 +165,13 @@ public class RobotContainer {
     // Note that each routine should be run exactly once in a single log.
     Trigger intakeProximityTrigger = new Trigger(() -> intake.getIntakeDistanceBool());
     Trigger algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 20);
-    @SuppressWarnings("unused")
     Trigger falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
     // Reset the field-centric heading on left bumper press
     joystick.povDown().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-    // Intake Coral
+    joystick.button(1).onTrue(testPathCommand);
+
+    /*// Intake Coral
     joystick
         .button(1)
         .and(intakeProximityTrigger)
@@ -205,7 +209,7 @@ public class RobotContainer {
     joystick.button(9).onTrue(elevator.toL2()).onFalse(elevator.toBottom());
     joystick.button(10).onTrue(intake.reverseIntake()).onFalse(intake.algaeHold());
     joystick.button(11).onTrue(elevator.toL4()).onFalse(elevator.toBottom());
-    joystick.button(12).onTrue(switchState(true)).onFalse(switchState(false));
+    joystick.button(12).onTrue(switchState(true)).onFalse(switchState(false));*/
 
     drivetrain.registerTelemetry(logger::telemeterize);
   }
