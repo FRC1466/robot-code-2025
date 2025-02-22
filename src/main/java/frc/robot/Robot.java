@@ -5,6 +5,7 @@ package frc.robot;
 
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
+import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -29,6 +30,7 @@ import frc.robot.constants.Constants.RobotType;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsTester;
 import frc.robot.subsystems.Vision;
+import frc.robot.util.LocalADStarAK;
 import java.io.File;
 import java.util.stream.Stream;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -149,6 +151,8 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotInit() {
+    // DO THIS FIRST
+    Pathfinding.setPathfinder(new LocalADStarAK());
     RobotContainer.elevator.setSelectedSensorPosition(0);
     vision = new Vision();
   }

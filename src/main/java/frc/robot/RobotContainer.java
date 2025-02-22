@@ -21,12 +21,12 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.Constants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsTester;
-import frc.robot.onTheFlyPaths.TestPath;
 import frc.robot.subsystems.Mechanisms.Elevator;
 import frc.robot.subsystems.Mechanisms.Intake;
 import frc.robot.subsystems.Mechanisms.RotatyPart;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
+import frc.robot.util.Pathfind;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -79,7 +79,6 @@ public class RobotContainer {
 
   // Drivetrain
   public static CommandSwerveDrivetrain drivetrain;
-  private final Command testPathCommand;
   // State
   public static boolean sliderEnabled = false;
 
@@ -101,7 +100,6 @@ public class RobotContainer {
       }
       default -> throw new IllegalArgumentException("Unexpected value: " + Constants.getRobot());
     }
-    testPathCommand = TestPath.getPathCommand(drivetrain);
 
     configureBindings();
     initializeChooser();
@@ -191,7 +189,7 @@ public class RobotContainer {
                   SmartDashboard.putBoolean("Reset Complete", true);
                 }));
 
-    joystick.button(1).onTrue(testPathCommand);
+    joystick.button(1).onTrue(Pathfind.getPathfindingCommand());
 
     /*// Intake Coral
     joystick
