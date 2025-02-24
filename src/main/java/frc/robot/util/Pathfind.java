@@ -6,7 +6,6 @@ package frc.robot.util;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.util.FileVersionException;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -18,22 +17,22 @@ public class Pathfind {
   PathPlannerPath path;
   PathConstraints constraints;
   static Command pathfindingCommand;
-  String bestPath = "Tag 10 to G";
-  Pose2d targetPose = new Pose2d(5.862, 3.863, Rotation2d.fromDegrees(180));
+  // String bestPath = "Tag 10 to G";
+  public Pose2d targetPose = new Pose2d(11.638, 3.863, Rotation2d.fromDegrees(0));
 
   public Pathfind() throws IOException, ParseException {
-    // Load the path we want to pathfind to and follow
+    /*  Load the path we want to pathfind to and follow
     try {
       path = PathPlannerPath.fromPathFile(bestPath);
     } catch (FileVersionException | IOException | org.json.simple.parser.ParseException e) {
       System.err.println("Error loading path: " + e.getMessage());
       e.printStackTrace();
-    }
+    }*/
 
     // Create the constraints to use while pathfinding. The constraints defined in the path will
     // only be used for the path.
     constraints =
-        new PathConstraints(.25, .25, Units.degreesToRadians(540), Units.degreesToRadians(720));
+        new PathConstraints(1.5, 1.5, Units.degreesToRadians(540), Units.degreesToRadians(720));
 
     // Since AutoBuilder is configured, we can use it to build pathfinding commands
     // pathfindingCommand = AutoBuilder.pathfindThenFollowPath(path, constraints);
