@@ -36,7 +36,7 @@ public class Pathfind {
     pathfindingCommand = AutoBuilder.pathfindThenFollowPath(path, constraints);
   }
 
-  public static Command getPathfindingCommand() {
+  public Command getPathfindingCommand() {
     return pathfindingCommand;
   }
 }

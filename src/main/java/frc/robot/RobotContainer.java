@@ -27,12 +27,15 @@ import frc.robot.subsystems.Mechanisms.RotatyPart;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
 import frc.robot.util.Pathfind;
+import java.io.IOException;
+import java.text.ParseException;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
   // Warnings
+  @SuppressWarnings("resource")
   private final Alert driverDisconnected =
       new Alert("Driver controller disconnected (port 0).", AlertType.kWarning);
 
@@ -70,6 +73,16 @@ public class RobotContainer {
   public final RotatyPart rotatyPart = new RotatyPart();
   public static final Vision photonCamera = new Vision();
   public static final Elevator elevator = new Elevator();
+
+  private final Pathfind m_pathfinder;
+
+  {
+    try {
+      m_pathfinder = new Pathfind();
+    } catch (IOException | ParseException e) {
+      throw new RuntimeException("Failed to initialize Pathfind", e);
+    }
+  }
 
   @AutoLogOutput public static boolean visionEnabled = true;
 
@@ -189,7 +202,7 @@ public class RobotContainer {
                   SmartDashboard.putBoolean("Reset Complete", true);
                 }));
 
-    joystick.button(1).onTrue(Pathfind.getPathfindingCommand());
+    joystick.button(1).whileTrue(m_pathfinder.getPathfindingCommand());
 
     /*// Intake Coral
     joystick
