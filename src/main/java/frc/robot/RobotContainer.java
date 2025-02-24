@@ -76,6 +76,8 @@ public class RobotContainer {
 
   private final Pathfind m_pathfinder;
 
+  private Command m_pathfindCommand;
+
   {
     try {
       m_pathfinder = new Pathfind();
@@ -201,8 +203,10 @@ public class RobotContainer {
                   // Add debug output
                   SmartDashboard.putBoolean("Reset Complete", true);
                 }));
-
-    joystick.button(1).whileTrue(m_pathfinder.getPathfindingCommand());
+    m_pathfindCommand = m_pathfinder.getPathfindingCommand();
+    if (m_pathfindCommand != null) {
+      joystick.button(1).whileTrue(m_pathfindCommand);
+    }
 
     /*// Intake Coral
     joystick
