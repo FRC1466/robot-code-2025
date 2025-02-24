@@ -78,14 +78,6 @@ public class RobotContainer {
 
   private Command m_pathfindCommand;
 
-  {
-    try {
-      m_pathfinder = new Pathfind();
-    } catch (IOException | ParseException e) {
-      throw new RuntimeException("Failed to initialize Pathfind", e);
-    }
-  }
-
   @AutoLogOutput public static boolean visionEnabled = true;
 
   // Joystick and telemetry
@@ -114,6 +106,11 @@ public class RobotContainer {
         Logger.recordOutput("Constant File", "Using TunerConstants for simulation");
       }
       default -> throw new IllegalArgumentException("Unexpected value: " + Constants.getRobot());
+    }
+    try {
+      m_pathfinder = new Pathfind();
+    } catch (IOException | ParseException e) {
+      throw new RuntimeException("Failed to initialize Pathfind", e);
     }
 
     configureBindings();
