@@ -7,6 +7,8 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.FileVersionException;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import java.io.IOException;
@@ -17,6 +19,7 @@ public class Pathfind {
   PathConstraints constraints;
   static Command pathfindingCommand;
   String bestPath = "Tag 10 to G";
+  Pose2d targetPose = new Pose2d(5.862, 3.863, Rotation2d.fromDegrees(180));
 
   public Pathfind() throws IOException, ParseException {
     // Load the path we want to pathfind to and follow
@@ -33,7 +36,12 @@ public class Pathfind {
         new PathConstraints(.25, .25, Units.degreesToRadians(540), Units.degreesToRadians(720));
 
     // Since AutoBuilder is configured, we can use it to build pathfinding commands
-    pathfindingCommand = AutoBuilder.pathfindThenFollowPath(path, constraints);
+    // pathfindingCommand = AutoBuilder.pathfindThenFollowPath(path, constraints);
+
+    pathfindingCommand =
+        AutoBuilder.pathfindToPose(
+            targetPose, constraints, 0.0 // Goal end velocity in meters/sec
+            );
   }
 
   public Command getPathfindingCommand() {
