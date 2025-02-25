@@ -315,12 +315,13 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
+    m_robotContainer.rotatyPart.coralScore();
   }
 
   @Override
   public void teleopPeriodic() {
-    SmartDashboard.putBoolean(
-        "Drive Command Running", RobotContainer.drivetrain.getDefaultCommand().isScheduled());
+    // SmartDashboard.putBoolean(
+    //   "Drive Command Running", RobotContainer.drivetrain.getDefaultCommand().isScheduled());
 
     if (RobotContainer.sliderEnabled) {
       RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);

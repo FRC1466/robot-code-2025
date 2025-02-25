@@ -25,7 +25,7 @@ public final class Constants {
 
   public static boolean disableHAL = false;
 
-  private static RobotType robotType = RobotType.DEVBOT;
+  private static RobotType robotType = RobotType.COMPBOT;
   public static Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.REPLAY;
 
   @SuppressWarnings("resource")
@@ -118,7 +118,7 @@ public final class Constants {
 
     public static final double maxRadians = Math.PI;
     public static final double gravityFF = 0.014;
-    public static final double absolutePositionOffset = -0.3211;
+    public static final double absolutePositionOffset = -0.4421;
     public static final boolean encoderInverted = true;
     public static final double dutyCycleResolution = 1.0;
 

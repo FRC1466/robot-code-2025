@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.Constants;
@@ -201,11 +202,11 @@ public class RobotContainer {
                   SmartDashboard.putBoolean("Reset Complete", true);
                 }));
     m_pathfindCommand = m_pathfinder.getPathfindingCommand();
-    if (m_pathfindCommand != null) {
+    /*   if (m_pathfindCommand != null) {
       joystick.button(1).whileTrue(m_pathfindCommand);
-    }
+    } */
 
-    /*// Intake Coral
+    // Intake Coral
     joystick
         .button(1)
         .and(intakeProximityTrigger)
@@ -243,7 +244,7 @@ public class RobotContainer {
     joystick.button(9).onTrue(elevator.toL2()).onFalse(elevator.toBottom());
     joystick.button(10).onTrue(intake.reverseIntake()).onFalse(intake.algaeHold());
     joystick.button(11).onTrue(elevator.toL4()).onFalse(elevator.toBottom());
-    joystick.button(12).onTrue(switchState(true)).onFalse(switchState(false));*/
+    joystick.button(12).onTrue(switchState(true)).onFalse(switchState(false));
 
     drivetrain.registerTelemetry(logger::telemeterize);
   }
