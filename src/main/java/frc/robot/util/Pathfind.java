@@ -18,6 +18,34 @@ public class Pathfind {
   PathConstraints constraints;
   static Command pathfindingCommand;
   // String bestPath = "Tag 10 to G";
+  // obj 0 is left, obj 1 is right
+  // 6,7,8,9,10,11
+  public Pose2d[][] redTargetPose = {
+    {
+      new Pose2d(13.550, 2.837, Rotation2d.fromDegrees(120)),
+      new Pose2d(13.853, 3.003, Rotation2d.fromDegrees(120))
+    },
+    {
+      new Pose2d(14.347, 3.860, Rotation2d.fromDegrees(-180)),
+      new Pose2d(14.347, 4.190, Rotation2d.fromDegrees(-180))
+    },
+    {
+      new Pose2d(13.840, 5.044, Rotation2d.fromDegrees(-120)),
+      new Pose2d(13.560, 5.216, Rotation2d.fromDegrees(-120))
+    },
+    {
+      new Pose2d(12.561, 5.237, Rotation2d.fromDegrees(-60)),
+      new Pose2d(12.301, 12.301, Rotation2d.fromDegrees(-60))
+    },
+    {
+      new Pose2d(11.695, 4.169, Rotation2d.fromDegrees(0)),
+      new Pose2d(11.695, 3.860, Rotation2d.fromDegrees(0))
+    },
+    {
+      new Pose2d(12.283, 2.998, Rotation2d.fromDegrees(60)),
+      new Pose2d(12.554, 2.850, Rotation2d.fromDegrees(60))
+    }
+  };
   public Pose2d targetPose = new Pose2d(11.638, 3.863, Rotation2d.fromDegrees(0));
 
   public Pathfind() throws IOException, ParseException {

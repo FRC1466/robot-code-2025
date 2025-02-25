@@ -115,7 +115,7 @@ public class Robot extends LoggedRobot {
 
       case REPLAY:
         setUseTiming(false);
-        File logsDir = new File("D:/logs");
+        File logsDir = new File("C:/logs");
         File[] logFiles = logsDir.listFiles();
         if (logFiles == null) {
           throw new RuntimeException("Logs directory D:/logs does not exist or is not accessible");
