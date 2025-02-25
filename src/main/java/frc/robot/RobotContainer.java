@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.Constants;
@@ -36,7 +35,6 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
   // Warnings
-  @SuppressWarnings("resource")
   private final Alert driverDisconnected =
       new Alert("Driver controller disconnected (port 0).", AlertType.kWarning);
 
@@ -71,12 +69,13 @@ public class RobotContainer {
 
   // Subsystems
   private final Intake intake = new Intake();
-  public final RotatyPart rotatyPart = new RotatyPart();
+  public final static RotatyPart rotatyPart = new RotatyPart();
   public static final Vision photonCamera = new Vision();
   public static final Elevator elevator = new Elevator();
 
   private final Pathfind m_pathfinder;
 
+  @SuppressWarnings("unused")
   private Command m_pathfindCommand;
 
   @AutoLogOutput public static boolean visionEnabled = true;
@@ -202,17 +201,17 @@ public class RobotContainer {
                   SmartDashboard.putBoolean("Reset Complete", true);
                 }));
     m_pathfindCommand = m_pathfinder.getPathfindingCommand();
-    /*   if (m_pathfindCommand != null) {
+    if (m_pathfindCommand != null) {
       joystick.button(1).whileTrue(m_pathfindCommand);
-    } */
+    }
 
     // Intake Coral
-    joystick
-        .button(1)
-        .and(intakeProximityTrigger)
-        .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
-        .onFalse(
-            Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));
+    /*joystick
+    .button(1)
+    .and(intakeProximityTrigger)
+    .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
+    .onFalse(
+        Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));*/
     // L2
     joystick
         .button(3)

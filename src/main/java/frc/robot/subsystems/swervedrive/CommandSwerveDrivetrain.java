@@ -119,6 +119,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   /* The SysId routine to test */
   private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
 
+  private boolean isAutoBuilderConfigured = false;
+
   /**
    * Constructs a CTRE SwerveDrivetrain using the specified constants.
    *
@@ -225,6 +227,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   }
 
   private void configureAutoBuilder() {
+    if (isAutoBuilderConfigured) {
+      DriverStation.reportError("AutoBuilder has already been configured.", false);
+      return;
+    }
+
     try {
       var config = RobotConfig.fromGUISettings();
       AutoBuilder.configure(
@@ -248,6 +255,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
           () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
           this // Subsystem for requirements
           );
+      isAutoBuilderConfigured = true;
     } catch (Exception ex) {
       DriverStation.reportError(
           "Failed to load PathPlanner config and configure AutoBuilder", ex.getStackTrace());

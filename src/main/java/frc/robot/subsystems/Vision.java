@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +35,7 @@ public class Vision {
 
   // Simulation
   private PhotonCameraSim cameraSim;
-  private VisionSystemSim visionSim;
+  public VisionSystemSim visionSim;
 
   public Vision() {
     camera = new PhotonCamera(kCameraName);
@@ -174,6 +175,8 @@ public class Vision {
 
   public void simulationPeriodic(Pose2d robotSimPose) {
     visionSim.update(robotSimPose);
+    Logger.recordOutput("SimPose", robotSimPose);
+    SmartDashboard.putData("Debug Field", getSimDebugField());
   }
 
   /** Reset pose history of the robot in the vision system simulation. */

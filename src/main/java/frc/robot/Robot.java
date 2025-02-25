@@ -315,7 +315,7 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
-    m_robotContainer.rotatyPart.coralScore();
+    RobotContainer.rotatyPart.coralScore();
   }
 
   @Override
@@ -355,5 +355,12 @@ public class Robot extends LoggedRobot {
   public void testExit() {}
 
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+    vision.simulationPeriodic(RobotContainer.drivetrain.getState().Pose);
+
+    var debugField = vision.getSimDebugField();
+    debugField
+        .getObject("EstimatedRobot")
+        .setPose(RobotPose = RobotContainer.drivetrain.getState().Pose);
+  }
 }
