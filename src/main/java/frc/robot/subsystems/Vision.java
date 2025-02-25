@@ -20,6 +20,7 @@ import frc.robot.Robot;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
@@ -87,6 +88,7 @@ public class Vision {
 
   // Should probably get an error handler and some data printing
   @SuppressWarnings("unlikely-arg-type")
+  @AutoLogOutput
   public int getClosestTag() {
     int closestTag = -1;
     double prevDistance = Double.MAX_VALUE;
@@ -96,9 +98,9 @@ public class Vision {
       for (PhotonTrackedTarget target : results.getTargets()) {
         if (target.getFiducialId() > 5 && target.getFiducialId() < 12) {
           if ((Math.pow(target.bestCameraToTarget.getX(), 2)
-                      + Math.pow(target.bestCameraToTarget.getY(), 2)
-                      + Math.pow(target.bestCameraToTarget.getRotation().getAngle() * .1, 2))
-                  < prevDistance) {
+                  + Math.pow(target.bestCameraToTarget.getY(), 2)
+                  + Math.pow(target.bestCameraToTarget.getRotation().getAngle() * .1, 2))
+              < prevDistance) {
             closestTag = target.getFiducialId();
             prevDistance =
                 (Math.pow(target.bestCameraToTarget.getX(), 2)
@@ -112,9 +114,9 @@ public class Vision {
       for (PhotonTrackedTarget target : results.getTargets()) {
         if (target.getFiducialId() > 16 && target.getFiducialId() < 23) {
           if ((Math.pow(target.bestCameraToTarget.getX(), 2)
-                      + Math.pow(target.bestCameraToTarget.getY(), 2)
-                      + Math.pow(target.bestCameraToTarget.getRotation().getAngle() * .1, 2))
-                  < prevDistance) {
+                  + Math.pow(target.bestCameraToTarget.getY(), 2)
+                  + Math.pow(target.bestCameraToTarget.getRotation().getAngle() * .1, 2))
+              < prevDistance) {
             closestTag = target.getFiducialId();
             prevDistance =
                 (Math.pow(target.bestCameraToTarget.getX(), 2)
