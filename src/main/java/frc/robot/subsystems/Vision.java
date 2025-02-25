@@ -12,15 +12,12 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
@@ -84,51 +81,6 @@ public class Vision {
       // Log the array of Pose3d objects
       Logger.recordOutput("SeenAprilTags", seenTagPoses.toArray(new Pose3d[0]));
     }
-  }
-
-  // Should probably get an error handler and some data printing
-  @SuppressWarnings("unlikely-arg-type")
-  @AutoLogOutput
-  public int getClosestTag() {
-    int closestTag = -1;
-    double prevDistance = Double.MAX_VALUE;
-    int offset = 0;
-    if (DriverStation.getAlliance().equals(Alliance.Red)) {
-      offset = 6;
-      for (PhotonTrackedTarget target : results.getTargets()) {
-        if (target.getFiducialId() > 5 && target.getFiducialId() < 12) {
-          if ((Math.pow(target.bestCameraToTarget.getX(), 2)
-                  + Math.pow(target.bestCameraToTarget.getY(), 2)
-                  + Math.pow(target.bestCameraToTarget.getRotation().getAngle() * .1, 2))
-              < prevDistance) {
-            closestTag = target.getFiducialId();
-            prevDistance =
-                (Math.pow(target.bestCameraToTarget.getX(), 2)
-                    + Math.pow(target.bestCameraToTarget.getY(), 2)
-                    + Math.pow(target.bestCameraToTarget.getRotation().getAngle() * .1, 2));
-          }
-        }
-      }
-    } else if (DriverStation.getAlliance().equals(Alliance.Blue)) {
-      offset = 17;
-      for (PhotonTrackedTarget target : results.getTargets()) {
-        if (target.getFiducialId() > 16 && target.getFiducialId() < 23) {
-          if ((Math.pow(target.bestCameraToTarget.getX(), 2)
-                  + Math.pow(target.bestCameraToTarget.getY(), 2)
-                  + Math.pow(target.bestCameraToTarget.getRotation().getAngle() * .1, 2))
-              < prevDistance) {
-            closestTag = target.getFiducialId();
-            prevDistance =
-                (Math.pow(target.bestCameraToTarget.getX(), 2)
-                    + Math.pow(target.bestCameraToTarget.getY(), 2)
-                    + Math.pow(target.bestCameraToTarget.getRotation().getAngle() * .1, 2));
-          }
-        }
-      }
-    }
-
-    // Adjust the tag based on alliance.
-    return closestTag - offset;
   }
 
   /**

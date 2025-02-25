@@ -10,10 +10,13 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
@@ -73,6 +76,8 @@ public class RobotContainer {
   public static final Vision photonCamera = new Vision();
   public static final Elevator elevator = new Elevator();
 
+  private final AprilTagFieldLayout layout =
+      AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
   private final Pathfind m_pathfinder;
 
   @SuppressWarnings("unused")
@@ -278,5 +283,44 @@ public class RobotContainer {
   // Update dashboard data
   public void updateDashboardOutputs() {
     SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
+  }
+
+  // Should probably get an error handler and some data printing
+  @SuppressWarnings("unlikely-arg-type")
+  @AutoLogOutput
+  public int getClosestTag() {
+    int closestTag = -1;
+    double prevDistance = Double.MAX_VALUE;
+    double holderDistance = 0;
+    int offset = 0;
+    if (DriverStation.getAlliance().equals(Alliance.Red)) {
+      offset = 6;
+    } else if (DriverStation.getAlliance().equals(Alliance.Blue)) {
+      offset = 17;
+    }
+    try {
+
+      for (int i = offset; i < (offset + 6); i++) {
+        holderDistance = layout.getTagPose(i).get().getX();
+        // (Math.pow(drivetrain.getState().Pose.getX() - layout.getTagPose(i).get().getX(), 2)
+        // + Math.pow(drivetrain.getState().Pose.getY() - layout.getTagPose(i).get().getY(), 2)
+        // + Math.pow(
+        //    drivetrain.getState().Pose.getRotation().getRadians()
+        //        - layout.getTagPose(i).get().getRotation().getAngle() * .1,
+        // 2));
+        if (holderDistance < prevDistance) {
+          closestTag = i;
+          prevDistance = holderDistance;
+        }
+      }
+    } catch (Exception e) {
+      // Retrieve the actual exception thrown by the invoked method
+      Throwable cause = e.getCause();
+      System.err.println("The underlying exception was: " + cause);
+      e.printStackTrace();
+    }
+
+    // Adjust the tag based on alliance.
+    return closestTag - offset;
   }
 }

@@ -211,7 +211,6 @@ public class Robot extends LoggedRobot {
 
     CommandScheduler.getInstance().run();
     RobotPose = RobotContainer.drivetrain.getState().Pose;
-
     visionEst.ifPresent(
         est -> {
           var estStdDevs = RobotContainer.photonCamera.getEstimationStdDevs();
@@ -235,6 +234,8 @@ public class Robot extends LoggedRobot {
                 estStdDevs);
           }
         });
+    Logger.recordOutput("apriltag seen", m_robotContainer.getClosestTag());
+
     // SmartDashboard.pu Boolean("Camera?", photonCamera.getCamera().isConnected());
     SmartDashboard.putBoolean("Vision Est", visionEst.isPresent());
 
