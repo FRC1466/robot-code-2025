@@ -8,9 +8,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
@@ -18,7 +15,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.Constants;
 import java.util.function.DoubleSupplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
+import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
+import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 
 public class Elevator extends SubsystemBase {
   // Adjust constants for better visualization
@@ -52,10 +53,13 @@ public class Elevator extends SubsystemBase {
 
   private double peakOutput;
 
-  private final Mechanism2d robotMech = new Mechanism2d(1.0, 1.0); // 1x1 meter visualization
-  private final MechanismRoot2d elevatorRoot;
-  private final MechanismLigament2d elevatorLigament;
-  private final MechanismLigament2d wristLigament;
+  @AutoLogOutput
+  private final LoggedMechanism2d robotMech =
+      new LoggedMechanism2d(1.0, 1.0); // 1x1 meter visualization
+
+  @AutoLogOutput private final LoggedMechanismRoot2d elevatorRoot;
+  @AutoLogOutput private final LoggedMechanismLigament2d elevatorLigament;
+  @AutoLogOutput private final LoggedMechanismLigament2d wristLigament;
 
   private final RotatyPart wrist;
 
@@ -88,7 +92,7 @@ public class Elevator extends SubsystemBase {
 
     elevatorLigament =
         elevatorRoot.append(
-            new MechanismLigament2d(
+            new LoggedMechanismLigament2d(
                 "ElevatorStage",
                 ELEVATOR_MIN_LENGTH,
                 90, // vertical
@@ -97,7 +101,7 @@ public class Elevator extends SubsystemBase {
 
     wristLigament =
         elevatorLigament.append(
-            new MechanismLigament2d(
+            new LoggedMechanismLigament2d(
                 "Wrist",
                 0.2, // 20cm wrist length
                 0, // horizontal to start

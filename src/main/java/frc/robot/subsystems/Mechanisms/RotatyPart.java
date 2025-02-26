@@ -169,8 +169,8 @@ public class RotatyPart extends SubsystemBase {
   public Rotation2d getPosition() {
     if (!isSimulation) {
       return RotationConstants.encoderInverted
-        ? getShiftedAbsoluteDistance().unaryMinus()
-        : getShiftedAbsoluteDistance();
+          ? getShiftedAbsoluteDistance().unaryMinus()
+          : getShiftedAbsoluteDistance();
     }
     return Rotation2d.fromRadians(simPosition);
   }
