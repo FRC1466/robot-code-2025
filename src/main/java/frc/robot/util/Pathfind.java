@@ -12,14 +12,19 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.RobotContainer;
 import java.io.IOException;
 import java.text.ParseException;
+import org.littletonrobotics.junction.Logger;
 
 public class Pathfind {
   PathPlannerPath path;
   PathConstraints constraints;
   static Command redPathfindingCommand;
   static Command bluePathfindingCommand;
+
+  private int closestTag;
+  private int leftOrRight;
 
   // String bestPath = "Tag 10 to G";
   // obj 0 is left, obj 1 is right
@@ -54,46 +59,47 @@ public class Pathfind {
   // DO NOT USE - NEEDS TO BE FIXED
   public Pose2d[][] blueTargetPoseTransformed = {
     {
-      // 13.550 - 8.774 = 4.776; 300° becomes -60°
-      new Pose2d(4.776, 2.837, Rotation2d.fromDegrees(-60)),
-      // 13.853 - 8.774 = 5.079; 300° becomes -60°
-      new Pose2d(5.079, 3.003, Rotation2d.fromDegrees(-60))
+      // 4.022; 300° becomes -60°
+      new Pose2d(4.022, 2.837, Rotation2d.fromDegrees(-60)),
+      // 3.719; 300° becomes -60°
+      new Pose2d(3.719, 3.003, Rotation2d.fromDegrees(-60))
     },
     {
-      // 14.347 - 8.774 = 5.573; 0° remains 0°
-      new Pose2d(5.573, 3.860, Rotation2d.fromDegrees(0)),
-      // 14.347 - 8.774 = 5.573; 0° remains 0°
-      new Pose2d(5.573, 4.190, Rotation2d.fromDegrees(0))
+      // 3.225; 0° remains 0°
+      new Pose2d(3.225, 3.860, Rotation2d.fromDegrees(0)),
+      // 3.225; 0° remains 0°
+      new Pose2d(3.225, 4.190, Rotation2d.fromDegrees(0))
     },
     {
-      // 13.840 - 8.774 = 5.066; 60° remains 60°
-      new Pose2d(5.066, 5.044, Rotation2d.fromDegrees(60)),
-      // 13.560 - 8.774 = 4.786; 60° remains 60°
-      new Pose2d(4.786, 5.216, Rotation2d.fromDegrees(60))
+      // 3.732; 60° remains 60°
+      new Pose2d(3.732, 5.044, Rotation2d.fromDegrees(60)),
+      // 4.012; 60° remains 60°
+      new Pose2d(4.012, 5.216, Rotation2d.fromDegrees(60))
     },
     {
-      // 12.561 - 8.774 = 3.787; 120° remains 120°
-      new Pose2d(3.787, 5.237, Rotation2d.fromDegrees(120)),
-      // 12.301 - 8.774 = 3.527; 120° remains 120°
-      new Pose2d(3.527, 12.301, Rotation2d.fromDegrees(120))
+      // 5.011; 120° remains 120°
+      new Pose2d(5.011, 5.237, Rotation2d.fromDegrees(120)),
+      // 5.271; 120° remains 120°
+      new Pose2d(5.271, 12.301, Rotation2d.fromDegrees(120))
     },
     {
-      // 11.695 - 8.774 = 2.921; 180° remains 180° (unchanged as it's not greater than 180)
-      new Pose2d(2.921, 4.169, Rotation2d.fromDegrees(180)),
-      // 11.695 - 8.774 = 2.921; 180° remains 180°
-      new Pose2d(2.921, 3.860, Rotation2d.fromDegrees(180))
+      // 5.877; 180° remains 180°
+      new Pose2d(5.877, 4.169, Rotation2d.fromDegrees(180)),
+      // 5.877; 180° remains 180°
+      new Pose2d(5.877, 3.860, Rotation2d.fromDegrees(180))
     },
     {
-      // 12.283 - 8.774 = 3.509; 240° becomes -120° (240 - 360)
-      new Pose2d(3.509, 2.998, Rotation2d.fromDegrees(-120)),
-      // 12.554 - 8.774 = 3.780; 240° becomes -120°
-      new Pose2d(3.780, 2.850, Rotation2d.fromDegrees(-120))
+      // 5.289; 240° becomes -120°
+      new Pose2d(5.289, 2.998, Rotation2d.fromDegrees(-120)),
+      // 5.018; 240° becomes -120°
+      new Pose2d(5.018, 2.850, Rotation2d.fromDegrees(-120))
     }
   };
 
-  public Pose2d targetPose = new Pose2d(11.638, 3.863, Rotation2d.fromDegrees(0));
+  // public Pose2d targetPose = new Pose2d(11.638, 3.863, Rotation2d.fromDegrees(0));
 
-  public Pathfind() throws IOException, ParseException {
+  public Pathfind(RobotContainer robotContainer) throws IOException, ParseException {
+    this.robotContainer = robotContainer;
     /*  Load the path we want to pathfind to and follow
     try {
       path = PathPlannerPath.fromPathFile(bestPath);
@@ -112,24 +118,22 @@ public class Pathfind {
 
   }
 
-  public Command getPathfindingCommand(int closestTag, int leftOrRight) {
+  private final RobotContainer robotContainer;
+
+  public Command getPathfindingCommand(int targetLeftOrRight) {
+    int currentClosestTag = robotContainer.getClosestTag();
+    Logger.recordOutput("closest tag in pathfind", currentClosestTag);
+    Logger.recordOutput("Target Point", redTargetPose[currentClosestTag][targetLeftOrRight]);
 
     redPathfindingCommand =
         AutoBuilder.pathfindToPose(
-            redTargetPose[closestTag][leftOrRight],
-            constraints,
-            0.0 // Goal end velocity in meters/sec
-            );
+            redTargetPose[currentClosestTag][targetLeftOrRight], constraints, 0.0);
     bluePathfindingCommand =
         AutoBuilder.pathfindToPose(
-            blueTargetPoseTransformed[closestTag][leftOrRight],
-            constraints,
-            0.0 // Goal end velocity in meters/sec
-            );
-    if (DriverStation.getAlliance().get() == Alliance.Red) {
-      return redPathfindingCommand;
-    }
+            blueTargetPoseTransformed[currentClosestTag][targetLeftOrRight], constraints, 0.0);
 
-    return bluePathfindingCommand;
+    return DriverStation.getAlliance().get() == Alliance.Red
+        ? redPathfindingCommand
+        : bluePathfindingCommand;
   }
 }

@@ -80,7 +80,7 @@ public class RobotContainer {
 
   private final AprilTagFieldLayout layout =
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
-  private final Pathfind m_pathfinder;
+  final Pathfind m_pathfinder;
 
   @SuppressWarnings("unused")
   private Command m_pathfindCommandLeft;
@@ -117,7 +117,7 @@ public class RobotContainer {
       default -> throw new IllegalArgumentException("Unexpected value: " + Constants.getRobot());
     }
     try {
-      m_pathfinder = new Pathfind();
+      m_pathfinder = new Pathfind(this);
     } catch (IOException | ParseException e) {
       throw new RuntimeException("Failed to initialize Pathfind", e);
     }
@@ -209,16 +209,6 @@ public class RobotContainer {
                   // Add debug output
                   SmartDashboard.putBoolean("Reset Complete", true);
                 }));
-    // Check if this runs multiple times and clean up
-    m_pathfindCommandLeft = m_pathfinder.getPathfindingCommand(getClosestTag(), 0);
-    m_pathfindCommandRight = m_pathfinder.getPathfindingCommand(getClosestTag(), 1);
-
-    if (m_pathfindCommandLeft != null) {
-      joystick.button(1).whileTrue(m_pathfindCommandLeft);
-    }
-    if (m_pathfindCommandRight != null) {
-      joystick.button(8).whileTrue(m_pathfindCommandRight);
-    }
 
     // Intake Coral
     /*joystick

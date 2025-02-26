@@ -161,6 +161,16 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotPeriodic() {
+    m_robotContainer
+        .joystick
+        .button(1)
+        .onTrue(m_robotContainer.m_pathfinder.getPathfindingCommand(0));
+
+    m_robotContainer
+        .joystick
+        .button(8)
+        .onTrue(m_robotContainer.m_pathfinder.getPathfindingCommand(1));
+
     Constants.RobotType selectedType = m_robotContainer.getSelectedRobotType();
     if (selectedType != Constants.getRobot()) {
       if (DriverStation.isEnabled()) {

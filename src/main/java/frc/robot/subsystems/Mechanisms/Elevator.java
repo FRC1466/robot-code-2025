@@ -9,17 +9,11 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.Constants;
 import java.util.function.DoubleSupplier;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
-import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
-import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 
 public class Elevator extends SubsystemBase {
   // Adjust constants for better visualization
@@ -53,13 +47,12 @@ public class Elevator extends SubsystemBase {
 
   private double peakOutput;
 
-  @AutoLogOutput
-  private final LoggedMechanism2d robotMech =
-      new LoggedMechanism2d(1.0, 1.0); // 1x1 meter visualization
+  // private final LoggedMechanism2d robotMech =
+  //    new LoggedMechanism2d(1.0, 1.0); // 1x1 meter visualization
 
-  @AutoLogOutput private final LoggedMechanismRoot2d elevatorRoot;
-  @AutoLogOutput private final LoggedMechanismLigament2d elevatorLigament;
-  @AutoLogOutput private final LoggedMechanismLigament2d wristLigament;
+  // @AutoLogOutput private final LoggedMechanismRoot2d elevatorRoot;
+  // @AutoLogOutput private final LoggedMechanismLigament2d elevatorLigament;
+  // @AutoLogOutput private final LoggedMechanismLigament2d wristLigament;
 
   private final RotatyPart wrist;
 
@@ -88,27 +81,27 @@ public class Elevator extends SubsystemBase {
     this.wrist = wrist;
 
     // Initialize mechanism visualization
-    elevatorRoot = robotMech.getRoot("Elevator", 0.6, 0);
+    // elevatorRoot = robotMech.getRoot("Elevator", 0.6, 0);
 
-    elevatorLigament =
-        elevatorRoot.append(
-            new LoggedMechanismLigament2d(
-                "ElevatorStage",
-                ELEVATOR_MIN_LENGTH,
-                90, // vertical
-                6, // width
-                new Color8Bit(Color.kBlue)));
+    // elevatorLigament =
+    //    elevatorRoot.append(
+    //        new LoggedMechanismLigament2d(
+    //            "ElevatorStage",
+    //            ELEVATOR_MIN_LENGTH,
+    //            90, // vertical
+    //            6, // width
+    //            new Color8Bit(Color.kBlue)));
 
-    wristLigament =
-        elevatorLigament.append(
-            new LoggedMechanismLigament2d(
-                "Wrist",
-                0.2, // 20cm wrist length
-                0, // horizontal to start
-                4, // smaller width
-                new Color8Bit(Color.kRed)));
+    // wristLigament =
+    //    elevatorLigament.append(
+    //        new LoggedMechanismLigament2d(
+    //            "Wrist",
+    //            0.2, // 20cm wrist length
+    //            0, // horizontal to start
+    //            4, // smaller width
+    //            new Color8Bit(Color.kRed)));
 
-    SmartDashboard.putData("Robot Mechanism", robotMech);
+    // SmartDashboard.putData("Robot Mechanism", robotMech);
   }
 
   private void setNeutralMode(NeutralModeValue neutralMode) {
@@ -236,10 +229,10 @@ public class Elevator extends SubsystemBase {
             ELEVATOR_MIN_LENGTH + heightMeters, ELEVATOR_MIN_LENGTH, ELEVATOR_MAX_LENGTH);
 
     // Update visualization
-    elevatorLigament.setLength(visualHeight);
+    // elevatorLigament.setLength(visualHeight);
 
     // Update wrist visualization
-    wristLigament.setAngle(wrist.getPosition().getDegrees());
+    // wristLigament.setAngle(wrist.getPosition().getDegrees());
 
     // Debug values
     SmartDashboard.putBoolean("Is Simulation", isSimulation);
@@ -257,6 +250,6 @@ public class Elevator extends SubsystemBase {
 
     // Update mechanism visualization
     heightMeters = (getElevatorHeight() / TICKS_PER_INCH) * 0.0254;
-    elevatorLigament.setLength(ELEVATOR_MIN_LENGTH + heightMeters);
+    // elevatorLigament.setLength(ELEVATOR_MIN_LENGTH + heightMeters);
   }
 }
