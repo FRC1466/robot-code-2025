@@ -13,6 +13,7 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -33,6 +34,7 @@ import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
 import frc.robot.util.Pathfind;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Optional;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -295,21 +297,27 @@ public class RobotContainer {
     double prevDistance = Double.MAX_VALUE;
     double holderDistance = 0;
     int offset = 0;
-    if (DriverStation.getAlliance().equals(Alliance.Red)) {
+    if (DriverStation.getAlliance().get() == Alliance.Red) {
       offset = 6;
-    } else if (DriverStation.getAlliance().equals(Alliance.Blue)) {
+    } else if (DriverStation.getAlliance().get() == Alliance.Blue) {
       offset = 17;
     }
     try {
 
-      for (int i = offset; i < (offset + 6); i++) {
-        holderDistance = layout.getTagPose(i).get().getX();
-        // (Math.pow(drivetrain.getState().Pose.getX() - layout.getTagPose(i).get().getX(), 2)
-        // + Math.pow(drivetrain.getState().Pose.getY() - layout.getTagPose(i).get().getY(), 2)
-        // + Math.pow(
-        //    drivetrain.getState().Pose.getRotation().getRadians()
-        //        - layout.getTagPose(i).get().getRotation().getAngle() * .1,
-        // 2));
+      for (int i = offset; i < (offset + 7); i++) {
+        Optional<Pose3d> tagPoseOptional = layout.getTagPose(i);
+        if (tagPoseOptional.isEmpty()) {
+          // Skip this index if no tag pose is available
+          continue;
+        }
+        var tagPose = tagPoseOptional.get();
+        holderDistance =
+            (Math.pow(drivetrain.getState().Pose.getX() - tagPose.getX(), 2)
+                + Math.pow(drivetrain.getState().Pose.getY() - tagPose.getY(), 2)
+                + Math.pow(
+                    drivetrain.getState().Pose.getRotation().getRadians()
+                        - tagPose.getRotation().getAngle() * 0.1,
+                    2));
         if (holderDistance < prevDistance) {
           closestTag = i;
           prevDistance = holderDistance;
@@ -321,8 +329,10 @@ public class RobotContainer {
       System.err.println("The underlying exception was: " + cause);
       e.printStackTrace();
     }
-
+    Logger.recordOutput("current offset is", offset);
+    Logger.recordOutput("Alliance is Red", DriverStation.getAlliance().get() == Alliance.Red);
+    Logger.recordOutput("Alliance is Blue", DriverStation.getAlliance().get() == Alliance.Blue);
     // Adjust the tag based on alliance.
-    return closestTag - offset;
+    return closestTag - offset - 1;
   }
 }
