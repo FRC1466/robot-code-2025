@@ -221,14 +221,15 @@ public class RobotContainer {
       // Run SysId routines when holding back/start and X/Y.
       // Note that each routine should be run exactly once in a single log.
       // Reset the field-centric heading on left bumper press
-      //Mode Switch
+      // Mode Switch
       joystick.button(2).onTrue(changeMode());
       // Intake Coral
       joystick
           .button(3)
           .and(intakeProximityTrigger)
           .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
-          .onFalse(Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));
+          .onFalse(
+              Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));
       // L2
       joystick
           .button(5)
@@ -241,15 +242,13 @@ public class RobotContainer {
           .onTrue(elevator.toL3().alongWith(rotatyPart.coralScore()))
           .onFalse(intake.intake());
       // L4
-     
+
     } else {
       joystick
           .button(1)
           .onTrue(intake.outTake())
           .onFalse(rotatyPart.coralScore().alongWith(elevator.toBottom()));
-      joystick
-          .button(6)
-          .onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()));
+      joystick.button(6).onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()));
       joystick
           .button(6)
           .and(algaeHeightReady)
