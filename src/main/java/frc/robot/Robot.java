@@ -185,7 +185,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotPeriodic() {
-    m_robotContainer
+   /*  m_robotContainer
         .joystick
         .button(1)
         .whileTrue(m_robotContainer.m_pathfinder.getPathfindingCommand(0));
@@ -193,7 +193,7 @@ public class Robot extends LoggedRobot {
     m_robotContainer
         .joystick
         .button(8)
-        .whileTrue(m_robotContainer.m_pathfinder.getPathfindingCommand(1));
+        .whileTrue(m_robotContainer.m_pathfinder.getPathfindingCommand(1));*/
 
     Constants.RobotType selectedType = m_robotContainer.getSelectedRobotType();
     if (selectedType != Constants.getRobot()) {
