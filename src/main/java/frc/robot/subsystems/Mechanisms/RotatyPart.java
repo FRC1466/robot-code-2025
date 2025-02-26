@@ -10,6 +10,8 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -19,6 +21,14 @@ import org.littletonrobotics.junction.Logger;
 import webblib.ArmPIDController;
 
 public class RotatyPart extends SubsystemBase {
+  // Add simulation constants
+  private static final double SIM_TIMESTEP = 0.02; // 20ms
+  private static final double SIM_SPEED_MULTIPLIER = 2.0; // Reduced from 5.0
+  private static final double GRAVITY_EFFECT = 4.0; // Reduced from 9.81
+  private static final double DAMPING_FACTOR = 0.5; // Increased from 0.1
+  private static final double POSITION_DAMPING = 0.3; // New position-based damping
+
+  public double armSetpoint = 0;
 
   private TalonFX armMotor;
   private DutyCycleEncoder absoluteArmEncoder;
@@ -38,6 +48,11 @@ public class RotatyPart extends SubsystemBase {
   private Rotation2d storedPosRad = Rotation2d.fromRadians(RotationConstants.restRadians);
   private boolean storedInPerimeter = false;
   private CurrentLimitsConfigs limitsConfigs = new CurrentLimitsConfigs();
+
+  // Add simulation variables
+  private double simPosition = 0.0;
+  private double simVelocity = 0.0;
+  private boolean isSimulation;
 
   public RotatyPart() {
     armMotor = new TalonFX(RotationConstants.armPort);
@@ -70,6 +85,9 @@ public class RotatyPart extends SubsystemBase {
     setGoal(Rotation2d.fromRadians(RotationConstants.restRadians));
     setDefaultCommand(hold());
     armMotor.setNeutralMode(NeutralModeValue.Brake);
+
+    // Add to constructor
+    isSimulation = RobotBase.isSimulation();
   }
 
   public void setTotalArmP(double p) {
@@ -95,7 +113,37 @@ public class RotatyPart extends SubsystemBase {
 
   @Override
   public void simulationPeriodic() {
-    // sim.update(armMotor.get());
+    if (isSimulation) {
+      // Update sim position based on motor output
+      double motorOutput = armMotor.get();
+
+      // Apply gravity based on current angle
+      double gravityTorque = Math.cos(simPosition) * GRAVITY_EFFECT;
+
+      double positionDamping = (simPosition - armSetpoint) * POSITION_DAMPING;
+
+      // Update velocity with increased speed and physics
+      // Update velocity with better damping
+      simVelocity +=
+          (motorOutput * SIM_SPEED_MULTIPLIER
+                  - gravityTorque
+                  - (simVelocity * DAMPING_FACTOR)
+                  - positionDamping)
+              * SIM_TIMESTEP;
+
+      // Update position faster
+      simPosition += simVelocity * SIM_TIMESTEP * SIM_SPEED_MULTIPLIER;
+
+      // Clamp position
+      simPosition = MathUtil.clamp(simPosition, -Math.PI, RotationConstants.maxRadians);
+
+      // Clamp position to valid range
+      simPosition = MathUtil.clamp(simPosition, -Math.PI, RotationConstants.maxRadians);
+
+      // Log simulation state
+      SmartDashboard.putNumber("Wrist Sim Position", simPosition);
+      SmartDashboard.putNumber("Wrist Sim Velocity", simVelocity);
+    }
   }
 
   /** Configure arm motor. */
@@ -119,9 +167,12 @@ public class RotatyPart extends SubsystemBase {
    * @return position in rad.
    */
   public Rotation2d getPosition() {
-    return RotationConstants.encoderInverted
+    if (!isSimulation) {
+      return RotationConstants.encoderInverted
         ? getShiftedAbsoluteDistance().unaryMinus()
         : getShiftedAbsoluteDistance();
+    }
+    return Rotation2d.fromRadians(simPosition);
   }
 
   /**
@@ -132,6 +183,7 @@ public class RotatyPart extends SubsystemBase {
   public void setGoal(Rotation2d setpoint) {
     localSetpoint = setpoint;
     armPID.setSetpoint(setpoint);
+    armSetpoint = setpoint.getDegrees();
     Logger.recordOutput("Arm PID Setpoint", setpoint.getRadians());
   }
 

@@ -7,7 +7,13 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.Constants;
@@ -15,6 +21,11 @@ import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
 public class Elevator extends SubsystemBase {
+  // Adjust constants for better visualization
+  private static final double SIMULATION_SPEED = 2; // Increased from 0.02
+  private static final double VISUALIZATION_SCALE = 0.1; // Meters per tick
+  private static final double ELEVATOR_MIN_LENGTH = 0.3; // Starting height
+  private static final double ELEVATOR_MAX_LENGTH = 1.5; // Max height
 
   private final TalonFX masterMotor, leftSlaveFX;
 
@@ -41,7 +52,19 @@ public class Elevator extends SubsystemBase {
 
   private double peakOutput;
 
-  public Elevator() {
+  private final Mechanism2d robotMech = new Mechanism2d(1.0, 1.0); // 1x1 meter visualization
+  private final MechanismRoot2d elevatorRoot;
+  private final MechanismLigament2d elevatorLigament;
+  private final MechanismLigament2d wristLigament;
+
+  private final RotatyPart wrist;
+
+  private double simulatedPosition = 0.0;
+  private boolean isSimulation;
+
+  public Elevator(RotatyPart wrist) {
+    isSimulation = RobotBase.isSimulation();
+
     masterMotor = new TalonFX(Constants.ElevatorConstants.masterID);
 
     leftSlaveFX = new TalonFX(Constants.ElevatorConstants.slaveID);
@@ -57,6 +80,31 @@ public class Elevator extends SubsystemBase {
     masterMotor.setVoltage(0);
     leftSlaveFX.setVoltage(0);
     setNeutralMode(NeutralModeValue.Brake);
+
+    this.wrist = wrist;
+
+    // Initialize mechanism visualization
+    elevatorRoot = robotMech.getRoot("Elevator", 0.6, 0);
+
+    elevatorLigament =
+        elevatorRoot.append(
+            new MechanismLigament2d(
+                "ElevatorStage",
+                ELEVATOR_MIN_LENGTH,
+                90, // vertical
+                6, // width
+                new Color8Bit(Color.kBlue)));
+
+    wristLigament =
+        elevatorLigament.append(
+            new MechanismLigament2d(
+                "Wrist",
+                0.2, // 20cm wrist length
+                0, // horizontal to start
+                4, // smaller width
+                new Color8Bit(Color.kRed)));
+
+    SmartDashboard.putData("Robot Mechanism", robotMech);
   }
 
   private void setNeutralMode(NeutralModeValue neutralMode) {
@@ -65,8 +113,11 @@ public class Elevator extends SubsystemBase {
   }
 
   public void setSelectedSensorPosition(double position) {
-    masterMotor.setPosition(position);
-    leftSlaveFX.setPosition(position);
+    if (!isSimulation) {
+      masterMotor.setPosition(position);
+      leftSlaveFX.setPosition(position);
+    }
+    simulatedPosition = position;
   }
 
   public void setP(double p) {
@@ -78,8 +129,10 @@ public class Elevator extends SubsystemBase {
   }
 
   public double getElevatorHeight() {
-    double height = masterMotor.getPosition().getValueAsDouble();
-    return height;
+    if (!isSimulation) {
+      return masterMotor.getPosition().getValueAsDouble();
+    }
+    return simulatedPosition;
   }
 
   public void goToGoal(double goal) {
@@ -89,8 +142,14 @@ public class Elevator extends SubsystemBase {
   }
 
   public void setMotor(double percent) {
-    masterMotor.set(percent);
-    leftSlaveFX.set(-percent);
+    if (!isSimulation) {
+      masterMotor.set(percent);
+      leftSlaveFX.set(-percent);
+    } else {
+      // Faster simulation physics
+      simulatedPosition += percent * SIMULATION_SPEED;
+      simulatedPosition = MathUtil.clamp(simulatedPosition, 0, MAX_POSITION_TICKS);
+    }
   }
 
   public Command setGoal(double goal) {
@@ -165,20 +224,35 @@ public class Elevator extends SubsystemBase {
   @Override
   public void periodic() {
     setArmHold();
-    /*  if(!hallBottom.get()){
-        setSelectedSensorPosition(0);
-    }*/
 
+    // Scale height for visualization
+    double heightMeters = getElevatorHeight() * VISUALIZATION_SCALE;
+    double visualHeight =
+        MathUtil.clamp(
+            ELEVATOR_MIN_LENGTH + heightMeters, ELEVATOR_MIN_LENGTH, ELEVATOR_MAX_LENGTH);
+
+    // Update visualization
+    elevatorLigament.setLength(visualHeight);
+
+    // Update wrist visualization
+    wristLigament.setAngle(wrist.getPosition().getDegrees());
+
+    // Debug values
+    SmartDashboard.putBoolean("Is Simulation", isSimulation);
+    SmartDashboard.putNumber("Raw Height", getElevatorHeight());
+    SmartDashboard.putNumber("Visual Height (m)", visualHeight);
+
+    // Update visualization and logging
     SmartDashboard.putNumber("Elevator Position", getElevatorHeight());
     SmartDashboard.putNumber("Get Elevator P", elevatorPID.getP());
     SmartDashboard.putNumber("Get Elevator PeakOutput", peakOutput);
     SmartDashboard.putNumber("Elevator Desired Position", elevatorPID.getSetpoint());
     SmartDashboard.putNumber("Elevator Error", elevatorPID.getError());
 
-    // if(!hallBottom.get()){
-    //   setSelectedSensorPosition(0);
-    // }
-
     Logger.recordOutput("Elevator Position", getElevatorHeight());
+
+    // Update mechanism visualization
+    heightMeters = (getElevatorHeight() / TICKS_PER_INCH) * 0.0254;
+    elevatorLigament.setLength(ELEVATOR_MIN_LENGTH + heightMeters);
   }
 }

@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.Constants;
@@ -74,7 +75,7 @@ public class RobotContainer {
   private final Intake intake = new Intake();
   public static final RotatyPart rotatyPart = new RotatyPart();
   public static final Vision photonCamera = new Vision();
-  public static final Elevator elevator = new Elevator();
+  public static final Elevator elevator = new Elevator(rotatyPart);
 
   private final AprilTagFieldLayout layout =
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
@@ -112,6 +113,16 @@ public class RobotContainer {
       }
       default -> throw new IllegalArgumentException("Unexpected value: " + Constants.getRobot());
     }
+
+    NamedCommands.registerCommand("Raise arm to Station", elevator.toStation());
+    NamedCommands.registerCommand("raise arm to 1", elevator.toL1());
+    NamedCommands.registerCommand("raise arm to 2", elevator.toL2());
+    NamedCommands.registerCommand("raise arm to 3", elevator.toL3());
+    NamedCommands.registerCommand("raise arm to 4", elevator.toL4());
+    NamedCommands.registerCommand("intake coral", intake.intake());
+    NamedCommands.registerCommand("reverse intake coral", intake.reverseIntake());
+    NamedCommands.registerCommand("rotary part", rotatyPart.coralScore());
+
     try {
       m_pathfinder = new Pathfind();
     } catch (IOException | ParseException e) {
@@ -138,15 +149,6 @@ public class RobotContainer {
 
   // Initialize autonomous chooser with options
   public void initializeChooser() {
-    NamedCommands.registerCommand("Raise arm to Station", elevator.toStation());
-    NamedCommands.registerCommand("raise arm to 1", elevator.toL1());
-    NamedCommands.registerCommand("raise arm to 2", elevator.toL2());
-    NamedCommands.registerCommand("raise arm to 3", elevator.toL3());
-    NamedCommands.registerCommand("raise arm to 4", elevator.toL4());
-    NamedCommands.registerCommand("intake coral", intake.intake());
-    NamedCommands.registerCommand("reverse intake coral", intake.reverseIntake());
-    NamedCommands.registerCommand("rotary part", rotatyPart.coralScore());
-
     autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));
     autoChooser.addOption("2 Piece Inverted", new PathPlannerAuto("Invert 2 Piece Auto"));
     autoChooser.addOption("3 Piece", new PathPlannerAuto("3 Piece Auto Better"));
@@ -206,17 +208,17 @@ public class RobotContainer {
                   SmartDashboard.putBoolean("Reset Complete", true);
                 }));
     m_pathfindCommand = m_pathfinder.getPathfindingCommand();
-    if (m_pathfindCommand != null) {
-      joystick.button(1).whileTrue(m_pathfindCommand);
-    }
+    // if (m_pathfindCommand != null) {
+    //  joystick.button(1).whileTrue(m_pathfindCommand);
+    // }
 
     // Intake Coral
-    /*joystick
-    .button(1)
-    .and(intakeProximityTrigger)
-    .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
-    .onFalse(
-        Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));*/
+    joystick
+        .button(1)
+        .and(intakeProximityTrigger)
+        .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
+        .onFalse(
+            Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));
     // L2
     joystick
         .button(3)
