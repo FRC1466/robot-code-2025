@@ -19,6 +19,7 @@ public class Intake extends SubsystemBase {
 
   @SuppressWarnings("unused")
   private double filteredCurrent;
+
   private boolean highCurrentBool;
   private final I2C.Port i2cPort = I2C.Port.kOnboard;
   private final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
@@ -64,16 +65,15 @@ public class Intake extends SubsystemBase {
     return (intakeMotor.getSupplyCurrent()).getValueAsDouble();
   }
 
-  public boolean getHighCurrent(){
-    if(intakeMotor.getTorqueCurrent().getValueAsDouble() > 10){
+  public boolean getHighCurrent() {
+    if (intakeMotor.getTorqueCurrent().getValueAsDouble() > 10) {
       highCurrentBool = true;
-    }
-    else if(intakeMotor.getTorqueCurrent().getValueAsDouble() < 3){
+    } else if (intakeMotor.getTorqueCurrent().getValueAsDouble() < 3) {
       highCurrentBool = false;
     }
     return highCurrentBool;
-
   }
+
   public void periodic() {
     filteredCurrent = currentFilter.calculate(getCurrent(intakeMotor));
     SmartDashboard.putNumber("ColorSensed", m_colorSensor.getProximity());
@@ -82,6 +82,5 @@ public class Intake extends SubsystemBase {
         "Angle Change", (intakeMotor.getPosition().getValueAsDouble() - prevMotorPose));
     prevMotorPose = intakeMotor.getPosition().getValueAsDouble();
     Logger.recordOutput("motor current", intakeMotor.getTorqueCurrent().getValueAsDouble());
-    
   }
 }

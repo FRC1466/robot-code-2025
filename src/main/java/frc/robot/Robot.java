@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Threads;
@@ -60,7 +61,9 @@ public class Robot extends LoggedRobot {
   private Vision vision;
   private final RobotContainer m_robotContainer;
 
+  @SuppressWarnings("unused")
   private Timer timer = new Timer();
+
   private boolean checkState = false;
 
   @SuppressWarnings("unused")
@@ -81,11 +84,9 @@ public class Robot extends LoggedRobot {
 
   @SuppressWarnings("resource")
   public Robot() {
-  
-    
-  
-   // Start logging! No more data receivers, replay sources, or metadata values may be added.
-    
+
+    // Start logging! No more data receivers, replay sources, or metadata values may be added.
+
     m_robotContainer = new RobotContainer();
     AutoLogOutputManager.addObject(this); // Add this object for logging
 
@@ -159,32 +160,40 @@ public class Robot extends LoggedRobot {
     Logger.start();
   }
 
-
-
-  
-  
-  
-  
-    @Override
-    public void robotInit() {
-      m_robotContainer.elevator.setSelectedSensorPosition(0);
-      vision = new Vision();
+  @Override
+  public void robotInit() {
+    RobotContainer.elevator.setSelectedSensorPosition(0);
+    vision = new Vision();
 
     Pathfinding.setPathfinder(new LocalADStarAK());
+    RobotContainer.elevator.setSelectedSensorPosition(0);
+    vision = new Vision();
+
+    // Check specifically for SIMBOT type, not just simulation
+    if (Constants.getRobot() == RobotType.SIMBOT) {
+      System.out.println("Detected SIMBOT - configuring Red1 alliance position");
+      DriverStationSim.setAllianceStationId(AllianceStationID.Red1);
+      DriverStationSim.setEnabled(true);
+      DriverStationSim.notifyNewData();
+
+      // Log the alliance to SmartDashboard for verification
+      SmartDashboard.putString("Alliance", "Red1");
+    } else if (RobotBase.isSimulation()) {
+      System.out.println("In simulation but not SIMBOT - skipping alliance configuration");
     }
-  
-  
+  }
+
   @Override
   public void robotPeriodic() {
     m_robotContainer
         .joystick
         .button(1)
-        .onTrue(m_robotContainer.m_pathfinder.getPathfindingCommand(0));
+        .whileTrue(m_robotContainer.m_pathfinder.getPathfindingCommand(0));
 
     m_robotContainer
         .joystick
         .button(8)
-        .onTrue(m_robotContainer.m_pathfinder.getPathfindingCommand(1));
+        .whileTrue(m_robotContainer.m_pathfinder.getPathfindingCommand(1));
 
     Constants.RobotType selectedType = m_robotContainer.getSelectedRobotType();
     if (selectedType != Constants.getRobot()) {
@@ -307,6 +316,13 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void disabledInit() {
+    // Only run simulation-specific code for SIMBOT
+    if (Constants.getRobot() == RobotType.SIMBOT) {
+      System.out.println("Refreshing SIMBOT alliance configuration");
+      DriverStationSim.setAllianceStationId(AllianceStationID.Red1);
+      DriverStationSim.notifyNewData();
+    }
+
     RobotContainer.elevator.goToGoal(.5);
     // fix later
     // m_robotContainer.rotatyPart.setGoal(Rotation2d.fromRadians(.05));
@@ -351,38 +367,36 @@ public class Robot extends LoggedRobot {
 
     if (RobotContainer.sliderEnabled) {
       RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
-    double radians = m_robotContainer.rotatyPart.getPosition().getRadians();
-    if(((radians > 0 && radians < .3)  || (radians > -2 && radians < -1)) && checkState){
-      m_robotContainer.rotatyPart.reset();
-      m_robotContainer.rotatyPart.setMotor(0);
-      checkState = false;
-    }
-    else if((radians > 0 && radians < .3)  || (radians > -2 && radians < -1)){
-      
-    }  
-    else{
-      checkState = true;
-    }
-    Logger.recordOutput("Check State",checkState);
-    Logger.recordOutput("Coral State",m_robotContainer.coralMode);
-    /*SmartDashboard.putData
-    ("Robot Pose", Telemetry.telemeterize.getPose());*/
-    if(m_robotContainer.sliderEnabled){
-      m_robotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3)+1)/2)*65);
-    }
-    Logger.recordOutput(
-        "Elevator Slider Position", (((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 75));
+      double radians = RobotContainer.rotatyPart.getPosition().getRadians();
+      if (((radians > 0 && radians < .3) || (radians > -2 && radians < -1)) && checkState) {
+        RobotContainer.rotatyPart.reset();
+        RobotContainer.rotatyPart.setMotor(0);
+        checkState = false;
+      } else if ((radians > 0 && radians < .3) || (radians > -2 && radians < -1)) {
 
-    if (RobotContainer.elevator.getElevatorHeight() < 7
-        || RobotContainer.elevator.getElevatorHeight() < 52) {
-      RobotContainer.elevator.setP(.05);
-      RobotContainer.elevator.setPeakOutput(.25);
-    } else {
-      RobotContainer.elevator.setP(Constants.ElevatorConstants.elevatorPosition.P);
-      RobotContainer.elevator.setPeakOutput(
-          Constants.ElevatorConstants.elevatorPosition.peakOutput);
+      } else {
+        checkState = true;
+      }
+      Logger.recordOutput("Check State", checkState);
+      Logger.recordOutput("Coral State", RobotContainer.coralMode);
+      /*SmartDashboard.putData
+      ("Robot Pose", Telemetry.telemeterize.getPose());*/
+      if (RobotContainer.sliderEnabled) {
+        RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
+      }
+      Logger.recordOutput(
+          "Elevator Slider Position", (((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 75));
+
+      if (RobotContainer.elevator.getElevatorHeight() < 7
+          || RobotContainer.elevator.getElevatorHeight() < 52) {
+        RobotContainer.elevator.setP(.05);
+        RobotContainer.elevator.setPeakOutput(.25);
+      } else {
+        RobotContainer.elevator.setP(Constants.ElevatorConstants.elevatorPosition.P);
+        RobotContainer.elevator.setPeakOutput(
+            Constants.ElevatorConstants.elevatorPosition.peakOutput);
+      }
     }
-  }
   }
 
   @Override
