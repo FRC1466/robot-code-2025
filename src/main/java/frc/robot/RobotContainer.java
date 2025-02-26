@@ -83,7 +83,9 @@ public class RobotContainer {
   private final Pathfind m_pathfinder;
 
   @SuppressWarnings("unused")
-  private Command m_pathfindCommand;
+  private Command m_pathfindCommandLeft;
+
+  private Command m_pathfindCommandRight;
 
   @AutoLogOutput public static boolean visionEnabled = true;
 
@@ -207,10 +209,15 @@ public class RobotContainer {
                   // Add debug output
                   SmartDashboard.putBoolean("Reset Complete", true);
                 }));
-    // Check if this runs multiple times
-    m_pathfindCommand = m_pathfinder.getPathfindingCommand(getClosestTag(), 0);
-    if (m_pathfindCommand != null) {
-      joystick.button(1).whileTrue(m_pathfindCommand);
+    // Check if this runs multiple times and clean up
+    m_pathfindCommandLeft = m_pathfinder.getPathfindingCommand(getClosestTag(), 0);
+    m_pathfindCommandRight = m_pathfinder.getPathfindingCommand(getClosestTag(), 1);
+
+    if (m_pathfindCommandLeft != null) {
+      joystick.button(1).whileTrue(m_pathfindCommandLeft);
+    }
+    if (m_pathfindCommandRight != null) {
+      joystick.button(8).whileTrue(m_pathfindCommandRight);
     }
 
     // Intake Coral
@@ -247,7 +254,6 @@ public class RobotContainer {
         .button(7)
         .onTrue(intake.intake())
         .onFalse(intake.stop().alongWith(rotatyPart.coralScore()));
-    joystick.button(8).onTrue(rotatyPart.algaeGrab()).onFalse(rotatyPart.coralScore());
     joystick.button(9).onTrue(elevator.toL2()).onFalse(elevator.toBottom());
     joystick.button(10).onTrue(intake.reverseIntake()).onFalse(intake.algaeHold());
     joystick.button(11).onTrue(elevator.toL4()).onFalse(elevator.toBottom());

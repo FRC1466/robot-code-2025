@@ -20,8 +20,7 @@ public class Pathfind {
   PathConstraints constraints;
   static Command redPathfindingCommand;
   static Command bluePathfindingCommand;
-  private int closestTag;
-  private int leftOrRight;
+
   // String bestPath = "Tag 10 to G";
   // obj 0 is left, obj 1 is right
   // 6,7,8,9,10,11
@@ -114,8 +113,7 @@ public class Pathfind {
   }
 
   public Command getPathfindingCommand(int closestTag, int leftOrRight) {
-    closestTag = this.closestTag;
-    leftOrRight = this.leftOrRight;
+
     redPathfindingCommand =
         AutoBuilder.pathfindToPose(
             redTargetPose[closestTag][leftOrRight],
