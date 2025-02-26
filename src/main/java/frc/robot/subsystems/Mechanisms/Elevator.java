@@ -54,7 +54,7 @@ public class Elevator extends SubsystemBase {
   // @AutoLogOutput private final LoggedMechanismLigament2d elevatorLigament;
   // @AutoLogOutput private final LoggedMechanismLigament2d wristLigament;
 
-  private final RotatyPart wrist;
+  // private final RotatyPart wrist;
 
   private double simulatedPosition = 0.0;
   private boolean isSimulation;
@@ -78,7 +78,7 @@ public class Elevator extends SubsystemBase {
     leftSlaveFX.setVoltage(0);
     setNeutralMode(NeutralModeValue.Brake);
 
-    this.wrist = wrist;
+    // this.wrist = wrist;
 
     // Initialize mechanism visualization
     // elevatorRoot = robotMech.getRoot("Elevator", 0.6, 0);

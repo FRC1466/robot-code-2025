@@ -23,9 +23,6 @@ public class Pathfind {
   static Command redPathfindingCommand;
   static Command bluePathfindingCommand;
 
-  private int closestTag;
-  private int leftOrRight;
-
   // String bestPath = "Tag 10 to G";
   // obj 0 is left, obj 1 is right
   // 6,7,8,9,10,11

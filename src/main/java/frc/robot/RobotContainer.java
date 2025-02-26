@@ -85,6 +85,7 @@ public class RobotContainer {
   @SuppressWarnings("unused")
   private Command m_pathfindCommandLeft;
 
+  @SuppressWarnings("unused")
   private Command m_pathfindCommandRight;
 
   @AutoLogOutput public static boolean visionEnabled = true;
@@ -288,7 +289,6 @@ public class RobotContainer {
   /**
    * @return int from 0-5 , if blue 0 = 17 and 5 = 22 , if red 0 = 6 and 5 = 11
    */
-  @SuppressWarnings("unlikely-arg-type")
   @AutoLogOutput(key = "Logger/closestTag")
   public int getClosestTag() {
     int closestTag = -1;
