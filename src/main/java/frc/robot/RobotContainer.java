@@ -191,8 +191,8 @@ public class RobotContainer {
     Trigger intakeProximityTrigger = new Trigger(() -> intake.getIntakeDistanceBool());
     Trigger algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 20);
     Trigger currentIntakeSwitch = new Trigger(() -> intake.getHighCurrent());
-Trigger algaeMode = new Trigger(() -> getMode());
-Trigger coralMode = new Trigger(() -> !getMode());
+Trigger algaeMode = new Trigger(() -> getModeMethod());
+Trigger coralMode = new Trigger(() -> !getModeMethod());
     Trigger falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
 
     // reset the field-centric heading on left bumper press
