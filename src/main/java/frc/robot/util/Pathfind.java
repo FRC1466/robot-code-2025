@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotContainer;
 import java.io.IOException;
@@ -22,6 +23,22 @@ public class Pathfind {
   PathConstraints constraints;
   static Command redPathfindingCommand;
   static Command bluePathfindingCommand;
+
+  // sendable chooser for pathfinding testing
+  static Command TestPathfindingCommand;
+  public static SendableChooser<Pose2d> testPoseChooser = new SendableChooser<>();
+
+  /*private void setupPoseChooser() {
+    testPoseChooser.setDefaultOption("Tag 10 to G", redTargetPose[5][0]);
+    testPoseChooser.addOption("Tag 9 to G", redTargetPose[4][0]);
+    testPoseChooser.addOption("Tag 8 to G", redTargetPose[3][0]);
+    testPoseChooser.addOption("Tag 7 to G", redTargetPose[2][0]);
+    testPoseChooser.addOption("Tag 6 to G", redTargetPose[1][0]);
+    testPoseChooser.addOption("Tag 5 to G", redTargetPose[0][0]);
+
+    // add the chooser to the dashboard
+    SmartDashboard.putData(testPoseChooser);
+  }*/
 
   // String bestPath = "Tag 10 to G";
   // obj 0 is left, obj 1 is right
@@ -41,7 +58,7 @@ public class Pathfind {
     },
     {
       new Pose2d(12.561, 5.237, Rotation2d.fromDegrees(-60)),
-      new Pose2d(12.301, 12.301, Rotation2d.fromDegrees(-60))
+      new Pose2d(12.301, 5.237, Rotation2d.fromDegrees(-60))
     },
     {
       new Pose2d(11.695, 4.169, Rotation2d.fromDegrees(0)),
@@ -97,7 +114,9 @@ public class Pathfind {
 
   public Pathfind(RobotContainer robotContainer) throws IOException, ParseException {
     this.robotContainer = robotContainer;
+    // setupPoseChooser();
     /*  Load the path we want to pathfind to and follow
+
     try {
       path = PathPlannerPath.fromPathFile(bestPath);
     } catch (FileVersionException | IOException | org.json.simple.parser.ParseException e) {
@@ -128,6 +147,8 @@ public class Pathfind {
     bluePathfindingCommand =
         AutoBuilder.pathfindToPose(
             blueTargetPoseTransformed[currentClosestTag][targetLeftOrRight], constraints, 0.0);
+    // Pose2d selectedPose = testPoseChooser.getSelected();
+    // TestPathfindingCommand = AutoBuilder.pathfindToPose(selectedPose, constraints, 0.0);
 
     return DriverStation.getAlliance().get() == Alliance.Red
         ? redPathfindingCommand
