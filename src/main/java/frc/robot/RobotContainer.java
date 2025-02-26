@@ -221,58 +221,45 @@ public class RobotContainer {
       // Run SysId routines when holding back/start and X/Y.
       // Note that each routine should be run exactly once in a single log.
       // Reset the field-centric heading on left bumper press
-
+      //Mode Switch
+      joystick.button(2).onTrue(changeMode());
       // Intake Coral
-      /*joystick
-      .button(1)
-      .and(intakeProximityTrigger)
-      .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
-      .onFalse(
-          Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));*/
-      // L2
       joystick
           .button(3)
+          .and(intakeProximityTrigger)
+          .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
+          .onFalse(Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));
+      // L2
+      joystick
+          .button(5)
           .onTrue(elevator.toL2().alongWith(rotatyPart.coralScore()))
           .onFalse(intake.outTake());
       (intakeProximityTrigger).onTrue(elevator.toBottom().andThen(intake.stop()));
       // L3
       joystick
-          .button(2)
+          .button(6)
           .onTrue(elevator.toL3().alongWith(rotatyPart.coralScore()))
           .onFalse(intake.intake());
       // L4
-      joystick.button(4).onTrue(rotatyPart.coralScore().alongWith(intake.hold()));
-      joystick.button(5).onTrue(rotatyPart.coralScore());
-      joystick
-          .button(6)
-          .onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()))
-          .onFalse(elevator.toL2().alongWith(intake.algaeHold()));
-      joystick
-          .button(6)
-          .and(algaeHeightReady)
-          .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
-
-      joystick
-          .button(7)
-          .onTrue(intake.intake())
-          .onFalse(intake.stop().alongWith(rotatyPart.coralScore()));
-      joystick.button(9).onTrue(elevator.toL2()).onFalse(elevator.toBottom());
-      joystick.button(10).onTrue(intake.reverseIntake()).onFalse(intake.algaeHold());
-      joystick.button(11).onTrue(elevator.toL4()).onFalse(elevator.toBottom());
-      joystick.button(12).onTrue(switchState(true)).onFalse(switchState(false));
-
-      joystick.button(15).onTrue(changeMode());
+     
     } else {
-      joystick.button(6).onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()));
+      joystick
+          .button(1)
+          .onTrue(intake.outTake())
+          .onFalse(rotatyPart.coralScore().alongWith(elevator.toBottom()));
+      joystick
+          .button(6)
+          .onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()));
       joystick
           .button(6)
           .and(algaeHeightReady)
           .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
+
       joystick
           .button(6)
           .and(currentIntakeSwitch)
           .onFalse(elevator.toL2().alongWith(intake.algaeHold()));
-      joystick.button(15).onTrue(changeMode());
+      joystick.button(2).onTrue(changeMode());
     }
 
     drivetrain.registerTelemetry(logger::telemeterize);
