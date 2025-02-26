@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 12.554,
-        "y": 2.85
+        "x": 100.0,
+        "y": 2.837
       },
       "prevControl": {
-        "x": 12.304,
-        "y": 2.85
+        "x": 99.75,
+        "y": 2.837
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 59.99999999999999
+    "rotation": -59.99999999999999
   },
   "reversed": false,
   "folder": "Tag 10",

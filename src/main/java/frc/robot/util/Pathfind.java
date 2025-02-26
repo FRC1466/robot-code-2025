@@ -9,6 +9,8 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import java.io.IOException;
 import java.text.ParseException;
@@ -16,7 +18,10 @@ import java.text.ParseException;
 public class Pathfind {
   PathPlannerPath path;
   PathConstraints constraints;
-  static Command pathfindingCommand;
+  static Command redPathfindingCommand;
+  static Command bluePathfindingCommand;
+  private int closestTag;
+  private int leftOrRight;
   // String bestPath = "Tag 10 to G";
   // obj 0 is left, obj 1 is right
   // 6,7,8,9,10,11
@@ -46,6 +51,47 @@ public class Pathfind {
       new Pose2d(12.554, 2.850, Rotation2d.fromDegrees(60))
     }
   };
+
+  // DO NOT USE - NEEDS TO BE FIXED
+  public Pose2d[][] blueTargetPoseTransformed = {
+    {
+      // 13.550 - 8.774 = 4.776; 300° becomes -60°
+      new Pose2d(4.776, 2.837, Rotation2d.fromDegrees(-60)),
+      // 13.853 - 8.774 = 5.079; 300° becomes -60°
+      new Pose2d(5.079, 3.003, Rotation2d.fromDegrees(-60))
+    },
+    {
+      // 14.347 - 8.774 = 5.573; 0° remains 0°
+      new Pose2d(5.573, 3.860, Rotation2d.fromDegrees(0)),
+      // 14.347 - 8.774 = 5.573; 0° remains 0°
+      new Pose2d(5.573, 4.190, Rotation2d.fromDegrees(0))
+    },
+    {
+      // 13.840 - 8.774 = 5.066; 60° remains 60°
+      new Pose2d(5.066, 5.044, Rotation2d.fromDegrees(60)),
+      // 13.560 - 8.774 = 4.786; 60° remains 60°
+      new Pose2d(4.786, 5.216, Rotation2d.fromDegrees(60))
+    },
+    {
+      // 12.561 - 8.774 = 3.787; 120° remains 120°
+      new Pose2d(3.787, 5.237, Rotation2d.fromDegrees(120)),
+      // 12.301 - 8.774 = 3.527; 120° remains 120°
+      new Pose2d(3.527, 12.301, Rotation2d.fromDegrees(120))
+    },
+    {
+      // 11.695 - 8.774 = 2.921; 180° remains 180° (unchanged as it's not greater than 180)
+      new Pose2d(2.921, 4.169, Rotation2d.fromDegrees(180)),
+      // 11.695 - 8.774 = 2.921; 180° remains 180°
+      new Pose2d(2.921, 3.860, Rotation2d.fromDegrees(180))
+    },
+    {
+      // 12.283 - 8.774 = 3.509; 240° becomes -120° (240 - 360)
+      new Pose2d(3.509, 2.998, Rotation2d.fromDegrees(-120)),
+      // 12.554 - 8.774 = 3.780; 240° becomes -120°
+      new Pose2d(3.780, 2.850, Rotation2d.fromDegrees(-120))
+    }
+  };
+
   public Pose2d targetPose = new Pose2d(11.638, 3.863, Rotation2d.fromDegrees(0));
 
   public Pathfind() throws IOException, ParseException {
@@ -65,13 +111,27 @@ public class Pathfind {
     // Since AutoBuilder is configured, we can use it to build pathfinding commands
     // pathfindingCommand = AutoBuilder.pathfindThenFollowPath(path, constraints);
 
-    pathfindingCommand =
-        AutoBuilder.pathfindToPose(
-            targetPose, constraints, 0.0 // Goal end velocity in meters/sec
-            );
   }
 
-  public Command getPathfindingCommand() {
-    return pathfindingCommand;
+  public Command getPathfindingCommand(int closestTag, int leftOrRight) {
+    closestTag = this.closestTag;
+    leftOrRight = this.leftOrRight;
+    redPathfindingCommand =
+        AutoBuilder.pathfindToPose(
+            redTargetPose[closestTag][leftOrRight],
+            constraints,
+            0.0 // Goal end velocity in meters/sec
+            );
+    bluePathfindingCommand =
+        AutoBuilder.pathfindToPose(
+            blueTargetPoseTransformed[closestTag][leftOrRight],
+            constraints,
+            0.0 // Goal end velocity in meters/sec
+            );
+    if (DriverStation.getAlliance().get() == Alliance.Red) {
+      return redPathfindingCommand;
+    }
+
+    return bluePathfindingCommand;
   }
 }

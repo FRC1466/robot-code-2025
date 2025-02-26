@@ -114,16 +114,6 @@ public class RobotContainer {
       }
       default -> throw new IllegalArgumentException("Unexpected value: " + Constants.getRobot());
     }
-
-    NamedCommands.registerCommand("Raise arm to Station", elevator.toStation());
-    NamedCommands.registerCommand("raise arm to 1", elevator.toL1());
-    NamedCommands.registerCommand("raise arm to 2", elevator.toL2());
-    NamedCommands.registerCommand("raise arm to 3", elevator.toL3());
-    NamedCommands.registerCommand("raise arm to 4", elevator.toL4());
-    NamedCommands.registerCommand("intake coral", intake.intake());
-    NamedCommands.registerCommand("reverse intake coral", intake.reverseIntake());
-    NamedCommands.registerCommand("rotary part", rotatyPart.coralScore());
-
     try {
       m_pathfinder = new Pathfind();
     } catch (IOException | ParseException e) {
@@ -150,6 +140,15 @@ public class RobotContainer {
 
   // Initialize autonomous chooser with options
   public void initializeChooser() {
+    NamedCommands.registerCommand("Raise arm to Station", elevator.toStation());
+    NamedCommands.registerCommand("raise arm to 1", elevator.toL1());
+    NamedCommands.registerCommand("raise arm to 2", elevator.toL2());
+    NamedCommands.registerCommand("raise arm to 3", elevator.toL3());
+    NamedCommands.registerCommand("raise arm to 4", elevator.toL4());
+    NamedCommands.registerCommand("intake coral", intake.intake());
+    NamedCommands.registerCommand("reverse intake coral", intake.reverseIntake());
+    NamedCommands.registerCommand("rotary part", rotatyPart.coralScore());
+
     autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));
     autoChooser.addOption("2 Piece Inverted", new PathPlannerAuto("Invert 2 Piece Auto"));
     autoChooser.addOption("3 Piece", new PathPlannerAuto("3 Piece Auto Better"));
@@ -208,18 +207,19 @@ public class RobotContainer {
                   // Add debug output
                   SmartDashboard.putBoolean("Reset Complete", true);
                 }));
-    m_pathfindCommand = m_pathfinder.getPathfindingCommand();
+    // Check if this runs multiple times
+    m_pathfindCommand = m_pathfinder.getPathfindingCommand(getClosestTag(), 0);
     if (m_pathfindCommand != null) {
       joystick.button(1).whileTrue(m_pathfindCommand);
     }
 
     // Intake Coral
-    // joystick
-    //     .button(1)
-    //     .and(intakeProximityTrigger)
-    //     .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
-    //     .onFalse(
-    //         Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));
+    /*joystick
+    .button(1)
+    .and(intakeProximityTrigger)
+    .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
+    .onFalse(
+        Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));*/
     // L2
     joystick
         .button(3)
@@ -289,6 +289,9 @@ public class RobotContainer {
   }
 
   // Should probably get an error handler and some data printing
+  /**
+   * @return int from 0-5 , if blue 0 = 17 and 5 = 22 , if red 0 = 6 and 5 = 11
+   */
   @SuppressWarnings("unlikely-arg-type")
   @AutoLogOutput(key = "Logger/closestTag")
   public int getClosestTag() {
@@ -303,7 +306,7 @@ public class RobotContainer {
     }
     try {
 
-      for (int i = offset; i < (offset + 7); i++) {
+      for (int i = offset; i < (offset + 6); i++) {
         Optional<Pose3d> tagPoseOptional = layout.getTagPose(i);
         if (tagPoseOptional.isEmpty()) {
           // Skip this index if no tag pose is available
@@ -312,12 +315,11 @@ public class RobotContainer {
         var tagPose = tagPoseOptional.get();
         holderDistance =
             (Math.pow(drivetrain.getState().Pose.getX() - tagPose.getX(), 2)
-          + Math.pow(drivetrain.getState().Pose.getY() - tagPose.getY(), 2)
-          // + Math.pow(
-          //     drivetrain.getState().Pose.getRotation().getRadians()
-          //         - tagPose.getRotation().getAngle() * -0.08,
-          //     2)
-          );
+                + Math.pow(drivetrain.getState().Pose.getY() - tagPose.getY(), 2)
+                + Math.pow(
+                    drivetrain.getState().Pose.getRotation().getRadians()
+                        - tagPose.getRotation().getAngle() * 0.1,
+                    2));
         if (holderDistance < prevDistance) {
           closestTag = i;
           prevDistance = holderDistance;
@@ -329,8 +331,8 @@ public class RobotContainer {
       System.err.println("The underlying exception was: " + cause);
       e.printStackTrace();
     }
-    Logger.recordOutput("current offset is", offset);
     Logger.recordOutput("Logger/closestTagID", closestTag);
+    Logger.recordOutput("current offset is", offset);
     Logger.recordOutput("Alliance is Red", DriverStation.getAlliance().get() == Alliance.Red);
     Logger.recordOutput("Alliance is Blue", DriverStation.getAlliance().get() == Alliance.Blue);
     // Adjust the tag based on alliance.
