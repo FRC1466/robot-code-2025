@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.Constants;
@@ -210,17 +209,17 @@ public class RobotContainer {
                   SmartDashboard.putBoolean("Reset Complete", true);
                 }));
     m_pathfindCommand = m_pathfinder.getPathfindingCommand();
-    // if (m_pathfindCommand != null) {
-    //  joystick.button(1).whileTrue(m_pathfindCommand);
-    // }
+    if (m_pathfindCommand != null) {
+      joystick.button(1).whileTrue(m_pathfindCommand);
+    }
 
     // Intake Coral
-    joystick
-        .button(1)
-        .and(intakeProximityTrigger)
-        .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
-        .onFalse(
-            Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));
+    // joystick
+    //     .button(1)
+    //     .and(intakeProximityTrigger)
+    //     .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
+    //     .onFalse(
+    //         Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));
     // L2
     joystick
         .button(3)
@@ -291,7 +290,7 @@ public class RobotContainer {
 
   // Should probably get an error handler and some data printing
   @SuppressWarnings("unlikely-arg-type")
-  @AutoLogOutput
+  @AutoLogOutput(key = "Logger/closestTag")
   public int getClosestTag() {
     int closestTag = -1;
     double prevDistance = Double.MAX_VALUE;
@@ -313,11 +312,12 @@ public class RobotContainer {
         var tagPose = tagPoseOptional.get();
         holderDistance =
             (Math.pow(drivetrain.getState().Pose.getX() - tagPose.getX(), 2)
-                + Math.pow(drivetrain.getState().Pose.getY() - tagPose.getY(), 2)
-                + Math.pow(
-                    drivetrain.getState().Pose.getRotation().getRadians()
-                        - tagPose.getRotation().getAngle() * 0.1,
-                    2));
+          + Math.pow(drivetrain.getState().Pose.getY() - tagPose.getY(), 2)
+          // + Math.pow(
+          //     drivetrain.getState().Pose.getRotation().getRadians()
+          //         - tagPose.getRotation().getAngle() * -0.08,
+          //     2)
+          );
         if (holderDistance < prevDistance) {
           closestTag = i;
           prevDistance = holderDistance;
@@ -330,9 +330,10 @@ public class RobotContainer {
       e.printStackTrace();
     }
     Logger.recordOutput("current offset is", offset);
+    Logger.recordOutput("Logger/closestTagID", closestTag);
     Logger.recordOutput("Alliance is Red", DriverStation.getAlliance().get() == Alliance.Red);
     Logger.recordOutput("Alliance is Blue", DriverStation.getAlliance().get() == Alliance.Blue);
     // Adjust the tag based on alliance.
-    return closestTag - offset - 1;
+    return closestTag - offset;
   }
 }
