@@ -115,7 +115,7 @@ public class RobotContainer {
         Logger.recordOutput("Constant File", "Using TunerConstantsTester for Devbot");
       }
       case SIMBOT -> {
-        drivetrain = TunerConstants.createDrivetrain(); // Use TunerConstants for simulation
+        drivetrain = TunerConstants.createDrivetrain();
         Logger.recordOutput("Constant File", "Using TunerConstants for simulation");
       }
       default -> throw new IllegalArgumentException("Unexpected value: " + Constants.getRobot());
@@ -167,12 +167,12 @@ public class RobotContainer {
 
   // Configure joystick bindings
   // Declare triggers as class members
-  @AutoLogOutput private Trigger intakeProximityTrigger;
-  @AutoLogOutput private Trigger algaeHeightReady;
-  @AutoLogOutput private Trigger currentIntakeSwitch;
-  @AutoLogOutput private Trigger algaeMode;
-  @AutoLogOutput private Trigger coralMode;
-  @AutoLogOutput private Trigger falseIntakeProximityTrigger;
+  @AutoLogOutput public Trigger intakeProximityTrigger;
+  @AutoLogOutput public Trigger algaeHeightReady;
+  @AutoLogOutput public Trigger currentIntakeSwitch;
+  @AutoLogOutput public Trigger algaeMode;
+  @AutoLogOutput public Trigger coralMode;
+  @AutoLogOutput public Trigger falseIntakeProximityTrigger;
 
   @SuppressWarnings("unused")
   private void configureBindings() {

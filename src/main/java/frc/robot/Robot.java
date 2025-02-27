@@ -30,6 +30,7 @@ import frc.robot.constants.Constants.Mode;
 import frc.robot.constants.Constants.RobotType;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsTester;
+import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.Vision;
 import frc.robot.util.LocalADStarAK;
 import java.io.File;
@@ -60,6 +61,7 @@ public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
   private Vision vision;
   private final RobotContainer m_robotContainer;
+  private final Blinkin m_blinkin;
 
   @SuppressWarnings("unused")
   private Timer timer = new Timer();
@@ -88,6 +90,7 @@ public class Robot extends LoggedRobot {
     // Start logging! No more data receivers, replay sources, or metadata values may be added.
 
     m_robotContainer = new RobotContainer();
+    m_blinkin = new Blinkin();
     AutoLogOutputManager.addObject(this); // Add this object for logging
 
     // Record metadata
@@ -287,7 +290,7 @@ public class Robot extends LoggedRobot {
         && disabledTimer.hasElapsed(lowBatteryDisabledTime)
         && lowBatteryCycleCount >= lowBatteryMinCycleCount) {
       lowBatteryAlert.set(true);
-      // Leds.getInstance().lowBatteryAlert = true;
+      m_blinkin.lightsWarning();
       // Useful when LEDs are implemented
     }
 
@@ -344,7 +347,9 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void autonomousPeriodic() {}
+  public void autonomousPeriodic() {
+    m_blinkin.lightsAuto();
+  }
 
   @Override
   public void autonomousExit() {}
@@ -361,6 +366,12 @@ public class Robot extends LoggedRobot {
   public void teleopPeriodic() {
     // SmartDashboard.putBoolean(
     //   "Drive Command Running", RobotContainer.drivetrain.getDefaultCommand().isScheduled());
+
+    if (m_robotContainer.coralMode.getAsBoolean()) {
+      m_blinkin.lightsCoral();
+    } else {
+      m_blinkin.lightsAlgae();
+    }
 
     if (RobotContainer.sliderEnabled) {
       RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
