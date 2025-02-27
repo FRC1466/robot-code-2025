@@ -200,11 +200,8 @@ public class RobotContainer {
     algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 20);
     currentIntakeSwitch = new Trigger(() -> intake.getHighCurrent());
     algaeMode = new Trigger(() -> !getModeMethod());
-    coralMode =
-        new Trigger(
-            () ->
-                getModeMethod()); // Should be true because boolCoralMode starts at true? I could be
-    // wrong
+    coralMode = new Trigger(() -> getModeMethod());
+    // Should be true because boolCoralMode starts at true? I could be wrong
     falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
 
     // reset the field-centric heading on left bumper press
@@ -274,6 +271,55 @@ public class RobotContainer {
         .and(algaeHeightReady)
         .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
 
+    // Intake Coral
+    // joystick.button(1).and(intakeProximityTrigger).whileTrue(elevator.toBottom().alongWith(rotatyPart.store()).alongWith(intake.intake())).onFalse(intake.stop().alongWith(rotatyPart.coralScore()));
+    // Run SysId routines when holding back/start and X/Y.
+    // Note that each routine should be run exactly once in a single log.
+    // Reset the field-centric heading on left bumper press
+    // Mode Switch
+    joystick.button(2).onTrue(changeMode());
+    // Intake Coral
+    joystick
+        .button(3)
+        .and(coralMode)
+        .and(intakeProximityTrigger)
+        .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
+        .onFalse(
+            Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));
+    // L2
+    joystick
+        .button(5)
+        .and(coralMode)
+        .onTrue(elevator.toL2().alongWith(rotatyPart.coralScore()))
+        .onFalse(intake.outTake());
+    (intakeProximityTrigger).onTrue(elevator.toBottom().andThen(intake.stop()));
+    // L3
+    joystick
+        .button(6)
+        .and(coralMode)
+        .onTrue(elevator.toL3().alongWith(rotatyPart.coralScore()))
+        .onFalse(intake.intake());
+    // L4
+
+    joystick
+        .button(1)
+        .and(algaeMode)
+        .onTrue(intake.outTake())
+        .onFalse(rotatyPart.coralScore().alongWith(elevator.toBottom()));
+    joystick
+        .button(6)
+        .and(algaeMode)
+        .onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()));
+    joystick
+        .button(6)
+        .and(algaeHeightReady)
+        .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
+
+    joystick
+        .button(6)
+        .and(algaeMode)
+        .and(currentIntakeSwitch)
+        .onFalse(elevator.toL2().alongWith(intake.algaeHold()));
     joystick
         .button(6)
         .and(algaeMode)
