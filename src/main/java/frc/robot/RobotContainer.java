@@ -95,7 +95,7 @@ public class RobotContainer {
   public final CommandJoystick joystick = new CommandJoystick(0);
   final Telemetry logger = new Telemetry(MaxSpeed);
 
-  public static boolean coralMode = true;
+  @AutoLogOutput public static boolean coralMode = true;
 
   // Drivetrain
   public static CommandSwerveDrivetrain drivetrain;
@@ -191,8 +191,8 @@ public class RobotContainer {
     Trigger intakeProximityTrigger = new Trigger(() -> intake.getIntakeDistanceBool());
     Trigger algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 20);
     Trigger currentIntakeSwitch = new Trigger(() -> intake.getHighCurrent());
-Trigger algaeMode = new Trigger(() -> getModeMethod());
-Trigger coralMode = new Trigger(() -> !getModeMethod());
+    Trigger algaeMode = new Trigger(() -> getModeMethod());
+    Trigger coralMode = new Trigger(() -> !getModeMethod());
     Trigger falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
 
     // reset the field-centric heading on left bumper press
@@ -217,51 +217,56 @@ Trigger coralMode = new Trigger(() -> !getModeMethod());
                   // Add debug output
                   SmartDashboard.putBoolean("Reset Complete", true);
                 }));
-    
-      // Intake Coral
-      // joystick.button(1).and(intakeProximityTrigger).whileTrue(elevator.toBottom().alongWith(rotatyPart.store()).alongWith(intake.intake())).onFalse(intake.stop().alongWith(rotatyPart.coralScore()));
-      // Run SysId routines when holding back/start and X/Y.
-      // Note that each routine should be run exactly once in a single log.
-      // Reset the field-centric heading on left bumper press
-      // Mode Switch
-      joystick.button(2).onTrue(changeMode());
-      // Intake Coral
-      joystick
-          .button(3).and(coralMode)
-          .and(intakeProximityTrigger)
-          .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
-          .onFalse(
-              Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));
-      // L2
-      joystick
-          .button(5).and(coralMode)
-          .onTrue(elevator.toL2().alongWith(rotatyPart.coralScore()))
-          .onFalse(intake.outTake());
-      (intakeProximityTrigger).onTrue(elevator.toBottom().andThen(intake.stop()));
-      // L3
-      joystick
-          .button(6).and(coralMode)
-          .onTrue(elevator.toL3().alongWith(rotatyPart.coralScore()))
-          .onFalse(intake.intake());
-      // L4
 
-    
-      joystick
-          .button(1).and(algaeMode)
-          .onTrue(intake.outTake())
-          .onFalse(rotatyPart.coralScore().alongWith(elevator.toBottom()));
-      joystick.button(6).and(algaeMode).onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()));
-      joystick
-          .button(6)
-          .and(algaeHeightReady)
-          .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
+    // Intake Coral
+    // joystick.button(1).and(intakeProximityTrigger).whileTrue(elevator.toBottom().alongWith(rotatyPart.store()).alongWith(intake.intake())).onFalse(intake.stop().alongWith(rotatyPart.coralScore()));
+    // Run SysId routines when holding back/start and X/Y.
+    // Note that each routine should be run exactly once in a single log.
+    // Reset the field-centric heading on left bumper press
+    // Mode Switch
+    joystick.button(2).onTrue(changeMode());
+    // Intake Coral
+    joystick
+        .button(3)
+        .and(coralMode)
+        .and(intakeProximityTrigger)
+        .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
+        .onFalse(
+            Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));
+    // L2
+    joystick
+        .button(5)
+        .and(coralMode)
+        .onTrue(elevator.toL2().alongWith(rotatyPart.coralScore()))
+        .onFalse(intake.outTake());
+    (intakeProximityTrigger).onTrue(elevator.toBottom().andThen(intake.stop()));
+    // L3
+    joystick
+        .button(6)
+        .and(coralMode)
+        .onTrue(elevator.toL3().alongWith(rotatyPart.coralScore()))
+        .onFalse(intake.intake());
+    // L4
 
-      joystick
-          .button(6).and(algaeMode)
-          .and(currentIntakeSwitch)
-          .onFalse(elevator.toL2().alongWith(intake.algaeHold()));
-      
-    
+    joystick
+        .button(1)
+        .and(algaeMode)
+        .onTrue(intake.outTake())
+        .onFalse(rotatyPart.coralScore().alongWith(elevator.toBottom()));
+    joystick
+        .button(6)
+        .and(algaeMode)
+        .onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()));
+    joystick
+        .button(6)
+        .and(algaeHeightReady)
+        .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
+
+    joystick
+        .button(6)
+        .and(algaeMode)
+        .and(currentIntakeSwitch)
+        .onFalse(elevator.toL2().alongWith(intake.algaeHold()));
 
     drivetrain.registerTelemetry(logger::telemeterize);
   }
@@ -289,10 +294,9 @@ Trigger coralMode = new Trigger(() -> !getModeMethod());
     coralMode = !coralMode;
   }
 
-
   public boolean getModeMethod() {
     return coralMode;
-}
+  }
 
   // Reset PID controllers
   public void resetPID() {
