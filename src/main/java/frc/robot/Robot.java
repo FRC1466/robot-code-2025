@@ -176,8 +176,6 @@ public class Robot extends LoggedRobot {
       DriverStationSim.setEnabled(true);
       DriverStationSim.notifyNewData();
 
-      // Log the alliance to SmartDashboard for verification
-      SmartDashboard.putString("Alliance", "Red1");
     } else if (RobotBase.isSimulation()) {
       System.out.println("In simulation but not SIMBOT - skipping alliance configuration");
     }
@@ -227,7 +225,6 @@ public class Robot extends LoggedRobot {
       }
     }
 
-    // Rest of robotPeriodic...
     vision.logSeenAprilTags();
     // Color detectedColor = m_colorSensor.getColor();
 
