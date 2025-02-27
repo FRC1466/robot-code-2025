@@ -26,10 +26,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
-import frc.robot.constants.Constants.Mode;
 import frc.robot.constants.Constants.RobotType;
-import frc.robot.generated.TunerConstants;
-import frc.robot.generated.TunerConstantsTester;
 import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.Vision;
 import frc.robot.util.LocalADStarAK;
@@ -80,9 +77,12 @@ public class Robot extends LoggedRobot {
           "Battery voltage is very low, consider turning off the robot or replacing the battery.",
           AlertType.kWarning);
 
+  // Alert is no longer needed since we're commenting out the type switching functionality
+  /*
   private final Alert typeSwitchAlert =
       new Alert(
           "Cannot switch robot type while enabled. Disable the robot first.", AlertType.kWarning);
+  */
 
   @SuppressWarnings("resource")
   public Robot() {
@@ -196,37 +196,40 @@ public class Robot extends LoggedRobot {
         .button(8)
         .whileTrue(m_robotContainer.m_pathfinder.getPathfindingCommand(1));*/
 
-    Constants.RobotType selectedType = m_robotContainer.getSelectedRobotType();
-    if (selectedType != Constants.getRobot()) {
-      if (DriverStation.isEnabled()) {
-        // If robot is enabled, show warning and don't switch
-        typeSwitchAlert.set(true);
-        // Reset chooser to current type to prevent future attempts
-        m_robotContainer.robotTypeChooser.addDefaultOption(
-            Constants.getRobot().toString(), Constants.getRobot());
-      } else {
-        // Only switch when disabled
-        Constants.setRobot(selectedType);
-        // Reinitialize drivetrain if robot type changes
-        if (RobotContainer.drivetrain != null) {
-          switch (selectedType) {
-            case COMPBOT -> {
-              Constants.setMode(Mode.REPLAY);
-              RobotContainer.drivetrain = TunerConstants.createDrivetrain();
+    // Commented out robot type switching code
+    /*
+      Constants.RobotType selectedType = m_robotContainer.getSelectedRobotType();
+      if (selectedType != Constants.getRobot()) {
+        if (DriverStation.isEnabled()) {
+          // If robot is enabled, show warning and don't switch
+          typeSwitchAlert.set(true);
+          // Reset chooser to current type to prevent future attempts
+          m_robotContainer.robotTypeChooser.addDefaultOption(
+              Constants.getRobot().toString(), Constants.getRobot());
+        } else {
+          // Only switch when disabled
+          Constants.setRobot(selectedType);
+          // Reinitialize drivetrain if robot type changes
+          if (RobotContainer.drivetrain != null) {
+            switch (selectedType) {
+              case COMPBOT -> {
+                Constants.setMode(Mode.REPLAY);
+                RobotContainer.drivetrain = TunerConstants.createDrivetrain();
+              }
+              case DEVBOT -> {
+                Constants.setMode(Mode.REPLAY);
+                RobotContainer.drivetrain = TunerConstantsTester.createDrivetrain();
+              }
+              case SIMBOT -> {
+                Constants.setMode(Mode.SIM);
+                RobotContainer.drivetrain = TunerConstants.createDrivetrain();
+              }
+              default -> throw new IllegalArgumentException("Unexpected value: " + selectedType);
             }
-            case DEVBOT -> {
-              Constants.setMode(Mode.REPLAY);
-              RobotContainer.drivetrain = TunerConstantsTester.createDrivetrain();
-            }
-            case SIMBOT -> {
-              Constants.setMode(Mode.SIM);
-              RobotContainer.drivetrain = TunerConstants.createDrivetrain();
-            }
-            default -> throw new IllegalArgumentException("Unexpected value: " + selectedType);
           }
         }
-      }
     }
+      */
 
     vision.logSeenAprilTags();
     // Color detectedColor = m_colorSensor.getColor();

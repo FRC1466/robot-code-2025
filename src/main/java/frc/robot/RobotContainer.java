@@ -70,8 +70,11 @@ public class RobotContainer {
       new LoggedDashboardChooser<>("Auto Routine");
 
   // Add new field
+  // Commented out robot type chooser - we'll initialize the drivetrain only once
+  /*
   public final LoggedDashboardChooser<Constants.RobotType> robotTypeChooser =
       new LoggedDashboardChooser<>("Robot Type");
+  */
 
   // Subsystems
   private final Intake intake = new Intake();
@@ -95,7 +98,7 @@ public class RobotContainer {
   public final CommandJoystick joystick = new CommandJoystick(0);
   final Telemetry logger = new Telemetry(MaxSpeed);
 
-  public static boolean boolCoralMode = true;
+  @AutoLogOutput public static boolean boolCoralMode = true;
 
   // Drivetrain
   public static CommandSwerveDrivetrain drivetrain;
@@ -103,8 +106,7 @@ public class RobotContainer {
   public static boolean sliderEnabled = false;
 
   public RobotContainer() {
-    configureRobotTypeChooser();
-    // Initialize drivetrain based on robot type
+    // Initialize drivetrain once based on robot type
     switch (Constants.getRobot()) {
       case COMPBOT -> {
         drivetrain = TunerConstants.createDrivetrain();
@@ -120,6 +122,10 @@ public class RobotContainer {
       }
       default -> throw new IllegalArgumentException("Unexpected value: " + Constants.getRobot());
     }
+
+    // Commented out robot type chooser configuration
+    // configureRobotTypeChooser();
+
     try {
       m_pathfinder = new Pathfind(this);
     } catch (IOException | ParseException e) {
@@ -130,6 +136,8 @@ public class RobotContainer {
     initializeChooser();
   }
 
+  // Commented out robot type chooser methods
+  /*
   private void configureRobotTypeChooser() {
     robotTypeChooser.addOption("COMPBOT", Constants.RobotType.COMPBOT);
     robotTypeChooser.addOption("DEVBOT", Constants.RobotType.DEVBOT);
@@ -143,6 +151,7 @@ public class RobotContainer {
   public Constants.RobotType getSelectedRobotType() {
     return robotTypeChooser.get();
   }
+  */
 
   // Initialize autonomous chooser with options
   public void initializeChooser() {
@@ -197,12 +206,12 @@ public class RobotContainer {
     // Run SysId routines when holding back/start and X/Y.
     // Note that each routine should be run exactly once in a single log.
     intakeProximityTrigger = new Trigger(() -> intake.getIntakeDistanceBool());
+    falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
     algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 20);
     currentIntakeSwitch = new Trigger(() -> intake.getHighCurrent());
     algaeMode = new Trigger(() -> !getModeMethod());
     coralMode = new Trigger(() -> getModeMethod());
     // Should be true because boolCoralMode starts at true? I could be wrong
-    falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
 
     // reset the field-centric heading on left bumper press
     joystick
