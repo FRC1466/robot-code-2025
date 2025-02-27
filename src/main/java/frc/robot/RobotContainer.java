@@ -95,7 +95,7 @@ public class RobotContainer {
   public final CommandJoystick joystick = new CommandJoystick(0);
   final Telemetry logger = new Telemetry(MaxSpeed);
 
-  public static boolean coralMode = true;
+  public static boolean boolCoralMode = true;
 
   // Drivetrain
   public static CommandSwerveDrivetrain drivetrain;
@@ -166,6 +166,14 @@ public class RobotContainer {
   }
 
   // Configure joystick bindings
+  // Declare triggers as class members
+  @AutoLogOutput private Trigger intakeProximityTrigger;
+  @AutoLogOutput private Trigger algaeHeightReady;
+  @AutoLogOutput private Trigger currentIntakeSwitch;
+  @AutoLogOutput private Trigger algaeMode;
+  @AutoLogOutput private Trigger coralMode;
+  @AutoLogOutput private Trigger falseIntakeProximityTrigger;
+
   @SuppressWarnings("unused")
   private void configureBindings() {
     // Note that X is defined as forward according to WPILib convention,
@@ -188,12 +196,16 @@ public class RobotContainer {
 
     // Run SysId routines when holding back/start and X/Y.
     // Note that each routine should be run exactly once in a single log.
-    Trigger intakeProximityTrigger = new Trigger(() -> intake.getIntakeDistanceBool());
-    Trigger algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 20);
-    Trigger currentIntakeSwitch = new Trigger(() -> intake.getHighCurrent());
-    Trigger algaeMode = new Trigger(() -> getModeMethod());
-    Trigger coralMode = new Trigger(() -> !getModeMethod());
-    Trigger falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
+    intakeProximityTrigger = new Trigger(() -> intake.getIntakeDistanceBool());
+    algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 20);
+    currentIntakeSwitch = new Trigger(() -> intake.getHighCurrent());
+    algaeMode = new Trigger(() -> !getModeMethod());
+    coralMode =
+        new Trigger(
+            () ->
+                getModeMethod()); // Should be true because boolCoralMode starts at true? I could be
+    // wrong
+    falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
 
     // reset the field-centric heading on left bumper press
     joystick
@@ -291,11 +303,11 @@ public class RobotContainer {
   }
 
   public void changeModeMethod() {
-    coralMode = !coralMode;
+    boolCoralMode = !boolCoralMode;
   }
 
   public boolean getModeMethod() {
-    return coralMode;
+    return boolCoralMode;
   }
 
   // Reset PID controllers

@@ -375,7 +375,7 @@ public class Robot extends LoggedRobot {
         checkState = true;
       }
       Logger.recordOutput("Check State", checkState);
-      Logger.recordOutput("Coral State", RobotContainer.coralMode);
+      Logger.recordOutput("Coral State", RobotContainer.boolCoralMode);
       /*SmartDashboard.putData
       ("Robot Pose", Telemetry.telemeterize.getPose());*/
       if (RobotContainer.sliderEnabled) {
