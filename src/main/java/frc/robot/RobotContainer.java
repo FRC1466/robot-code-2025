@@ -70,8 +70,11 @@ public class RobotContainer {
       new LoggedDashboardChooser<>("Auto Routine");
 
   // Add new field
+  // Commented out robot type chooser - we'll initialize the drivetrain only once
+  /*
   public final LoggedDashboardChooser<Constants.RobotType> robotTypeChooser =
       new LoggedDashboardChooser<>("Robot Type");
+  */
 
   // Subsystems
   private final Intake intake = new Intake();
@@ -103,8 +106,7 @@ public class RobotContainer {
   public static boolean sliderEnabled = false;
 
   public RobotContainer() {
-    configureRobotTypeChooser();
-    // Initialize drivetrain based on robot type
+    // Initialize drivetrain once based on robot type
     switch (Constants.getRobot()) {
       case COMPBOT -> {
         drivetrain = TunerConstants.createDrivetrain();
@@ -115,11 +117,15 @@ public class RobotContainer {
         Logger.recordOutput("Constant File", "Using TunerConstantsTester for Devbot");
       }
       case SIMBOT -> {
-        drivetrain = TunerConstants.createDrivetrain(); // Use TunerConstants for simulation
+        drivetrain = TunerConstants.createDrivetrain();
         Logger.recordOutput("Constant File", "Using TunerConstants for simulation");
       }
       default -> throw new IllegalArgumentException("Unexpected value: " + Constants.getRobot());
     }
+
+    // Commented out robot type chooser configuration
+    // configureRobotTypeChooser();
+
     try {
       m_pathfinder = new Pathfind(this);
     } catch (IOException | ParseException e) {
@@ -130,6 +136,8 @@ public class RobotContainer {
     initializeChooser();
   }
 
+  // Commented out robot type chooser methods
+  /*
   private void configureRobotTypeChooser() {
     robotTypeChooser.addOption("COMPBOT", Constants.RobotType.COMPBOT);
     robotTypeChooser.addOption("DEVBOT", Constants.RobotType.DEVBOT);
@@ -143,6 +151,7 @@ public class RobotContainer {
   public Constants.RobotType getSelectedRobotType() {
     return robotTypeChooser.get();
   }
+  */
 
   // Initialize autonomous chooser with options
   public void initializeChooser() {
@@ -166,6 +175,13 @@ public class RobotContainer {
   }
 
   // Configure joystick bindings
+  // Declare triggers as class members
+  @AutoLogOutput public Trigger intakeProximityTrigger;
+  @AutoLogOutput public Trigger algaeHeightReady;
+  @AutoLogOutput public Trigger currentIntakeSwitch;
+  @AutoLogOutput public Trigger algaeMode;
+  @AutoLogOutput public Trigger falseIntakeProximityTrigger;
+
   @SuppressWarnings("unused")
   private void configureBindings() {
     // Note that X is defined as forward according to WPILib convention,
