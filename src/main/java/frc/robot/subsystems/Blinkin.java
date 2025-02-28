@@ -5,13 +5,17 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import org.littletonrobotics.junction.AutoLogOutput;
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 
 public class Blinkin {
 
   Spark blinkin;
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
   @AutoLogOutput private double blinkinValue;
 
@@ -40,6 +44,8 @@ public class Blinkin {
     blinkin.set(-.11);
     blinkinValue = -.11;
 =======
+=======
+>>>>>>> Stashed changes
 
   public Blinkin() {
 
@@ -62,6 +68,9 @@ public class Blinkin {
 
   public void rainbowParty() {
     blinkin.set(-.97);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
   }
 }

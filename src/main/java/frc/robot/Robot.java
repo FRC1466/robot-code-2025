@@ -31,6 +31,9 @@ import frc.robot.constants.Constants.RobotType;
 =======
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsTester;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.Vision;
@@ -194,6 +197,7 @@ public class Robot extends LoggedRobot {
   @Override
   public void robotPeriodic() {
 
+<<<<<<< Updated upstream
     // Commented out robot type switching code
     /*
       Constants.RobotType selectedType = m_robotContainer.getSelectedRobotType();
@@ -223,6 +227,25 @@ public class Robot extends LoggedRobot {
                 RobotContainer.drivetrain = TunerConstants.createDrivetrain();
               }
               default -> throw new IllegalArgumentException("Unexpected value: " + selectedType);
+=======
+    Constants.RobotType selectedType = m_robotContainer.getSelectedRobotType();
+    if (selectedType != Constants.getRobot()) {
+      if (DriverStation.isEnabled()) {
+        // If robot is enabled, show warning and don't switch
+        typeSwitchAlert.set(true);
+        // Reset chooser to current type to prevent future attempts
+        m_robotContainer.robotTypeChooser.addDefaultOption(
+            Constants.getRobot().toString(), Constants.getRobot());
+      } else {
+        // Only switch when disabled
+        Constants.setRobot(selectedType);
+        // Reinitialize drivetrain if robot type changes
+        if (RobotContainer.drivetrain != null) {
+          switch (selectedType) {
+            case COMPBOT -> {
+              Constants.setMode(Mode.REPLAY);
+              RobotContainer.drivetrain = TunerConstants.createDrivetrain();
+>>>>>>> Stashed changes
             }
           }
         }
@@ -370,6 +393,7 @@ public class Robot extends LoggedRobot {
     // SmartDashboard.putBoolean(
     //   "Drive Command Running", RobotContainer.drivetrain.getDefaultCommand().isScheduled());
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
     if (m_robotContainer.coralMode.getAsBoolean()) {
       m_blinkin.lightsCoral();
@@ -378,11 +402,16 @@ public class Robot extends LoggedRobot {
     }
 
 =======
+=======
+>>>>>>> Stashed changes
     if (m_robotContainer.getModeMethod()) {
       blinkin.coralLights();
     } else {
       blinkin.alageLights();
     }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     if (RobotContainer.sliderEnabled) {
       RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
