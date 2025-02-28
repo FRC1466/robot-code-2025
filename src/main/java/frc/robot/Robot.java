@@ -31,10 +31,6 @@ import frc.robot.constants.Constants.RobotType;
 =======
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsTester;
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.Vision;
 import frc.robot.util.LocalADStarAK;
@@ -392,27 +388,11 @@ public class Robot extends LoggedRobot {
 
     // SmartDashboard.putBoolean(
     //   "Drive Command Running", RobotContainer.drivetrain.getDefaultCommand().isScheduled());
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-
-    if (m_robotContainer.coralMode.getAsBoolean()) {
-      m_blinkin.lightsCoral();
-    } else {
-      m_blinkin.lightsAlgae();
-    }
-
-=======
-=======
->>>>>>> Stashed changes
     if (m_robotContainer.getModeMethod()) {
       blinkin.coralLights();
     } else {
       blinkin.alageLights();
     }
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     if (RobotContainer.sliderEnabled) {
       RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
       double radians = RobotContainer.rotatyPart.getPosition().getRadians();
