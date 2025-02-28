@@ -184,6 +184,9 @@ public class RobotContainer {
 
   @SuppressWarnings("unused")
   private void configureBindings() {
+    joystick.povLeft().whileTrue(m_pathfinder.getPathfindingCommand(0, getClosestTag()));
+
+    joystick.povRight().whileTrue(m_pathfinder.getPathfindingCommand(1, getClosestTag()));
     // Note that X is defined as forward according to WPILib convention,
     // and Y is defined as to the left according to WPILib convention.
     drivetrain.setDefaultCommand(
@@ -212,6 +215,7 @@ public class RobotContainer {
     Trigger falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
 
     // reset the field-centric heading on left bumper press
+
     joystick
         .povDown()
         .onTrue(

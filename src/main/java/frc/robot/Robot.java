@@ -27,6 +27,11 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
 import frc.robot.constants.Constants.RobotType;
+<<<<<<< Updated upstream
+=======
+import frc.robot.generated.TunerConstants;
+import frc.robot.generated.TunerConstantsTester;
+>>>>>>> Stashed changes
 import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.Vision;
 import frc.robot.util.LocalADStarAK;
@@ -54,6 +59,8 @@ public class Robot extends LoggedRobot {
   // AutoLog output for the estimated robot state pose.
   @AutoLogOutput(key = "RobotState/EstimatedPose")
   private Pose2d RobotPose;
+
+  private Blinkin blinkin = new Blinkin();
 
   private Command m_autonomousCommand;
   private Vision vision;
@@ -186,15 +193,6 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotPeriodic() {
-    /*  m_robotContainer
-        .joystick
-        .button(1)
-        .whileTrue(m_robotContainer.m_pathfinder.getPathfindingCommand(0));
-
-    m_robotContainer
-        .joystick
-        .button(8)
-        .whileTrue(m_robotContainer.m_pathfinder.getPathfindingCommand(1));*/
 
     // Commented out robot type switching code
     /*
@@ -347,6 +345,7 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
+    blinkin.rainbowParty();
   }
 
   @Override
@@ -367,8 +366,10 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void teleopPeriodic() {
+
     // SmartDashboard.putBoolean(
     //   "Drive Command Running", RobotContainer.drivetrain.getDefaultCommand().isScheduled());
+<<<<<<< Updated upstream
 
     if (m_robotContainer.coralMode.getAsBoolean()) {
       m_blinkin.lightsCoral();
@@ -376,6 +377,13 @@ public class Robot extends LoggedRobot {
       m_blinkin.lightsAlgae();
     }
 
+=======
+    if (m_robotContainer.getModeMethod()) {
+      blinkin.coralLights();
+    } else {
+      blinkin.alageLights();
+    }
+>>>>>>> Stashed changes
     if (RobotContainer.sliderEnabled) {
       RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
       double radians = RobotContainer.rotatyPart.getPosition().getRadians();

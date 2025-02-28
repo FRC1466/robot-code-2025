@@ -136,8 +136,8 @@ public class Pathfind {
 
   private final RobotContainer robotContainer;
 
-  public Command getPathfindingCommand(int targetLeftOrRight) {
-    int currentClosestTag = robotContainer.getClosestTag();
+  public Command getPathfindingCommand(int targetLeftOrRight, int closestTag) {
+    int currentClosestTag = closestTag;
     Logger.recordOutput("closest tag in pathfind", currentClosestTag);
     Logger.recordOutput("Target Point", redTargetPose[currentClosestTag][targetLeftOrRight]);
 
