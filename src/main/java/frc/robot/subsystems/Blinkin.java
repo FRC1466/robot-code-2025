@@ -15,11 +15,11 @@ public class Blinkin {
   }
 
   public void coralLights() {
-    blinkin.set(.89);
+    blinkin.set(.57);
   }
 
   public void algaeLights() {
-    blinkin.set(.73);
+    blinkin.set(.77);
   }
 
   public void rainbowPartyLights() {

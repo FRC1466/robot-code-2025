@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.Constants;
 import java.util.function.DoubleSupplier;
-import org.littletonrobotics.junction.Logger;
 
 public class Elevator extends SubsystemBase {
 
@@ -169,16 +168,16 @@ public class Elevator extends SubsystemBase {
         setSelectedSensorPosition(0);
     }*/
 
-    SmartDashboard.putNumber("Elevator Position", getElevatorHeight());
+    /*SmartDashboard.putNumber("Elevator Position", getElevatorHeight());
     SmartDashboard.putNumber("Get Elevator P", elevatorPID.getP());
     SmartDashboard.putNumber("Get Elevator PeakOutput", peakOutput);
     SmartDashboard.putNumber("Elevator Desired Position", elevatorPID.getSetpoint());
-    SmartDashboard.putNumber("Elevator Error", elevatorPID.getError());
+    SmartDashboard.putNumber("Elevator Error", elevatorPID.getError());*/
 
     // if(!hallBottom.get()){
     //   setSelectedSensorPosition(0);
     // }
 
-    Logger.recordOutput("Elevator Position", getElevatorHeight());
+    // Logger.recordOutput("Elevator Position", getElevatorHeight());
   }
 }

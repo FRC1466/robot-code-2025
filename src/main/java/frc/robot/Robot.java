@@ -31,6 +31,9 @@ import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.Vision;
 import frc.robot.util.LocalADStarAK;
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.AutoLogOutputManager;
@@ -86,8 +89,14 @@ public class Robot extends LoggedRobot {
           "Cannot switch robot type while enabled. Disable the robot first.", AlertType.kWarning);
   */
 
+  // Map to track command counts for enhanced logging
+  private final Map<String, Integer> commandCounts = new HashMap<>();
+
   @SuppressWarnings("resource")
   public Robot() {
+
+    // Initialize vision here to avoid null reference in robotPeriodic
+    vision = new Vision();
 
     // Start logging! No more data receivers, replay sources, or metadata values may be added.
 
@@ -163,16 +172,22 @@ public class Robot extends LoggedRobot {
 
     // Start AdvantageKit Logger
     Logger.start();
+
+    // Set up command logging to track what's happening with the command scheduler
+    setupCommandLogging();
   }
 
   @Override
   public void robotInit() {
 
-    vision = new Vision();
+    // Remove redundant vision initialization since it's now in the constructor
 
     Pathfinding.setPathfinder(new LocalADStarAK());
-    RobotContainer.elevator.setSelectedSensorPosition(0);
-    vision = new Vision();
+
+    // Add null check before accessing elevator
+    if (RobotContainer.elevator != null) {
+      RobotContainer.elevator.setSelectedSensorPosition(0);
+    }
 
     // Check specifically for SIMBOT type, not just simulation
     if (Constants.getRobot() == RobotType.SIMBOT) {
@@ -184,10 +199,31 @@ public class Robot extends LoggedRobot {
     } else if (RobotBase.isSimulation()) {
       System.out.println("In simulation but not SIMBOT - skipping alliance configuration");
     }
+
+    // Add diagnostic information
+    System.out.println("Robot initialization complete");
+    System.out.println("Robot type: " + Constants.getRobot());
+    System.out.println("Joystick connected: " + DriverStation.isJoystickConnected(0));
   }
+
+  // Create a timer for checking command status
+  private final Timer commandMonitorTimer = new Timer();
+  private boolean commandMonitorInitialized = false;
 
   @Override
   public void robotPeriodic() {
+
+    // Initialize our monitoring timer if needed
+    if (!commandMonitorInitialized) {
+      commandMonitorTimer.reset();
+      commandMonitorTimer.start();
+      commandMonitorInitialized = true;
+    }
+
+    // Check command status every 500ms
+    if (commandMonitorTimer.advanceIfElapsed(0.5)) {
+      checkDriveCommand();
+    }
 
     // Commented out robot type switching code
     /*
@@ -243,58 +279,61 @@ public class Robot extends LoggedRobot {
         }
           */
 
-    vision.logSeenAprilTags();
-    // Color detectedColor = m_colorSensor.getColor();
+    // Add null check before accessing vision
+    if (vision != null) {
+      vision.logSeenAprilTags();
+    }
 
-    /*
-     if (m_robotContainer.limitSwitch.get() != limitSwitchCounter) {
-       if (limitSwitchCounter == false && m_robotContainer.elevator.getElevatorHeight() < 3) {
-         m_robotContainer.elevator.setSelectedSensorPosition(2.15);
-       }
-       limitSwitchCounter = m_robotContainer.limitSwitch.get();
-     }
-    */
+    // Add null check before accessing photonCamera
+    if (RobotContainer.photonCamera != null) {
+      var visionEst = RobotContainer.photonCamera.getEstimatedGlobalPose();
 
-    var visionEst = RobotContainer.photonCamera.getEstimatedGlobalPose();
-    // SmartDashboard.putBoolean("booleanSwitch", m_robotContainer.limitSwitch.get());
+      // Only process vision estimate if drivetrain is initialized
+      if (visionEst.isPresent() && RobotContainer.drivetrain != null) {
+        var est = visionEst.get();
+        var estStdDevs = RobotContainer.photonCamera.getEstimationStdDevs();
+        SmartDashboard.putNumber("Timestamp", est.timestampSeconds);
+        SmartDashboard.putNumber("Vision Pose X", est.estimatedPose.toPose2d().getX());
+        SmartDashboard.putNumber("Vision Pose Y", est.estimatedPose.toPose2d().getY());
 
-    CommandScheduler.getInstance().run();
-    RobotPose = RobotContainer.drivetrain.getState().Pose;
-    visionEst.ifPresent(
-        est -> {
-          var estStdDevs = RobotContainer.photonCamera.getEstimationStdDevs();
-          SmartDashboard.putNumber("Timestamp", est.timestampSeconds);
-          SmartDashboard.putNumber(
-              "Vision Pose X", visionEst.get().estimatedPose.toPose2d().getX());
-          SmartDashboard.putNumber(
-              "Vision Pose Y", visionEst.get().estimatedPose.toPose2d().getY());
+        if (RobotContainer.visionEnabled) {
+          // With vision - use full pose estimate
+          RobotContainer.drivetrain.addVisionMeasurement(
+              est.estimatedPose.toPose2d(),
+              Utils.fpgaToCurrentTime(est.timestampSeconds),
+              estStdDevs);
+        } else if (RobotPose != null) {
+          // Without vision - maintain current rotation
+          RobotContainer.drivetrain.addVisionMeasurement(
+              new Pose2d(est.estimatedPose.toPose2d().getTranslation(), RobotPose.getRotation()),
+              Utils.fpgaToCurrentTime(est.timestampSeconds),
+              estStdDevs);
+        }
+      }
+    }
 
-          if (RobotContainer.visionEnabled) {
-            // With vision - use full pose estimate
-            RobotContainer.drivetrain.addVisionMeasurement(
-                est.estimatedPose.toPose2d(),
-                Utils.fpgaToCurrentTime(est.timestampSeconds),
-                estStdDevs);
-          } else {
-            // Without vision - maintain current rotation
-            RobotContainer.drivetrain.addVisionMeasurement(
-                new Pose2d(est.estimatedPose.toPose2d().getTranslation(), RobotPose.getRotation()),
-                Utils.fpgaToCurrentTime(est.timestampSeconds),
-                estStdDevs);
-          }
-        });
-    Logger.recordOutput("apriltag seen", m_robotContainer.getClosestTag());
+    // Only update RobotPose if drivetrain is initialized
+    if (RobotContainer.drivetrain != null) {
+      RobotPose = RobotContainer.drivetrain.getState().Pose;
+    }
+
+    // Logger.recordOutput("apriltag seen", m_robotContainer.getClosestTag());
 
     // SmartDashboard.pu Boolean("Camera?", photonCamera.getCamera().isConnected());
-    SmartDashboard.putBoolean("Vision Est", visionEst.isPresent());
+    // SmartDashboard.putBoolean("Vision Est", visionEst.isPresent());
 
-    SmartDashboard.putNumber("Robot Pose X", RobotContainer.drivetrain.getState().Pose.getX());
-    SmartDashboard.putNumber("Robot Pose Y", RobotContainer.drivetrain.getState().Pose.getY());
-    SmartDashboard.putNumber(
-        "Robot Pose Theta", RobotContainer.drivetrain.getState().Pose.getRotation().getDegrees());
+    // SmartDashboard.putNumber("Robot Pose X", RobotContainer.drivetrain.getState().Pose.getX());
+    // SmartDashboard.putNumber("Robot Pose Y", RobotContainer.drivetrain.getState().Pose.getY());
+    // SmartDashboard.putNumber(
+    //     "Robot Pose Theta",
+    // RobotContainer.drivetrain.getState().Pose.getRotation().getDegrees());
 
-    SwerveDriveState driveState = RobotContainer.drivetrain.getState();
-    Logger.recordOutput("SwerveModuleStates", driveState.ModuleStates);
+    // Add null check for SwerveDriveState
+    @SuppressWarnings("unused")
+    SwerveDriveState driveState =
+        RobotContainer.drivetrain != null ? RobotContainer.drivetrain.getState() : null;
+
+    // Logger.recordOutput("SwerveModuleStates", driveState.ModuleStates);
 
     // Low battery alert
     lowBatteryCycleCount += 1;
@@ -322,9 +361,109 @@ public class Robot extends LoggedRobot {
         autoMessagePrinted = true;
       }
     }
-    // Robot container periodic methods
-    m_robotContainer.updateAlerts();
-    m_robotContainer.updateDashboardOutputs();
+    // Ensure m_robotContainer is not null before calling methods on it
+    if (m_robotContainer != null) {
+      // Only call getClosestTag if drivetrain is not null to avoid cascading NullPointerExceptions
+      if (RobotContainer.drivetrain != null) {
+        // Logger.recordOutput("apriltag seen", m_robotContainer.getClosestTag());
+      }
+
+      // Robot container periodic methods - only call if not null
+      m_robotContainer.updateAlerts();
+      m_robotContainer.updateDashboardOutputs();
+    }
+
+    // Add diagnostic logging for drivetrain and joystick
+    if (RobotContainer.drivetrain != null
+        && m_robotContainer != null
+        && m_robotContainer.joystick != null) {
+      SmartDashboard.putNumber("Joystick Raw Y", m_robotContainer.joystick.getY());
+      SmartDashboard.putNumber("Joystick Raw X", m_robotContainer.joystick.getX());
+      SmartDashboard.putNumber("Joystick Raw Z", m_robotContainer.joystick.getZ());
+
+      if (RobotBase.isReal()) {
+        // Print diagnostic message every 100 cycles (approximately 2 seconds)
+        if (lowBatteryCycleCount % 100 == 0) {
+          System.out.println(
+              "Drivetrain command: "
+                  + (RobotContainer.drivetrain.getCurrentCommand() != null
+                      ? RobotContainer.drivetrain.getCurrentCommand().getName()
+                      : "None"));
+          System.out.println(
+              "Joystick values - Y: "
+                  + m_robotContainer.joystick.getY()
+                  + ", X: "
+                  + m_robotContainer.joystick.getX()
+                  + ", Z: "
+                  + m_robotContainer.joystick.getZ());
+        }
+      }
+    }
+
+    // Run the CommandScheduler - make sure this happens in robotPeriodic
+    CommandScheduler.getInstance().run();
+  }
+
+  // New method to check drive command status
+  private void checkDriveCommand() {
+    if (RobotContainer.drivetrain != null
+        && DriverStation.isEnabled()
+        && !DriverStation.isAutonomousEnabled()) {
+      var defaultCommand = RobotContainer.drivetrain.getDefaultCommand();
+      var currentCommand = RobotContainer.drivetrain.getCurrentCommand();
+
+      SmartDashboard.putString(
+          "Drivetrain Default Cmd", defaultCommand != null ? defaultCommand.getName() : "None");
+      SmartDashboard.putString(
+          "Drivetrain Current Cmd", currentCommand != null ? currentCommand.getName() : "None");
+
+      // If default command exists but isn't running, force it to restart
+      if (defaultCommand != null && currentCommand == null) {
+        System.out.println("WARNING: Drive command not running - scheduling it now");
+        if (m_robotContainer != null) {
+          m_robotContainer.forceDriveCommand();
+        } else if (defaultCommand != null) {
+          defaultCommand.schedule();
+        }
+      }
+    }
+
+    // Additionally log active commands count to SmartDashboard
+    if (RobotContainer.drivetrain != null) {
+      int driveCommandCount = 0;
+      for (Map.Entry<String, Integer> entry : commandCounts.entrySet()) {
+        if (entry.getKey().contains("Drive") && entry.getValue() > 0) {
+          driveCommandCount += entry.getValue();
+        }
+      }
+      SmartDashboard.putNumber("Active Drive Commands", driveCommandCount);
+    }
+  }
+
+  /** Setup enhanced command logging for diagnostic purposes */
+  private void setupCommandLogging() {
+    // Log active commands with unique identifiers
+    BiConsumer<Command, Boolean> logCommandFunction =
+        (Command command, Boolean active) -> {
+          String name = command.getName();
+          int count = commandCounts.getOrDefault(name, 0) + (active ? 1 : -1);
+          commandCounts.put(name, count);
+          Logger.recordOutput(
+              "CommandsUnique/" + name + "_" + Integer.toHexString(command.hashCode()), active);
+          Logger.recordOutput("CommandsAll/" + name, count > 0);
+
+          // Also log to console for important commands
+          if (name.contains("Drive") || name.contains("Swerve")) {
+            System.out.println((active ? "STARTED: " : "ENDED: ") + name + " - Count: " + count);
+          }
+        };
+
+    CommandScheduler.getInstance()
+        .onCommandInitialize((Command command) -> logCommandFunction.accept(command, true));
+    CommandScheduler.getInstance()
+        .onCommandFinish((Command command) -> logCommandFunction.accept(command, false));
+    CommandScheduler.getInstance()
+        .onCommandInterrupt((Command command) -> logCommandFunction.accept(command, false));
   }
 
   public void periodic() {}
@@ -338,15 +477,21 @@ public class Robot extends LoggedRobot {
       DriverStationSim.notifyNewData();
     }
 
-    RobotContainer.elevator.goToGoal(.5);
+    // Add null checks for elevator and rotatyPart
+    if (RobotContainer.elevator != null) {
+      RobotContainer.elevator.goToGoal(.5);
+    }
     // fix later
     // m_robotContainer.rotatyPart.setGoal(Rotation2d.fromRadians(.05));
   }
 
   @Override
   public void disabledPeriodic() {
-    m_robotContainer.resetPID();
-    CommandScheduler.getInstance().cancelAll();
+    if (m_robotContainer != null) {
+      m_robotContainer.resetPID();
+    }
+    // DO NOT cancel all commands here, as it could be causing our drive command issues
+    // CommandScheduler.getInstance().cancelAll();
   }
 
   @Override
@@ -354,16 +499,24 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void autonomousInit() {
-    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-    autoStart = Timer.getTimestamp();
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.schedule();
+    // Ensure m_robotContainer is not null before getting autonomous command
+    if (m_robotContainer != null) {
+      m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+      autoStart = Timer.getTimestamp();
+      if (m_autonomousCommand != null) {
+        m_autonomousCommand.schedule();
+      }
+    } else {
+      System.err.println("Warning: RobotContainer is null in autonomousInit");
     }
-    blinkin.rainbowPartyLights();
   }
 
   @Override
-  public void autonomousPeriodic() {}
+  public void autonomousPeriodic() {
+    if (blinkin != null) {
+      blinkin.rainbowPartyLights();
+    }
+  }
 
   @Override
   public void autonomousExit() {}
@@ -373,28 +526,70 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
-    RobotContainer.rotatyPart.coralScore();
+
+    // Add null check before accessing rotatyPart
+    if (RobotContainer.rotatyPart != null) {
+      RobotContainer.rotatyPart.coralScore();
+    }
+
+    // Explicitly ensure drive command is enabled
+    if (m_robotContainer != null) {
+      System.out.println("Teleop init: Forcing drive command to schedule");
+      m_robotContainer.forceDriveCommand();
+    }
+
+    // Also try scheduling directly
+    if (RobotContainer.drivetrain != null) {
+      var defaultCommand = RobotContainer.drivetrain.getDefaultCommand();
+      if (defaultCommand != null) {
+        System.out.println("Teleop init: Directly scheduling default command");
+        defaultCommand.schedule();
+      } else {
+        System.out.println("WARNING: No default drive command to schedule in teleopInit");
+      }
+    }
   }
 
   @Override
   public void teleopPeriodic() {
+    m_robotContainer
+        .joystick
+        .button(1)
+        .whileTrue(
+            m_robotContainer.m_pathfinder.getPathfindingCommand(
+                0, m_robotContainer.getClosestTag()));
+    // Skip auto-cancellation of commands in disabledPeriodic to prevent our drive command from
+    // getting killed
+    // by removing CommandScheduler.getInstance().cancelAll(); from disabledPeriodic
 
-    // SmartDashboard.putBoolean(
-    //   "Drive Command Running", RobotContainer.drivetrain.getDefaultCommand().isScheduled());
-    if (RobotContainer.sliderEnabled) {
+    // Add null check for blinkin and m_robotContainer
+    if (blinkin != null && m_robotContainer != null) {
+      if (m_robotContainer.getModeMethod()) {
+        blinkin.coralLights();
+      } else {
+        blinkin.algaeLights();
+      }
+    }
+
+    // Add null checks for elevator and joystick
+    if (RobotContainer.sliderEnabled
+        && RobotContainer.elevator != null
+        && m_robotContainer != null
+        && m_robotContainer.joystick != null) {
       RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
     }
-    Logger.recordOutput(
-        "Elevator Slider Position", (((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65));
 
-    if (RobotContainer.elevator.getElevatorHeight() < 7
-        || RobotContainer.elevator.getElevatorHeight() < 52) {
-      RobotContainer.elevator.setP(.05);
-      RobotContainer.elevator.setPeakOutput(.25);
-    } else {
-      RobotContainer.elevator.setP(Constants.ElevatorConstants.elevatorPosition.P);
-      RobotContainer.elevator.setPeakOutput(
-          Constants.ElevatorConstants.elevatorPosition.peakOutput);
+    // Add null check for elevator
+    if (RobotContainer.elevator != null) {
+      if (RobotContainer.elevator.getElevatorHeight() < 7
+          || RobotContainer.elevator.getElevatorHeight() < 52) {
+        RobotContainer.elevator.setP(.05);
+        RobotContainer.elevator.setPeakOutput(.25);
+      } else {
+        RobotContainer.elevator.setP(Constants.ElevatorConstants.elevatorPosition.P);
+        RobotContainer.elevator.setPeakOutput(
+            Constants.ElevatorConstants.elevatorPosition.peakOutput);
+      }
     }
   }
 
@@ -414,11 +609,16 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void simulationPeriodic() {
-    vision.simulationPeriodic(RobotContainer.drivetrain.getState().Pose);
+    // Add null checks before accessing vision and drivetrain
+    if (vision != null && RobotContainer.drivetrain != null) {
+      vision.simulationPeriodic(RobotContainer.drivetrain.getState().Pose);
 
-    var debugField = vision.getSimDebugField();
-    debugField
-        .getObject("EstimatedRobot")
-        .setPose(RobotPose = RobotContainer.drivetrain.getState().Pose);
+      var debugField = vision.getSimDebugField();
+      if (debugField != null) {
+        debugField
+            .getObject("EstimatedRobot")
+            .setPose(RobotPose = RobotContainer.drivetrain.getState().Pose);
+      }
+    }
   }
 }
