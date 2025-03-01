@@ -241,15 +241,13 @@ public class RobotContainer {
     // Mode Switch
     joystick.button(2).onTrue(changeMode());
 
-    joystick.button(11).onTrue(elevator.toL2()).onFalse(elevator.toBottom());
-    joystick.button(12).onTrue(rotatyPart.coralScore());
     // Intake Coral
     joystick
         .button(3)
+        .and(coralMode)
         .and(intakeProximityTrigger)
         .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
-        .onFalse(
-            Commands.waitSeconds(.005).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));
+        .onFalse(intake.coralHold().alongWith(rotatyPart.coralScore()));
     // L2
     joystick
         .button(7)
@@ -270,24 +268,36 @@ public class RobotContainer {
         .onTrue(elevator.toL4().alongWith(rotatyPart.coralScore()))
         .onFalse(intake.outTake());
     joystick.button(5).and(l4Ready).onTrue(rotatyPart.l4coralScore().alongWith(intake.coralHold()));
-
+    // L2 Removal
     joystick
         .button(1)
         .and(algaeMode)
         .onTrue(intake.outTake())
         .onFalse(rotatyPart.coralScore().alongWith(elevator.toBottom()));
     joystick
-        .button(6)
+        .button(3)
         .and(algaeMode)
         .onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()));
     joystick
-        .button(6)
+        .button(3)
+        .and(algaeMode)
+        .and(algaeHeightReady)
+        .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
+
+    joystick.button(3).and(algaeMode).and(currentIntakeSwitch).onFalse((intake.algaeHold()));
+    // L3 Removal
+    joystick
+        .button(4)
+        .and(algaeMode)
+        .onTrue(rotatyPart.coralScore().alongWith(elevator.toL3Algae()));
+    joystick
+        .button(4)
         .and(algaeMode)
         .and(algaeHeightReady)
         .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
 
     joystick
-        .button(6)
+        .button(4)
         .and(algaeMode)
         .and(currentIntakeSwitch)
         .onFalse(elevator.toL2().alongWith(intake.algaeHold()));

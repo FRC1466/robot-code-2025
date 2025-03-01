@@ -118,6 +118,10 @@ public class Elevator extends SubsystemBase {
     return runOnce(() -> goToGoal(30));
   }
 
+  public Command toL3Algae() {
+    return runOnce(() -> goToGoal(40));
+  }
+
   public Command toL4() {
     return runOnce(() -> goToGoal(60));
   }

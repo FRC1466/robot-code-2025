@@ -9,6 +9,7 @@ import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
   private final TalonFX intakeMotor;
@@ -47,7 +48,7 @@ public class Intake extends SubsystemBase {
   }
 
   public Command coralHold() {
-    return runOnce(() -> setVoltage(.2));
+    return runOnce(() -> setVoltage(.1));
   }
 
   public Command intake() {
@@ -82,6 +83,7 @@ public class Intake extends SubsystemBase {
     // Logger.recordOutput(
     //     "Angle Change", (intakeMotor.getPosition().getValueAsDouble() - prevMotorPose));
     prevMotorPose = intakeMotor.getPosition().getValueAsDouble();
-    // Logger.recordOutput("motor current", intakeMotor.getTorqueCurrent().getValueAsDouble());
+    Logger.recordOutput("motor current", intakeMotor.getTorqueCurrent().getValueAsDouble());
+    Logger.recordOutput("high current bool", highCurrentBool);
   }
 }
