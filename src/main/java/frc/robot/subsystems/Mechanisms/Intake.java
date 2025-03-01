@@ -46,7 +46,7 @@ public class Intake extends SubsystemBase {
     return runOnce(() -> setVoltage(.75));
   }
 
-  public Command hold() {
+  public Command coralHold() {
     return runOnce(() -> setVoltage(.2));
   }
 

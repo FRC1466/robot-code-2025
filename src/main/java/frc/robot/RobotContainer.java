@@ -35,6 +35,7 @@ import frc.robot.util.Pathfind;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Optional;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -96,8 +97,7 @@ public class RobotContainer {
   // Joystick and telemetry
   public final CommandJoystick joystick = new CommandJoystick(0);
   final Telemetry logger = new Telemetry(MaxSpeed);
-
-  public static boolean coralMode = true;
+  @AutoLogOutput public static boolean algaeMode = false;
 
   // Drivetrain
   public static CommandSwerveDrivetrain drivetrain;
@@ -178,7 +178,6 @@ public class RobotContainer {
   public Trigger intakeProximityTrigger;
   public Trigger algaeHeightReady;
   public Trigger currentIntakeSwitch;
-  public Trigger algaeMode;
   public Trigger falseIntakeProximityTrigger;
 
   @SuppressWarnings("unused")
@@ -210,6 +209,7 @@ public class RobotContainer {
     Trigger algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 20);
     Trigger currentIntakeSwitch = new Trigger(() -> intake.getHighCurrent());
     Trigger algaeMode = new Trigger(() -> getModeMethod());
+    Trigger l4Ready = new Trigger(() -> elevator.getElevatorHeight() > 57);
     Trigger coralMode = new Trigger(() -> !getModeMethod());
     Trigger falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
 
@@ -240,18 +240,19 @@ public class RobotContainer {
     // Reset the field-centric heading on left bumper press
     // Mode Switch
     joystick.button(2).onTrue(changeMode());
-    // Intake Coral
+
     joystick.button(11).onTrue(elevator.toL2()).onFalse(elevator.toBottom());
     joystick.button(12).onTrue(rotatyPart.coralScore());
+    // Intake Coral
     joystick
         .button(3)
         .and(intakeProximityTrigger)
         .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
         .onFalse(
-            Commands.waitSeconds(.07).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));
+            Commands.waitSeconds(.005).andThen(intake.stop()).alongWith(rotatyPart.coralScore()));
     // L2
     joystick
-        .button(5)
+        .button(7)
         .and(coralMode)
         .onTrue(elevator.toL2().alongWith(rotatyPart.coralScore()))
         .onFalse(intake.outTake());
@@ -261,8 +262,14 @@ public class RobotContainer {
         .button(6)
         .and(coralMode)
         .onTrue(elevator.toL3().alongWith(rotatyPart.coralScore()))
-        .onFalse(intake.intake());
+        .onFalse(intake.outTake());
     // L4
+    joystick
+        .button(5)
+        .and(coralMode)
+        .onTrue(elevator.toL4().alongWith(rotatyPart.l4coralScore()))
+        .onFalse(intake.outTake().alongWith(rotatyPart.coralScore()));
+    joystick.button(5).and(l4Ready).onTrue(rotatyPart.l4coralScore().alongWith(intake.coralHold()));
 
     joystick
         .button(1)
@@ -275,6 +282,7 @@ public class RobotContainer {
         .onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()));
     joystick
         .button(6)
+        .and(algaeMode)
         .and(algaeHeightReady)
         .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
 
@@ -307,11 +315,11 @@ public class RobotContainer {
   }
 
   public void changeModeMethod() {
-    coralMode = !coralMode;
+    algaeMode = !algaeMode;
   }
 
   public boolean getModeMethod() {
-    return coralMode;
+    return algaeMode;
   }
 
   // Reset PID controllers
