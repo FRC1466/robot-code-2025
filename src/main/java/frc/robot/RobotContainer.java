@@ -241,9 +241,10 @@ public class RobotContainer {
     // Mode Switch
     joystick.button(2).onTrue(changeMode());
     // Intake Coral
+    joystick.button(11).onTrue(elevator.toL2()).onFalse(elevator.toBottom());
+    joystick.button(12).onTrue(rotatyPart.coralScore());
     joystick
         .button(3)
-        .and(coralMode)
         .and(intakeProximityTrigger)
         .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
         .onFalse(

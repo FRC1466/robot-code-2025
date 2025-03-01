@@ -51,7 +51,7 @@ public class Intake extends SubsystemBase {
   }
 
   public Command intake() {
-    return runOnce(() -> setVoltage(-2));
+    return runOnce(() -> setVoltage(-4));
   }
 
   public Command outTake() {
