@@ -79,7 +79,7 @@ public class RobotContainer {
   private final Intake intake = new Intake();
   public static final RotatyPart rotatyPart = new RotatyPart();
   public static final Vision photonCamera = new Vision();
-  public static final Elevator elevator = new Elevator(rotatyPart);
+  public static final Elevator elevator = new Elevator();
 
   private final AprilTagFieldLayout layout =
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);

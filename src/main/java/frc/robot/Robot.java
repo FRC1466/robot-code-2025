@@ -381,16 +381,11 @@ public class Robot extends LoggedRobot {
 
     // SmartDashboard.putBoolean(
     //   "Drive Command Running", RobotContainer.drivetrain.getDefaultCommand().isScheduled());
-    if (m_robotContainer.getModeMethod()) {
-      blinkin.coralLights();
-    } else {
-      blinkin.algaeLights();
-    }
     if (RobotContainer.sliderEnabled) {
       RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
     }
     Logger.recordOutput(
-        "Elevator Slider Position", (((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 75));
+        "Elevator Slider Position", (((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65));
 
     if (RobotContainer.elevator.getElevatorHeight() < 7
         || RobotContainer.elevator.getElevatorHeight() < 52) {
