@@ -267,8 +267,8 @@ public class RobotContainer {
     joystick
         .button(5)
         .and(coralMode)
-        .onTrue(elevator.toL4().alongWith(rotatyPart.l4coralScore()))
-        .onFalse(intake.outTake().alongWith(rotatyPart.coralScore()));
+        .onTrue(elevator.toL4().alongWith(rotatyPart.coralScore()))
+        .onFalse(intake.outTake());
     joystick.button(5).and(l4Ready).onTrue(rotatyPart.l4coralScore().alongWith(intake.coralHold()));
 
     joystick

@@ -75,7 +75,7 @@ public class RotatyPart extends SubsystemBase {
             RotationConstants.rotationPosition.D);
     armPID.setAvoidanceRange(
         Rotation2d.fromRadians(0), Rotation2d.fromRadians(RotationConstants.maxRadians));
-    armPID.setTolerance(0.15);
+    armPID.setTolerance(0.1);
 
     /*   if (Robot.isSimulation()) {
       sim = new VirtualFourBarSimulation(absoluteArmEncoder);

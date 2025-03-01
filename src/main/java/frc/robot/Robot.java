@@ -386,16 +386,6 @@ public class Robot extends LoggedRobot {
     }
     Logger.recordOutput(
         "Elevator Slider Position", (((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65));
-
-    if (RobotContainer.elevator.getElevatorHeight() < 7
-        || RobotContainer.elevator.getElevatorHeight() < 52) {
-      RobotContainer.elevator.setP(.05);
-      RobotContainer.elevator.setPeakOutput(.25);
-    } else {
-      RobotContainer.elevator.setP(Constants.ElevatorConstants.elevatorPosition.P);
-      RobotContainer.elevator.setPeakOutput(
-          Constants.ElevatorConstants.elevatorPosition.peakOutput);
-    }
   }
 
   @Override
