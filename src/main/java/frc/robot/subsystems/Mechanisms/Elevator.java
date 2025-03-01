@@ -3,6 +3,8 @@
  
 package frc.robot.subsystems.Mechanisms;
 
+import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
@@ -11,7 +13,11 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
+
+import static edu.wpi.first.units.Units.Volts;
+
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -26,6 +32,7 @@ public class Elevator extends SubsystemBase {
   private double localSetpoint = 0;
   private DoubleSupplier overrideFeedforward = () -> 0;
   private final ElevatorFeedforward elevatorFeedforward = new ElevatorFeedforward(0, .07, 16.97);
+  private final VoltageOut m_voltReq = new VoltageOut(0.0);
 
   // Will use when we install hall sensor
   // DigitalInput hallBottom = new DigitalInput(0);
@@ -43,6 +50,9 @@ public class Elevator extends SubsystemBase {
 
   private double peakOutput;
 
+  private final SysIdRoutine m_sysIdRoutine;
+ 
+
   public Elevator() {
     masterMotor = new TalonFX(Constants.ElevatorConstants.masterID);
 
@@ -59,8 +69,24 @@ public class Elevator extends SubsystemBase {
     masterMotor.setVoltage(0);
     leftSlaveFX.setVoltage(0);
     setNeutralMode(NeutralModeValue.Brake);
-  }
+    m_sysIdRoutine = new SysIdRoutine(
+    new SysIdRoutine.Config(
+      null,
+      Volts.of(4),
+      null,
 
+      (state) -> SignalLogger.writeString("state", state.toString())
+    ),
+    new SysIdRoutine.Mechanism(
+      (volts) -> masterMotor.setControl(m_voltReq.withOutput(volts.in(Volts))),
+      null,
+      this
+    )
+  );
+
+  }
+ 
+  
   private void setNeutralMode(NeutralModeValue neutralMode) {
     masterMotor.setNeutralMode(neutralMode);
     leftSlaveFX.setNeutralMode(neutralMode);
@@ -134,6 +160,14 @@ public class Elevator extends SubsystemBase {
 
   public Command removeAlgaeHigh() {
     return runOnce(() -> goToGoal(10));
+  }
+
+  public Command sysIdQuasistaic(SysIdRoutine.Direction direction) {
+    return m_sysIdRoutine.quasistatic(direction);
+  }
+
+  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    return m_sysIdRoutine.dynamic(direction);
   }
 
   public void setArmHold() {

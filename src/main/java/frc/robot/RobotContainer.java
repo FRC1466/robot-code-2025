@@ -6,6 +6,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.wpilibj2.command.Commands.run;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -14,6 +15,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -185,6 +187,13 @@ public class RobotContainer {
     joystick.povLeft().whileTrue(m_pathfinder.getPathfindingCommand(0, getClosestTag()));
 
     joystick.povRight().whileTrue(m_pathfinder.getPathfindingCommand(1, getClosestTag()));
+
+    joystick.button(1).whileTrue(elevator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    joystick.button(2).whileTrue(elevator.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    joystick.button(3).whileTrue(elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    joystick.button(4).whileTrue(elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    joystick.button(5).onTrue(Commands.runOnce(SignalLogger::start));
+    joystick.button(6).onTrue(Commands.runOnce(SignalLogger::stop));
     // Note that X is defined as forward according to WPILib convention,
     // and Y is defined as to the left according to WPILib convention.
     drivetrain.setDefaultCommand(
@@ -239,7 +248,7 @@ public class RobotContainer {
     // Note that each routine should be run exactly once in a single log.
     // Reset the field-centric heading on left bumper press
     // Mode Switch
-    joystick.button(2).onTrue(changeMode());
+    /*joystick.button(2).onTrue(changeMode());
 
     joystick.button(11).onTrue(elevator.toL2()).onFalse(elevator.toBottom());
     joystick.button(12).onTrue(rotatyPart.coralScore());
@@ -290,7 +299,7 @@ public class RobotContainer {
         .button(6)
         .and(algaeMode)
         .and(currentIntakeSwitch)
-        .onFalse(elevator.toL2().alongWith(intake.algaeHold()));
+        .onFalse(elevator.toL2().alongWith(intake.algaeHold()));*/
 
     drivetrain.registerTelemetry(logger::telemeterize);
   }
