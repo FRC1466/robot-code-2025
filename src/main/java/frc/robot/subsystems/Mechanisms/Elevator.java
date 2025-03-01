@@ -6,6 +6,7 @@ package frc.robot.subsystems.Mechanisms;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -24,6 +25,7 @@ public class Elevator extends SubsystemBase {
   private PIDController elevatorPID;
   private double localSetpoint = 0;
   private DoubleSupplier overrideFeedforward = () -> 0;
+  private final ElevatorFeedforward elevatorFeedforward = new ElevatorFeedforward(0, .07, 16.97);
 
   // Will use when we install hall sensor
   // DigitalInput hallBottom = new DigitalInput(0);
@@ -135,11 +137,12 @@ public class Elevator extends SubsystemBase {
   }
 
   public void setArmHold() {
+   
     var motorOutput =
         MathUtil.clamp(
             elevatorPID.calculate(getElevatorHeight(), localSetpoint), -peakOutput, peakOutput);
-    var feedforward = getElevatorHeight() * Constants.ElevatorConstants.elevatorPosition.F;
-    setMotor(motorOutput + feedforward + overrideFeedforward.getAsDouble());
+    var feedforward = 0; // elevatorFeedforward.calculate(masterMotor.getVelocity().getValueAsDouble() * 12, masterMotor.getAcceleration().getValueAsDouble() * 12);
+    setMotor(motorOutput + feedforward);
     SmartDashboard.putNumber("Elevator PID Output", motorOutput);
     SmartDashboard.putNumber("Arm Feedforward", feedforward);
     SmartDashboard.putNumber("Elevator Feedforward Override", overrideFeedforward.getAsDouble());
