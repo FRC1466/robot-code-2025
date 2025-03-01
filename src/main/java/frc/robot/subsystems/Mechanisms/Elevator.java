@@ -8,12 +8,10 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.Constants;
 import java.util.function.DoubleSupplier;
-import org.littletonrobotics.junction.Logger;
 
 public class Elevator extends SubsystemBase {
   // Adjust constants for better visualization
@@ -135,7 +133,7 @@ public class Elevator extends SubsystemBase {
   public void goToGoal(double goal) {
     localSetpoint = goal;
     elevatorPID.setSetpoint(goal);
-    SmartDashboard.putNumber("Elevator PID Setpoint", goal);
+    // SmartDashboard.putNumber("Elevator PID Setpoint", goal);
   }
 
   public void setMotor(double percent) {
@@ -196,9 +194,9 @@ public class Elevator extends SubsystemBase {
             elevatorPID.calculate(getElevatorHeight(), localSetpoint), -peakOutput, peakOutput);
     var feedforward = getElevatorHeight() * Constants.ElevatorConstants.elevatorPosition.F;
     setMotor(motorOutput + feedforward + overrideFeedforward.getAsDouble());
-    SmartDashboard.putNumber("Elevator PID Output", motorOutput);
-    SmartDashboard.putNumber("Arm Feedforward", feedforward);
-    SmartDashboard.putNumber("Elevator Feedforward Override", overrideFeedforward.getAsDouble());
+    // SmartDashboard.putNumber("Elevator PID Output", motorOutput);
+    // SmartDashboard.putNumber("Arm Feedforward", feedforward);
+    // SmartDashboard.putNumber("Elevator Feedforward Override", overrideFeedforward.getAsDouble());
   }
 
   public void setFeedforward(DoubleSupplier feedforward) {
@@ -224,6 +222,7 @@ public class Elevator extends SubsystemBase {
 
     // Scale height for visualization
     double heightMeters = getElevatorHeight() * VISUALIZATION_SCALE;
+    @SuppressWarnings("unused")
     double visualHeight =
         MathUtil.clamp(
             ELEVATOR_MIN_LENGTH + heightMeters, ELEVATOR_MIN_LENGTH, ELEVATOR_MAX_LENGTH);
@@ -235,18 +234,18 @@ public class Elevator extends SubsystemBase {
     // wristLigament.setAngle(wrist.getPosition().getDegrees());
 
     // Debug values
-    SmartDashboard.putBoolean("Is Simulation", isSimulation);
-    SmartDashboard.putNumber("Raw Height", getElevatorHeight());
-    SmartDashboard.putNumber("Visual Height (m)", visualHeight);
+    // SmartDashboard.putBoolean("Is Simulation", isSimulation);
+    // SmartDashboard.putNumber("Raw Height", getElevatorHeight());
+    // SmartDashboard.putNumber("Visual Height (m)", visualHeight);
 
     // Update visualization and logging
-    SmartDashboard.putNumber("Elevator Position", getElevatorHeight());
-    SmartDashboard.putNumber("Get Elevator P", elevatorPID.getP());
-    SmartDashboard.putNumber("Get Elevator PeakOutput", peakOutput);
-    SmartDashboard.putNumber("Elevator Desired Position", elevatorPID.getSetpoint());
-    SmartDashboard.putNumber("Elevator Error", elevatorPID.getError());
+    // SmartDashboard.putNumber("Elevator Position", getElevatorHeight());
+    // SmartDashboard.putNumber("Get Elevator P", elevatorPID.getP());
+    // SmartDashboard.putNumber("Get Elevator PeakOutput", peakOutput);
+    // SmartDashboard.putNumber("Elevator Desired Position", elevatorPID.getSetpoint());
+    // SmartDashboard.putNumber("Elevator Error", elevatorPID.getError());
 
-    Logger.recordOutput("Elevator Position", getElevatorHeight());
+    // Logger.recordOutput("Elevator Position", getElevatorHeight());
 
     // Update mechanism visualization
     heightMeters = (getElevatorHeight() / TICKS_PER_INCH) * 0.0254;

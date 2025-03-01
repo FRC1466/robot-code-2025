@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotContainer;
 import java.io.IOException;
 import java.text.ParseException;
-import org.littletonrobotics.junction.Logger;
 
 public class Pathfind {
   PathPlannerPath path;
@@ -134,12 +133,13 @@ public class Pathfind {
 
   }
 
+  @SuppressWarnings("unused")
   private final RobotContainer robotContainer;
 
   public Command getPathfindingCommand(int targetLeftOrRight, int closestTag) {
     int currentClosestTag = closestTag;
-    Logger.recordOutput("closest tag in pathfind", currentClosestTag);
-    Logger.recordOutput("Target Point", redTargetPose[currentClosestTag][targetLeftOrRight]);
+    // Logger.recordOutput("closest tag in pathfind", currentClosestTag);
+    // Logger.recordOutput("Target Point", redTargetPose[currentClosestTag][targetLeftOrRight]);
 
     redPathfindingCommand =
         AutoBuilder.pathfindToPose(

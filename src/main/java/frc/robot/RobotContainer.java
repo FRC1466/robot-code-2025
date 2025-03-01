@@ -35,7 +35,6 @@ import frc.robot.util.Pathfind;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Optional;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -92,13 +91,13 @@ public class RobotContainer {
   @SuppressWarnings("unused")
   private Command m_pathfindCommandRight;
 
-  @AutoLogOutput public static boolean visionEnabled = true;
+  public static boolean visionEnabled = true;
 
   // Joystick and telemetry
   public final CommandJoystick joystick = new CommandJoystick(0);
   final Telemetry logger = new Telemetry(MaxSpeed);
 
-  @AutoLogOutput public static boolean coralMode = true;
+  public static boolean coralMode = true;
 
   // Drivetrain
   public static CommandSwerveDrivetrain drivetrain;
@@ -176,11 +175,11 @@ public class RobotContainer {
 
   // Configure joystick bindings
   // Declare triggers as class members
-  @AutoLogOutput public Trigger intakeProximityTrigger;
-  @AutoLogOutput public Trigger algaeHeightReady;
-  @AutoLogOutput public Trigger currentIntakeSwitch;
-  @AutoLogOutput public Trigger algaeMode;
-  @AutoLogOutput public Trigger falseIntakeProximityTrigger;
+  public Trigger intakeProximityTrigger;
+  public Trigger algaeHeightReady;
+  public Trigger currentIntakeSwitch;
+  public Trigger algaeMode;
+  public Trigger falseIntakeProximityTrigger;
 
   @SuppressWarnings("unused")
   private void configureBindings() {
@@ -223,8 +222,6 @@ public class RobotContainer {
                 () -> {
                   visionEnabled = true;
                   drivetrain.seedFieldCentric();
-                  // Add debug output
-                  SmartDashboard.putBoolean("Reset Complete", true);
                 }));
 
     joystick
@@ -234,8 +231,6 @@ public class RobotContainer {
                 () -> {
                   visionEnabled = false;
                   drivetrain.seedFieldCentric();
-                  // Add debug output
-                  SmartDashboard.putBoolean("Reset Complete", true);
                 }));
 
     // Intake Coral
@@ -339,7 +334,6 @@ public class RobotContainer {
   /**
    * @return int from 0-5 , if blue 0 = 17 and 5 = 22 , if red 0 = 6 and 5 = 11
    */
-  @AutoLogOutput(key = "Logger/closestTag")
   public int getClosestTag() {
     int closestTag = -1;
     double prevDistance = Double.MAX_VALUE;
@@ -377,10 +371,10 @@ public class RobotContainer {
       System.err.println("The underlying exception was: " + cause);
       e.printStackTrace();
     }
-    Logger.recordOutput("Logger/closestTagID", closestTag);
-    Logger.recordOutput("current offset is", offset);
-    Logger.recordOutput("Alliance is Red", DriverStation.getAlliance().get() == Alliance.Red);
-    Logger.recordOutput("Alliance is Blue", DriverStation.getAlliance().get() == Alliance.Blue);
+    // Logger.recordOutput("Logger/closestTagID", closestTag);
+    // Logger.recordOutput("current offset is", offset);
+    // Logger.recordOutput("Alliance is Red", DriverStation.getAlliance().get() == Alliance.Red);
+    // Logger.recordOutput("Alliance is Blue", DriverStation.getAlliance().get() == Alliance.Blue);
     // Adjust the tag based on alliance.
     return closestTag - offset;
   }

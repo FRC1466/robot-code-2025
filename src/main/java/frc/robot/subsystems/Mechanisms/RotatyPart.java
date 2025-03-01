@@ -11,13 +11,11 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.Constants.RotationConstants;
 import java.util.function.DoubleSupplier;
-import org.littletonrobotics.junction.Logger;
 import webblib.ArmPIDController;
 
 public class RotatyPart extends SubsystemBase {
@@ -34,6 +32,8 @@ public class RotatyPart extends SubsystemBase {
   private DutyCycleEncoder absoluteArmEncoder;
   private double peakOutput;
   private ArmPIDController armPID;
+
+  @SuppressWarnings("unused")
   private double armPID_P;
 
   @SuppressWarnings("unused")
@@ -141,8 +141,7 @@ public class RotatyPart extends SubsystemBase {
       simPosition = MathUtil.clamp(simPosition, -Math.PI, RotationConstants.maxRadians);
 
       // Log simulation state
-      SmartDashboard.putNumber("Wrist Sim Position", simPosition);
-      SmartDashboard.putNumber("Wrist Sim Velocity", simVelocity);
+      // SmartDashboard.putNumber("Wrist Sim Position", simPosition);
     }
   }
 
@@ -184,7 +183,7 @@ public class RotatyPart extends SubsystemBase {
     localSetpoint = setpoint;
     armPID.setSetpoint(setpoint);
     armSetpoint = setpoint.getDegrees();
-    Logger.recordOutput("Arm PID Setpoint", setpoint.getRadians());
+    // Logger.recordOutput("Arm PID Setpoint", setpoint.getRadians());
   }
 
   public void setArmHold() {
@@ -193,9 +192,9 @@ public class RotatyPart extends SubsystemBase {
     var feedforward = getPosition().getSin() * RotationConstants.gravityFF;
     setMotor(motorOutput + feedforward + overrideFeedforward.getAsDouble());
 
-    Logger.recordOutput("Arm PID Output", motorOutput);
-    Logger.recordOutput("Arm Feedforward", feedforward);
-    Logger.recordOutput("Arm Feedforward Override", overrideFeedforward.getAsDouble());
+    // Logger.recordOutput("Arm PID Output", motorOutput);
+    // Logger.recordOutput("Arm Feedforward", feedforward);
+    // Logger.recordOutput("Arm Feedforward Override", overrideFeedforward.getAsDouble());
   }
 
   public void setMotor(double percent) {
@@ -236,7 +235,7 @@ public class RotatyPart extends SubsystemBase {
       storedPosRad = Rotation2d.fromRadians(RotationConstants.restRadians);
     }
     System.out.println("Override changed.");
-    Logger.recordOutput("In Frame Perimeter", storedInPerimeter);
+    // Logger.recordOutput("In Frame Perimeter", storedInPerimeter);
     storedInPerimeter = !storedInPerimeter;
   }
 
@@ -262,7 +261,7 @@ public class RotatyPart extends SubsystemBase {
    * @return if arm is at setpoint.
    */
   public boolean isAtSetpoint() {
-    Logger.recordOutput("Arm PID at setpoint", armPID.atSetpoint());
+    // Logger.recordOutput("Arm PID at setpoint", armPID.atSetpoint());
     return armPID.atSetpoint();
   }
 
@@ -275,12 +274,13 @@ public class RotatyPart extends SubsystemBase {
     setArmHold();
 
     // Logger.putData(absoluteArmEncoder);
-    Logger.recordOutput("Arm Raw Absolute Encoder", absoluteArmEncoder.get());
-    Logger.recordOutput("Arm Processed Absolute Encoder", getPosition().getRadians());
-    Logger.recordOutput("Get Shifted Absolute Position", getShiftedAbsoluteDistance().getRadians());
-    Logger.recordOutput("Get Arm P", armPID_P);
-    Logger.recordOutput("Get Arm Output", peakOutput);
-    Logger.recordOutput("Arm PID error", armPID.getPositionError());
-    Logger.recordOutput("Arm Disabled", disabled);
+    // Logger.recordOutput("Arm Raw Absolute Encoder", absoluteArmEncoder.get());
+    // Logger.recordOutput("Arm Processed Absolute Encoder", getPosition().getRadians());
+    // Logger.recordOutput("Get Shifted Absolute Position",
+    // getShiftedAbsoluteDistance().getRadians());
+    // Logger.recordOutput("Get Arm P", armPID_P);
+    // Logger.recordOutput("Get Arm Output", peakOutput);
+    // Logger.recordOutput("Arm PID error", armPID.getPositionError());
+    // Logger.recordOutput("Arm Disabled", disabled);
   }
 }

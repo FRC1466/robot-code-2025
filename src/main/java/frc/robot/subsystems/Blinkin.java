@@ -11,24 +11,22 @@ public class Blinkin {
 
   public Blinkin() {
 
-    blinkin = new Spark(0);
-  }
-
-  /** if the robot is not in hatMode and in normal drive, the LED turns solid white (0.93) */
-  public void lightsNormal() {
-
-    blinkin.set(0.93);
+    blinkin = new Spark(1);
   }
 
   public void coralLights() {
-    blinkin.set(.57);
+    blinkin.set(.89);
   }
 
-  public void alageLights() {
+  public void algaeLights() {
     blinkin.set(.73);
   }
 
-  public void rainbowParty() {
+  public void rainbowPartyLights() {
     blinkin.set(-.97);
+  }
+
+  public void warningLights() {
+    blinkin.set(-0.17);
   }
 }

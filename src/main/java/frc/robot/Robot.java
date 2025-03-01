@@ -27,10 +27,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
 import frc.robot.constants.Constants.RobotType;
-<<<<<<< Updated upstream
-=======
-import frc.robot.generated.TunerConstants;
-import frc.robot.generated.TunerConstantsTester;
 import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.Vision;
 import frc.robot.util.LocalADStarAK;
@@ -64,11 +60,11 @@ public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
   private Vision vision;
   private final RobotContainer m_robotContainer;
-  private final Blinkin m_blinkin;
 
   @SuppressWarnings("unused")
   private Timer timer = new Timer();
 
+  @SuppressWarnings("unused")
   private boolean checkState = false;
 
   @SuppressWarnings("unused")
@@ -96,7 +92,7 @@ public class Robot extends LoggedRobot {
     // Start logging! No more data receivers, replay sources, or metadata values may be added.
 
     m_robotContainer = new RobotContainer();
-    m_blinkin = new Blinkin();
+
     AutoLogOutputManager.addObject(this); // Add this object for logging
 
     // Record metadata
@@ -171,7 +167,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotInit() {
-    RobotContainer.elevator.setSelectedSensorPosition(0);
+
     vision = new Vision();
 
     Pathfinding.setPathfinder(new LocalADStarAK());
@@ -193,60 +189,59 @@ public class Robot extends LoggedRobot {
   @Override
   public void robotPeriodic() {
 
-<<<<<<< Updated upstream
     // Commented out robot type switching code
     /*
-      Constants.RobotType selectedType = m_robotContainer.getSelectedRobotType();
-      if (selectedType != Constants.getRobot()) {
-        if (DriverStation.isEnabled()) {
-          // If robot is enabled, show warning and don't switch
-          typeSwitchAlert.set(true);
-          // Reset chooser to current type to prevent future attempts
-          m_robotContainer.robotTypeChooser.addDefaultOption(
-              Constants.getRobot().toString(), Constants.getRobot());
-        } else {
-          // Only switch when disabled
-          Constants.setRobot(selectedType);
-          // Reinitialize drivetrain if robot type changes
-          if (RobotContainer.drivetrain != null) {
-            switch (selectedType) {
-              case COMPBOT -> {
-                Constants.setMode(Mode.REPLAY);
-                RobotContainer.drivetrain = TunerConstants.createDrivetrain();
+          Constants.RobotType selectedType = m_robotContainer.getSelectedRobotType();
+          if (selectedType != Constants.getRobot()) {
+            if (DriverStation.isEnabled()) {
+              // If robot is enabled, show warning and don't switch
+              typeSwitchAlert.set(true);
+              // Reset chooser to current type to prevent future attempts
+              m_robotContainer.robotTypeChooser.addDefaultOption(
+                  Constants.getRobot().toString(), Constants.getRobot());
+            } else {
+              // Only switch when disabled
+              Constants.setRobot(selectedType);
+              // Reinitialize drivetrain if robot type changes
+              if (RobotContainer.drivetrain != null) {
+                switch (selectedType) {
+                  case COMPBOT -> {
+                    Constants.setMode(Mode.REPLAY);
+                    RobotContainer.drivetrain = TunerConstants.createDrivetrain();
+                  }
+                  case DEVBOT -> {
+                    Constants.setMode(Mode.REPLAY);
+                    RobotContainer.drivetrain = TunerConstantsTester.createDrivetrain();
+                  }
+                  case SIMBOT -> {
+                    Constants.setMode(Mode.SIM);
+                    RobotContainer.drivetrain = TunerConstants.createDrivetrain();
+                  }
+                  default -> throw new IllegalArgumentException("Unexpected value: " + selectedType);
+    =======
+        Constants.RobotType selectedType = m_robotContainer.getSelectedRobotType();
+        if (selectedType != Constants.getRobot()) {
+          if (DriverStation.isEnabled()) {
+            // If robot is enabled, show warning and don't switch
+            typeSwitchAlert.set(true);
+            // Reset chooser to current type to prevent future attempts
+            m_robotContainer.robotTypeChooser.addDefaultOption(
+                Constants.getRobot().toString(), Constants.getRobot());
+          } else {
+            // Only switch when disabled
+            Constants.setRobot(selectedType);
+            // Reinitialize drivetrain if robot type changes
+            if (RobotContainer.drivetrain != null) {
+              switch (selectedType) {
+                case COMPBOT -> {
+                  Constants.setMode(Mode.REPLAY);
+                  RobotContainer.drivetrain = TunerConstants.createDrivetrain();
+
+                }
               }
-              case DEVBOT -> {
-                Constants.setMode(Mode.REPLAY);
-                RobotContainer.drivetrain = TunerConstantsTester.createDrivetrain();
-              }
-              case SIMBOT -> {
-                Constants.setMode(Mode.SIM);
-                RobotContainer.drivetrain = TunerConstants.createDrivetrain();
-              }
-              default -> throw new IllegalArgumentException("Unexpected value: " + selectedType);
-=======
-    Constants.RobotType selectedType = m_robotContainer.getSelectedRobotType();
-    if (selectedType != Constants.getRobot()) {
-      if (DriverStation.isEnabled()) {
-        // If robot is enabled, show warning and don't switch
-        typeSwitchAlert.set(true);
-        // Reset chooser to current type to prevent future attempts
-        m_robotContainer.robotTypeChooser.addDefaultOption(
-            Constants.getRobot().toString(), Constants.getRobot());
-      } else {
-        // Only switch when disabled
-        Constants.setRobot(selectedType);
-        // Reinitialize drivetrain if robot type changes
-        if (RobotContainer.drivetrain != null) {
-          switch (selectedType) {
-            case COMPBOT -> {
-              Constants.setMode(Mode.REPLAY);
-              RobotContainer.drivetrain = TunerConstants.createDrivetrain();
->>>>>>> Stashed changes
             }
-          }
         }
-    }
-      */
+          */
 
     vision.logSeenAprilTags();
     // Color detectedColor = m_colorSensor.getColor();
@@ -310,7 +305,7 @@ public class Robot extends LoggedRobot {
         && disabledTimer.hasElapsed(lowBatteryDisabledTime)
         && lowBatteryCycleCount >= lowBatteryMinCycleCount) {
       lowBatteryAlert.set(true);
-      m_blinkin.lightsWarning();
+
       // Useful when LEDs are implemented
     }
 
@@ -364,13 +359,11 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
-    blinkin.rainbowParty();
+    blinkin.rainbowPartyLights();
   }
 
   @Override
-  public void autonomousPeriodic() {
-    m_blinkin.lightsAuto();
-  }
+  public void autonomousPeriodic() {}
 
   @Override
   public void autonomousExit() {}
@@ -391,39 +384,22 @@ public class Robot extends LoggedRobot {
     if (m_robotContainer.getModeMethod()) {
       blinkin.coralLights();
     } else {
-      blinkin.alageLights();
+      blinkin.algaeLights();
     }
     if (RobotContainer.sliderEnabled) {
       RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
-      double radians = RobotContainer.rotatyPart.getPosition().getRadians();
-      if (((radians > 0 && radians < .3) || (radians > -2 && radians < -1)) && checkState) {
-        RobotContainer.rotatyPart.reset();
-        RobotContainer.rotatyPart.setMotor(0);
-        checkState = false;
-      } else if ((radians > 0 && radians < .3) || (radians > -2 && radians < -1)) {
+    }
+    Logger.recordOutput(
+        "Elevator Slider Position", (((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 75));
 
-      } else {
-        checkState = true;
-      }
-      Logger.recordOutput("Check State", checkState);
-      Logger.recordOutput("Coral State", RobotContainer.boolCoralMode);
-      /*SmartDashboard.putData
-      ("Robot Pose", Telemetry.telemeterize.getPose());*/
-      if (RobotContainer.sliderEnabled) {
-        RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
-      }
-      Logger.recordOutput(
-          "Elevator Slider Position", (((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 75));
-
-      if (RobotContainer.elevator.getElevatorHeight() < 7
-          || RobotContainer.elevator.getElevatorHeight() < 52) {
-        RobotContainer.elevator.setP(.05);
-        RobotContainer.elevator.setPeakOutput(.25);
-      } else {
-        RobotContainer.elevator.setP(Constants.ElevatorConstants.elevatorPosition.P);
-        RobotContainer.elevator.setPeakOutput(
-            Constants.ElevatorConstants.elevatorPosition.peakOutput);
-      }
+    if (RobotContainer.elevator.getElevatorHeight() < 7
+        || RobotContainer.elevator.getElevatorHeight() < 52) {
+      RobotContainer.elevator.setP(.05);
+      RobotContainer.elevator.setPeakOutput(.25);
+    } else {
+      RobotContainer.elevator.setP(Constants.ElevatorConstants.elevatorPosition.P);
+      RobotContainer.elevator.setPeakOutput(
+          Constants.ElevatorConstants.elevatorPosition.peakOutput);
     }
   }
 
