@@ -5,7 +5,6 @@ package frc.robot.subsystems.Mechanisms;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.ColorSensorV3;
-import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -13,14 +12,6 @@ import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
   private final TalonFX intakeMotor;
-
-  @SuppressWarnings("unused")
-  private double prevMotorPose = 0;
-
-  private final LinearFilter currentFilter = LinearFilter.movingAverage(10);
-
-  @SuppressWarnings("unused")
-  private double filteredCurrent;
 
   private boolean highCurrentBool;
   private final I2C.Port i2cPort = I2C.Port.kOnboard;
@@ -77,13 +68,8 @@ public class Intake extends SubsystemBase {
   }
 
   public void periodic() {
-    filteredCurrent = currentFilter.calculate(getCurrent(intakeMotor));
-    // SmartDashboard.putNumber("ColorSensed", m_colorSensor.getProximity());
-    // SmartDashboard.putBoolean("ColorSensed boolean", (m_colorSensor.getProximity() <= 120));
-    // Logger.recordOutput(
-    //     "Angle Change", (intakeMotor.getPosition().getValueAsDouble() - prevMotorPose));
-    prevMotorPose = intakeMotor.getPosition().getValueAsDouble();
-    Logger.recordOutput("motor current", intakeMotor.getTorqueCurrent().getValueAsDouble());
-    Logger.recordOutput("high current bool", highCurrentBool);
+    Logger.recordOutput("ColorSensed boolean", (m_colorSensor.getProximity() <= 120));
+    Logger.recordOutput("Intake Motor Current", intakeMotor.getTorqueCurrent().getValueAsDouble());
+    Logger.recordOutput("Intake Motor High Current", highCurrentBool);
   }
 }

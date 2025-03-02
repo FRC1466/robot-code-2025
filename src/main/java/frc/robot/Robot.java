@@ -4,7 +4,6 @@
 package frc.robot;
 
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -13,15 +12,15 @@ import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.IterativeRobotBase;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.BuildConstants;
@@ -31,6 +30,7 @@ import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.Vision;
 import frc.robot.util.LocalADStarAK;
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.stream.Stream;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.AutoLogOutputManager;
@@ -41,6 +41,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 public class Robot extends LoggedRobot {
+  private static final double loopOverrunWarningTimeout = 0.2;
   private static final double lowBatteryVoltage = 11.8;
   private static final double lowBatteryDisabledTime = 1.5;
   private static final double lowBatteryMinCycleCount = 10;
@@ -129,7 +130,7 @@ public class Robot extends LoggedRobot {
 
       case REPLAY:
         setUseTiming(false);
-        File logsDir = new File("C:/logs");
+        File logsDir = new File("D:/logs");
         File[] logFiles = logsDir.listFiles();
         if (logFiles == null) {
           throw new RuntimeException("Logs directory D:/logs does not exist or is not accessible");
@@ -158,11 +159,21 @@ public class Robot extends LoggedRobot {
     DriverStation.silenceJoystickConnectionWarning(true);
     disabledTimer.restart();
 
-    // Switch thread to high priority to improve loop timing
-    Threads.setCurrentThreadPriority(true, 5);
-
     // Start AdvantageKit Logger
     Logger.start();
+
+    // Adjust loop overrun warning timeout
+    try {
+      Field watchdogField = IterativeRobotBase.class.getDeclaredField("m_watchdog");
+      watchdogField.setAccessible(true);
+      Watchdog watchdog = (Watchdog) watchdogField.get(this);
+      watchdog.setTimeout(loopOverrunWarningTimeout);
+    } catch (Exception e) {
+      DriverStation.reportWarning("Failed to disable loop overrun warnings.", false);
+    }
+
+    // Switch thread to high priority to improve loop timing
+    Threads.setCurrentThreadPriority(true, 10);
   }
 
   @Override
@@ -173,76 +184,10 @@ public class Robot extends LoggedRobot {
     Pathfinding.setPathfinder(new LocalADStarAK());
     RobotContainer.elevator.setSelectedSensorPosition(0);
     vision = new Vision();
-
-    // Check specifically for SIMBOT type, not just simulation
-    if (Constants.getRobot() == RobotType.SIMBOT) {
-      System.out.println("Detected SIMBOT - configuring Red1 alliance position");
-      DriverStationSim.setAllianceStationId(AllianceStationID.Red1);
-      DriverStationSim.setEnabled(true);
-      DriverStationSim.notifyNewData();
-
-    } else if (RobotBase.isSimulation()) {
-      System.out.println("In simulation but not SIMBOT - skipping alliance configuration");
-    }
   }
 
   @Override
   public void robotPeriodic() {
-
-    // Commented out robot type switching code
-    /*
-          Constants.RobotType selectedType = m_robotContainer.getSelectedRobotType();
-          if (selectedType != Constants.getRobot()) {
-            if (DriverStation.isEnabled()) {
-              // If robot is enabled, show warning and don't switch
-              typeSwitchAlert.set(true);
-              // Reset chooser to current type to prevent future attempts
-              m_robotContainer.robotTypeChooser.addDefaultOption(
-                  Constants.getRobot().toString(), Constants.getRobot());
-            } else {
-              // Only switch when disabled
-              Constants.setRobot(selectedType);
-              // Reinitialize drivetrain if robot type changes
-              if (RobotContainer.drivetrain != null) {
-                switch (selectedType) {
-                  case COMPBOT -> {
-                    Constants.setMode(Mode.REPLAY);
-                    RobotContainer.drivetrain = TunerConstants.createDrivetrain();
-                  }
-                  case DEVBOT -> {
-                    Constants.setMode(Mode.REPLAY);
-                    RobotContainer.drivetrain = TunerConstantsTester.createDrivetrain();
-                  }
-                  case SIMBOT -> {
-                    Constants.setMode(Mode.SIM);
-                    RobotContainer.drivetrain = TunerConstants.createDrivetrain();
-                  }
-                  default -> throw new IllegalArgumentException("Unexpected value: " + selectedType);
-    =======
-        Constants.RobotType selectedType = m_robotContainer.getSelectedRobotType();
-        if (selectedType != Constants.getRobot()) {
-          if (DriverStation.isEnabled()) {
-            // If robot is enabled, show warning and don't switch
-            typeSwitchAlert.set(true);
-            // Reset chooser to current type to prevent future attempts
-            m_robotContainer.robotTypeChooser.addDefaultOption(
-                Constants.getRobot().toString(), Constants.getRobot());
-          } else {
-            // Only switch when disabled
-            Constants.setRobot(selectedType);
-            // Reinitialize drivetrain if robot type changes
-            if (RobotContainer.drivetrain != null) {
-              switch (selectedType) {
-                case COMPBOT -> {
-                  Constants.setMode(Mode.REPLAY);
-                  RobotContainer.drivetrain = TunerConstants.createDrivetrain();
-
-                }
-              }
-            }
-        }
-          */
-
     vision.logSeenAprilTags();
     // Color detectedColor = m_colorSensor.getColor();
 
@@ -256,19 +201,11 @@ public class Robot extends LoggedRobot {
     */
 
     var visionEst = RobotContainer.photonCamera.getEstimatedGlobalPose();
-    // SmartDashboard.putBoolean("booleanSwitch", m_robotContainer.limitSwitch.get());
-
     CommandScheduler.getInstance().run();
     RobotPose = RobotContainer.drivetrain.getState().Pose;
     visionEst.ifPresent(
         est -> {
           var estStdDevs = RobotContainer.photonCamera.getEstimationStdDevs();
-          SmartDashboard.putNumber("Timestamp", est.timestampSeconds);
-          SmartDashboard.putNumber(
-              "Vision Pose X", visionEst.get().estimatedPose.toPose2d().getX());
-          SmartDashboard.putNumber(
-              "Vision Pose Y", visionEst.get().estimatedPose.toPose2d().getY());
-
           if (RobotContainer.visionEnabled) {
             // With vision - use full pose estimate
             RobotContainer.drivetrain.addVisionMeasurement(
@@ -283,18 +220,6 @@ public class Robot extends LoggedRobot {
                 estStdDevs);
           }
         });
-    Logger.recordOutput("apriltag seen", m_robotContainer.getClosestTag());
-
-    // SmartDashboard.pu Boolean("Camera?", photonCamera.getCamera().isConnected());
-    SmartDashboard.putBoolean("Vision Est", visionEst.isPresent());
-
-    SmartDashboard.putNumber("Robot Pose X", RobotContainer.drivetrain.getState().Pose.getX());
-    SmartDashboard.putNumber("Robot Pose Y", RobotContainer.drivetrain.getState().Pose.getY());
-    SmartDashboard.putNumber(
-        "Robot Pose Theta", RobotContainer.drivetrain.getState().Pose.getRotation().getDegrees());
-
-    SwerveDriveState driveState = RobotContainer.drivetrain.getState();
-    Logger.recordOutput("SwerveModuleStates", driveState.ModuleStates);
 
     // Low battery alert
     lowBatteryCycleCount += 1;
@@ -359,11 +284,12 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
-    blinkin.rainbowPartyLights();
   }
 
   @Override
-  public void autonomousPeriodic() {}
+  public void autonomousPeriodic() {
+    blinkin.rainbowPartyLights();
+  }
 
   @Override
   public void autonomousExit() {}
@@ -378,14 +304,9 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void teleopPeriodic() {
-
-    // SmartDashboard.putBoolean(
-    //   "Drive Command Running", RobotContainer.drivetrain.getDefaultCommand().isScheduled());
     if (RobotContainer.sliderEnabled) {
       RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
     }
-    Logger.recordOutput(
-        "Elevator Slider Position", (((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65));
   }
 
   @Override

@@ -25,20 +25,6 @@ public class Elevator extends SubsystemBase {
   private double localSetpoint = 0;
   private DoubleSupplier overrideFeedforward = () -> 0;
 
-  // Will use when we install hall sensor
-  // DigitalInput hallBottom = new DigitalInput(0);
-
-  // figure out what this is
-  @SuppressWarnings("unused")
-  private static final double TICKS_PER_INCH = 1;
-
-  // Also figure this out
-  @SuppressWarnings("unused")
-  private static final double HOME_POSITION_INCHES = 0;
-
-  @SuppressWarnings("unused")
-  private static final double MAX_POSITION_TICKS = 64;
-
   private double peakOutput;
 
   public Elevator() {
@@ -169,20 +155,8 @@ public class Elevator extends SubsystemBase {
   @Override
   public void periodic() {
     setArmHold();
-    /*  if(!hallBottom.get()){
-        setSelectedSensorPosition(0);
-    }*/
-
-    SmartDashboard.putNumber("Elevator Position", getElevatorHeight());
-    SmartDashboard.putNumber("Get Elevator P", elevatorPID.getP());
-    SmartDashboard.putNumber("Get Elevator PeakOutput", peakOutput);
-    SmartDashboard.putNumber("Elevator Desired Position", elevatorPID.getSetpoint());
-    SmartDashboard.putNumber("Elevator Error", elevatorPID.getError());
-
-    // if(!hallBottom.get()){
-    //   setSelectedSensorPosition(0);
-    // }
 
     Logger.recordOutput("Elevator Position", getElevatorHeight());
+    Logger.recordOutput("Elevator Desired Positon", elevatorPID.getSetpoint());
   }
 }
