@@ -1,0 +1,77 @@
+// Copyright (c) 2025 FRC Team 1466
+// https://github.com/FRC1466
+ 
+package frc.robot.constants;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+
+public class PathfindConstants {
+  // Red Target Poses for Reef
+  public static final Pose2d[][] redTargetPoseReef = {
+    {
+      new Pose2d(13.550, 2.837, Rotation2d.fromDegrees(120)),
+      new Pose2d(13.853, 3.003, Rotation2d.fromDegrees(120))
+    },
+    {
+      new Pose2d(14.347, 3.860, Rotation2d.fromDegrees(-180)),
+      new Pose2d(14.347, 4.190, Rotation2d.fromDegrees(-180))
+    },
+    {
+      new Pose2d(13.840, 5.044, Rotation2d.fromDegrees(-120)),
+      new Pose2d(13.560, 5.216, Rotation2d.fromDegrees(-120))
+    },
+    {
+      new Pose2d(12.561, 5.237, Rotation2d.fromDegrees(-60)),
+      new Pose2d(12.301, 5.237, Rotation2d.fromDegrees(-60))
+    },
+    {
+      new Pose2d(11.695, 4.169, Rotation2d.fromDegrees(0)),
+      new Pose2d(11.695, 3.860, Rotation2d.fromDegrees(0))
+    },
+    {
+      new Pose2d(12.283, 2.998, Rotation2d.fromDegrees(60)),
+      new Pose2d(12.554, 2.850, Rotation2d.fromDegrees(60))
+    }
+  };
+
+  // Red Target Poses for Station
+  public static final Pose2d[] redTargetPoseStation = {
+    new Pose2d(16.288, 7.064, Rotation2d.fromDegrees(-125.000)),
+    new Pose2d(16.288, 0.937, Rotation2d.fromDegrees(125.000)),
+  };
+
+  // Blue target poses for reef
+  public static final Pose2d[][] blueTargetPoseReef = {
+    {
+      new Pose2d(4.022, 2.837, Rotation2d.fromDegrees(-60)),
+      new Pose2d(3.719, 3.003, Rotation2d.fromDegrees(-60))
+    },
+    {
+      new Pose2d(3.225, 3.860, Rotation2d.fromDegrees(0)),
+      new Pose2d(3.225, 4.190, Rotation2d.fromDegrees(0))
+    },
+    {
+      new Pose2d(3.732, 5.044, Rotation2d.fromDegrees(60)),
+      new Pose2d(4.012, 5.216, Rotation2d.fromDegrees(60))
+    },
+    {
+      new Pose2d(5.011, 5.237, Rotation2d.fromDegrees(120)),
+      new Pose2d(5.271, 12.301, Rotation2d.fromDegrees(120))
+    },
+    {
+      new Pose2d(5.877, 4.169, Rotation2d.fromDegrees(180)),
+      new Pose2d(5.877, 3.860, Rotation2d.fromDegrees(180))
+    },
+    {
+      new Pose2d(5.289, 2.998, Rotation2d.fromDegrees(-120)),
+      new Pose2d(5.018, 2.850, Rotation2d.fromDegrees(-120))
+    }
+  };
+
+  // Blue Target Poses for Station
+  public static final Pose2d[] blueTargetPoseStation = {
+    new Pose2d(1.295, 7.064, Rotation2d.fromDegrees(-55.000)),
+    new Pose2d(1.295, 0.937, Rotation2d.fromDegrees(55.000)),
+  };
+}

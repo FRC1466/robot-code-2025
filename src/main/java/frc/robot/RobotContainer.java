@@ -40,6 +40,10 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
+  private Command leftReefCommand = null;
+  private Command rightReefCommand = null;
+  private Command stationCommand = null;
+
   // Warnings
   private final Alert driverDisconnected =
       new Alert("Driver controller disconnected (port 0).", AlertType.kWarning);
@@ -59,22 +63,9 @@ public class RobotContainer {
           .withDriveRequestType(
               DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
-  @SuppressWarnings("unused")
-  private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-
-  @SuppressWarnings("unused")
-  private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
-
   // Autonomous chooser
   private final LoggedDashboardChooser<Command> autoChooser =
       new LoggedDashboardChooser<>("Auto Routine");
-
-  // Add new field
-  // Commented out robot type chooser - we'll initialize the drivetrain only once
-  /*
-  public final LoggedDashboardChooser<Constants.RobotType> robotTypeChooser =
-      new LoggedDashboardChooser<>("Robot Type");
-  */
 
   // Subsystems
   private final Intake intake = new Intake();
@@ -84,13 +75,8 @@ public class RobotContainer {
 
   private final AprilTagFieldLayout layout =
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+
   final Pathfind m_pathfinder;
-
-  @SuppressWarnings("unused")
-  private Command m_pathfindCommandLeft;
-
-  @SuppressWarnings("unused")
-  private Command m_pathfindCommandRight;
 
   public static boolean visionEnabled = true;
 
@@ -99,9 +85,7 @@ public class RobotContainer {
   final Telemetry logger = new Telemetry(MaxSpeed);
   @AutoLogOutput public static boolean algaeMode = false;
 
-  // Drivetrain
   public static CommandSwerveDrivetrain drivetrain;
-  // State
   public static boolean sliderEnabled = false;
 
   public RobotContainer() {
@@ -122,9 +106,6 @@ public class RobotContainer {
       default -> throw new IllegalArgumentException("Unexpected value: " + Constants.getRobot());
     }
 
-    // Commented out robot type chooser configuration
-    // configureRobotTypeChooser();
-
     try {
       m_pathfinder = new Pathfind(this);
     } catch (IOException | ParseException e) {
@@ -134,23 +115,6 @@ public class RobotContainer {
     configureBindings();
     initializeChooser();
   }
-
-  // Commented out robot type chooser methods
-  /*
-  private void configureRobotTypeChooser() {
-    robotTypeChooser.addOption("COMPBOT", Constants.RobotType.COMPBOT);
-    robotTypeChooser.addOption("DEVBOT", Constants.RobotType.DEVBOT);
-    robotTypeChooser.addOption("SIMBOT", Constants.RobotType.SIMBOT);
-
-    // Set default to current robot type
-    robotTypeChooser.addDefaultOption(Constants.getRobot().toString(), Constants.getRobot());
-  }
-
-  // Add getter method
-  public Constants.RobotType getSelectedRobotType() {
-    return robotTypeChooser.get();
-  }
-  */
 
   // Initialize autonomous chooser with options
   public void initializeChooser() {
@@ -182,9 +146,54 @@ public class RobotContainer {
 
   @SuppressWarnings("unused")
   private void configureBindings() {
-    joystick.povLeft().whileTrue(m_pathfinder.getPathfindingCommand(0, getClosestTag()));
+    joystick
+        .povLeft()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  leftReefCommand = m_pathfinder.getPathfindingCommandReef(0, getClosestTag());
+                  leftReefCommand.schedule();
+                }))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  if (leftReefCommand != null) {
+                    leftReefCommand.cancel();
+                  }
+                }));
 
-    joystick.povRight().whileTrue(m_pathfinder.getPathfindingCommand(1, getClosestTag()));
+    joystick
+        .povRight()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  rightReefCommand = m_pathfinder.getPathfindingCommandReef(1, getClosestTag());
+                  rightReefCommand.schedule();
+                }))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  if (rightReefCommand != null) {
+                    rightReefCommand.cancel();
+                  }
+                }));
+
+    joystick
+        .button(1) //TEMPORARY BINDING
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  stationCommand = m_pathfinder.getPathfindingCommandStation(getClosestStation());
+                  stationCommand.schedule();
+                }))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  if (stationCommand != null) {
+                    stationCommand.cancel();
+                  }
+                }));
+
     // Note that X is defined as forward according to WPILib convention,
     // and Y is defined as to the left according to WPILib convention.
     drivetrain.setDefaultCommand(
@@ -203,18 +212,15 @@ public class RobotContainer {
                             * MaxAngularRate) // Drive counterclockwise with negative X (left)
             ));
 
-    // Run SysId routines when holding back/start and X/Y.
-    // Note that each routine should be run exactly once in a single log.
     Trigger intakeProximityTrigger = new Trigger(() -> intake.getIntakeDistanceBool());
+    Trigger falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
     Trigger algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 20);
     Trigger currentIntakeSwitch = new Trigger(() -> intake.getHighCurrent());
     Trigger algaeMode = new Trigger(() -> getModeMethod());
     Trigger l4Ready = new Trigger(() -> elevator.getElevatorHeight() > 57);
     Trigger coralMode = new Trigger(() -> !getModeMethod());
-    Trigger falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
 
-    // reset the field-centric heading on left bumper press
-
+    // reset the field-centric heading with vision on pov down and without vision on pov up
     joystick
         .povDown()
         .onTrue(
@@ -223,7 +229,6 @@ public class RobotContainer {
                   visionEnabled = true;
                   drivetrain.seedFieldCentric();
                 }));
-
     joystick
         .povUp()
         .onTrue(
@@ -233,21 +238,16 @@ public class RobotContainer {
                   drivetrain.seedFieldCentric();
                 }));
 
-    // Intake Coral
-    // joystick.button(1).and(intakeProximityTrigger).whileTrue(elevator.toBottom().alongWith(rotatyPart.store()).alongWith(intake.intake())).onFalse(intake.stop().alongWith(rotatyPart.coralScore()));
-    // Run SysId routines when holding back/start and X/Y.
-    // Note that each routine should be run exactly once in a single log.
-    // Reset the field-centric heading on left bumper press
     // Mode Switch
     joystick.button(2).onTrue(changeMode());
 
     // Intake Coral
     joystick
-        .button(3)
-        .and(coralMode)
-        .and(intakeProximityTrigger)
-        .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
-        .onFalse(intake.coralHold().alongWith(rotatyPart.coralScore()));
+    .button(3)
+    .and(coralMode)
+    .and(intakeProximityTrigger)
+    .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
+    .onFalse(intake.coralHold().alongWith(rotatyPart.coralScore()));
     // L2
     joystick
         .button(7)
@@ -358,30 +358,37 @@ public class RobotContainer {
     double prevDistance = Double.MAX_VALUE;
     double holderDistance = 0;
     int offset = 0;
-    if (DriverStation.getAlliance().get() == Alliance.Red) {
-      offset = 6;
-    } else if (DriverStation.getAlliance().get() == Alliance.Blue) {
-      offset = 17;
+    Optional<Alliance> alliance = DriverStation.getAlliance();
+    if (alliance.isPresent()) {
+      if (alliance.get() == Alliance.Red) {
+        offset = 6;
+      } else if (alliance.get() == Alliance.Blue) {
+        offset = 17;
+      }
+    } else {
+      // Default behavior if alliance is unknown
+      offset = 0; // or whatever default makes sense
     }
     try {
-
       for (int i = offset; i < (offset + 6); i++) {
         Optional<Pose3d> tagPoseOptional = layout.getTagPose(i);
         if (tagPoseOptional.isEmpty()) {
-          // Skip this index if no tag pose is available
           continue;
         }
-        var tagPose = tagPoseOptional.get();
-        holderDistance =
-            (Math.pow(drivetrain.getState().Pose.getX() - tagPose.getX(), 2)
-                + Math.pow(drivetrain.getState().Pose.getY() - tagPose.getY(), 2)
-                + Math.pow(
-                    drivetrain.getState().Pose.getRotation().getRadians()
-                        - tagPose.getRotation().getAngle() * 0.1,
-                    2));
-        if (holderDistance < prevDistance) {
-          closestTag = i;
-          prevDistance = holderDistance;
+        // Check if the Optional contains a value before calling get()
+        if (tagPoseOptional.isPresent()) {
+          var tagPose = tagPoseOptional.get();
+          holderDistance =
+              (Math.pow(drivetrain.getState().Pose.getX() - tagPose.getX(), 2)
+                  + Math.pow(drivetrain.getState().Pose.getY() - tagPose.getY(), 2)
+                  + Math.pow(
+                      drivetrain.getState().Pose.getRotation().getRadians()
+                          - tagPose.getRotation().getAngle() * 0.1,
+                      2));
+          if (holderDistance < prevDistance) {
+            closestTag = i;
+            prevDistance = holderDistance;
+          }
         }
       }
     } catch (Exception e) {
@@ -390,11 +397,19 @@ public class RobotContainer {
       System.err.println("The underlying exception was: " + cause);
       e.printStackTrace();
     }
-    // Logger.recordOutput("Logger/closestTagID", closestTag);
-    // Logger.recordOutput("current offset is", offset);
-    // Logger.recordOutput("Alliance is Red", DriverStation.getAlliance().get() == Alliance.Red);
-    // Logger.recordOutput("Alliance is Blue", DriverStation.getAlliance().get() == Alliance.Blue);
-    // Adjust the tag based on alliance.
-    return closestTag - offset;
+    Logger.recordOutput("Logger/closestTagID", closestTag);
+    // If no valid tag was found, return a default value (e.g., 0)
+    return closestTag == -1 ? 0 : closestTag - offset;
+  }
+
+  public int getClosestStation() {
+    int closestStation = -1;
+    if (drivetrain.getState().Pose.getY() >= 4.025) {
+      closestStation = 0;
+    } else {
+      closestStation = 1;
+    }
+    Logger.recordOutput("Logger/closestStation", closestStation);
+    return closestStation;
   }
 }
