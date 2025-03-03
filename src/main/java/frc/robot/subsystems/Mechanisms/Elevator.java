@@ -39,7 +39,7 @@ public class Elevator extends SubsystemBase {
             Constants.ElevatorConstants.elevatorPosition.I,
             Constants.ElevatorConstants.elevatorPosition.D);
     elevatorPID.setTolerance(.1);
-    setGoal(.5);
+    setGoal(1);
     masterMotor.setVoltage(0);
     leftSlaveFX.setVoltage(0);
     setNeutralMode(NeutralModeValue.Brake);

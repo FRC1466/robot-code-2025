@@ -40,10 +40,11 @@ public class Vision {
   public VisionSystemSim visionSim;
 
   public Vision() {
-    camera = new PhotonCamera(kCameraName);
+    camera = new PhotonCamera(kCameraName1);
 
     photonEstimator =
-        new PhotonPoseEstimator(kTagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, kRobotToCam);
+        new PhotonPoseEstimator(
+            kTagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, kRobotToCam1);
     photonEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
     // ----- Simulation
@@ -63,7 +64,7 @@ public class Vision {
       // targets.
       cameraSim = new PhotonCameraSim(camera, cameraProp);
       // Add the simulated camera to view the targets on this simulated field.
-      visionSim.addCamera(cameraSim, kRobotToCam);
+      visionSim.addCamera(cameraSim, kRobotToCam1);
 
       cameraSim.enableDrawWireframe(true);
     }

@@ -20,9 +20,6 @@ import edu.wpi.first.wpilibj.RobotBase;
 import webblib.Gains;
 
 public final class Constants {
-  public static final Translation3d cameraTranslation = new Translation3d(0.28, 0.0, 0.23);
-  public static final Rotation3d cameraRotation = new Rotation3d(0, 0, 0);
-
   public static boolean disableHAL = false;
 
   private static RobotType robotType = RobotType.COMPBOT;
@@ -137,10 +134,10 @@ public final class Constants {
   }
 
   public static class Vision {
-    public static final String kCameraName = "Global_Shutter_Camera";
+    public static final String kCameraName1 = "Camera_Front";
     // Cam mounted facing forward, half a meter forward of center, half a meter up from center.
-    public static final Transform3d kRobotToCam =
-        new Transform3d(new Translation3d(0.3, -0.13, 0.22), new Rotation3d(0, 0, 0));
+    public static final Transform3d kRobotToCam1 =
+        new Transform3d(new Translation3d(.267, .292, .2), new Rotation3d(0, 0, 0));
 
     // The layout of the AprilTags on the field
     public static final AprilTagFieldLayout kTagLayout =
@@ -156,6 +153,6 @@ public final class Constants {
     public static final int masterID = 17;
     public static final int slaveID = 16;
 
-    public static final Gains elevatorPosition = new Gains(.05, 0.00, 0.01, .0, 0, .25);
+    public static final Gains elevatorPosition = new Gains(.05, 0.00, 0.0, .0, 0, .25);
   }
 }
