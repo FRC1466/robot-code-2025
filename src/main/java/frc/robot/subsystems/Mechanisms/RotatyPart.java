@@ -18,13 +18,6 @@ import java.util.function.DoubleSupplier;
 import webblib.ArmPIDController;
 
 public class RotatyPart extends SubsystemBase {
-  // Add simulation constants
-  private static final double SIM_TIMESTEP = 0.02; // 20ms
-  private static final double SIM_SPEED_MULTIPLIER = 2.0; // Reduced from 5.0
-  private static final double GRAVITY_EFFECT = 4.0; // Reduced from 9.81
-  private static final double DAMPING_FACTOR = 0.5; // Increased from 0.1
-  private static final double POSITION_DAMPING = 0.3; // New position-based damping
-
   public double armSetpoint = 0;
 
   private TalonFX armMotor;
