@@ -179,7 +179,7 @@ public class RobotContainer {
                 }));
 
     joystick
-        .button(1) //TEMPORARY BINDING
+        .button(1) // TEMPORARY BINDING
         .onTrue(
             Commands.runOnce(
                 () -> {
@@ -243,11 +243,11 @@ public class RobotContainer {
 
     // Intake Coral
     joystick
-    .button(3)
-    .and(coralMode)
-    .and(intakeProximityTrigger)
-    .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
-    .onFalse(intake.coralHold().alongWith(rotatyPart.coralScore()));
+        .button(3)
+        .and(coralMode)
+        .and(intakeProximityTrigger)
+        .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
+        .onFalse(intake.coralHold().alongWith(rotatyPart.coralScore()));
     // L2
     joystick
         .button(7)
