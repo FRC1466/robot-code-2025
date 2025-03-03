@@ -6,6 +6,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "ValidatePathsApp",
+      "request": "launch",
+      "mainClass": "ValidatePathsApp",
+      "projectName": "robot-code-2025"
+    },
+    {
+      "type": "java",
       "name": "Constants$CheckDeploy",
       "request": "launch",
       "mainClass": "frc.robot.constants.Constants$CheckDeploy",
