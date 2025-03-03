@@ -129,7 +129,8 @@ public class RobotContainer {
 
     autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));
     autoChooser.addOption("2 Piece Inverted", new PathPlannerAuto("Invert 2 Piece Auto"));
-    autoChooser.addOption("3 Piece", new PathPlannerAuto("3 Piece Auto Better"));
+    autoChooser.addOption("3 Piece", new PathPlannerAuto("3 Piece Auto"));
+    autoChooser.addOption("5 Piece", new PathPlannerAuto("5 Piece Auto Too Slow"));
     autoChooser.addOption("Recenter bot", new PathPlannerAuto("Recenter"));
     autoChooser.addOption("Taxi", new PathPlannerAuto("Taxi"));
 
