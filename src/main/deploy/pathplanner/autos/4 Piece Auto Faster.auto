@@ -11,21 +11,9 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "reverse intake coral"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "11 to Station"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "intake coral"
           }
         },
         {
@@ -35,21 +23,9 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "reverse intake coral"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "9 to Station"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "intake coral"
           }
         },
         {
@@ -59,9 +35,15 @@
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "reverse intake coral"
+            "pathName": "8 to Station"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Station to 7"
           }
         }
       ]

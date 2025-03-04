@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "raise arm to 4",
+      "name": "intake coral",
       "waypointRelativePos": 0.35,
       "endWaypointRelativePos": null,
       "command": null

@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.956,
-        "y": 5.284
+        "x": 1.295,
+        "y": 7.064
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.6390394004106614,
-        "y": 5.46634406678513
+        "x": 1.5561996476482076,
+        "y": 6.5597158477969515
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 1.295,
-        "y": 7.064
+        "x": 3.18,
+        "y": 3.8451844262295083
       },
       "prevControl": {
-        "x": 1.5043499295134408,
-        "y": 6.9273522520759405
+        "x": 2.6396783996438034,
+        "y": 4.7856071064443455
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "intake coral",
-      "waypointRelativePos": 0.4476190476190474,
+      "name": "raise arm to 4",
+      "waypointRelativePos": 0.673809523809522,
       "endWaypointRelativePos": null,
       "command": null
     }
@@ -49,13 +49,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -55.0
+    "rotation": 0.0
   },
   "reversed": false,
-  "folder": "9",
+  "folder": "6",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -59.99999999999999
+    "rotation": -55.0
   },
   "useDefaultConstraints": true
 }
