@@ -119,32 +119,44 @@ public class RobotContainer {
   // Initialize autonomous chooser with options
   public void initializeChooser() {
     // Create the Intake command that runs for exactly 2 seconds
-    Command intakeCommand = intake.intake()
-        .alongWith(rotatyPart.store())
-        .alongWith(elevator.toBottom())
-        .withTimeout(3)  // Run for exactly 2 seconds
-        .andThen(rotatyPart.coralScore().alongWith(intake.stop()));
-        
+    Command intakeCommand =
+        intake
+            .intake()
+            .alongWith(rotatyPart.store())
+            .alongWith(elevator.toBottom())
+            .withTimeout(3) // Run for exactly 2 seconds
+            .andThen(rotatyPart.coralScore().alongWith(intake.stop()));
+
     // L2 command - go to position, outtake, hold for 2 seconds, then return to bottom
-    Command l2Command = elevator.toL2()
-        .alongWith(rotatyPart.coralScore())
-        .andThen(intake.outTake().withTimeout(3))
-        .andThen(elevator.toBottom().alongWith(rotatyPart.coralScore()));
-    
+    Command l2Command =
+        elevator
+            .toL2()
+            .alongWith(rotatyPart.coralScore())
+            .andThen(intake.outTake().withTimeout(3))
+            .andThen(elevator.toBottom().alongWith(rotatyPart.coralScore()));
+
     // L3 command - go to position, outtake, hold for 2 seconds, then return to bottom
-    Command l3Command = elevator.toL3()
-        .alongWith(rotatyPart.coralScore())
-        .andThen(intake.outTake().withTimeout(3))
-        .andThen(elevator.toBottom().alongWith(rotatyPart.coralScore()));
+    Command l3Command =
+        elevator
+            .toL3()
+            .alongWith(rotatyPart.coralScore())
+            .andThen(intake.outTake().withTimeout(3))
+            .andThen(elevator.toBottom().alongWith(rotatyPart.coralScore()));
 
     // Create the L4 command with conditional follow-up action when elevator reaches position
-    Command l4Command = elevator.toL4()
-        .alongWith(rotatyPart.coralScore())
-        .andThen(
-            Commands.waitUntil(() -> elevator.getElevatorHeight() > 53)
-                .andThen(rotatyPart.l4coralScore().alongWith(intake.coralHold()).andThen(intake.outTake().withTimeout(3)).andThen(elevator.toBottom().alongWith(rotatyPart.coralScore())))
-        );
-    
+    Command l4Command =
+        elevator
+            .toL4()
+            .alongWith(rotatyPart.coralScore())
+            .andThen(
+                Commands.waitUntil(() -> elevator.getElevatorHeight() > 53)
+                    .andThen(
+                        rotatyPart
+                            .l4coralScore()
+                            .alongWith(intake.coralHold())
+                            .andThen(intake.outTake().withTimeout(3))
+                            .andThen(elevator.toBottom().alongWith(rotatyPart.coralScore()))));
+
     // Register the named commands
     NamedCommands.registerCommand("Intake", intakeCommand);
     NamedCommands.registerCommand("l2", l2Command);
