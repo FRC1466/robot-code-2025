@@ -358,7 +358,7 @@ public class Robot extends LoggedRobot {
 
     // Check all buttons (typically 1-12 for a standard flightstick)
     for (int i = 1; i <= 12; i++) {
-      if (m_robotContainer.joystick.button(i) != null) {
+      if (m_robotContainer.joystick.getHID().getRawButton(i)) {
         inputsActive = true;
         break;
       }
@@ -404,7 +404,15 @@ public class Robot extends LoggedRobot {
 
       // Check all buttons
       for (int i = 1; i <= 12; i++) {
-        if (m_robotContainer.joystick.button(i) != null) {
+        if (m_robotContainer.joystick.getHID().getRawButton(i)) {
+          allInputsNeutral = false;
+          break;
+        }
+      }
+
+      // Check all POVs (usually just one, but check all possible)
+      for (int i = 0; i < m_robotContainer.joystick.getHID().getPOVCount(); i++) {
+        if (m_robotContainer.joystick.getHID().getPOV(i) != -1) { // -1 means POV not pressed
           allInputsNeutral = false;
           break;
         }
