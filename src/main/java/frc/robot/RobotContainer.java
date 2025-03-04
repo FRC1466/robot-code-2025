@@ -218,7 +218,7 @@ public class RobotContainer {
     Trigger algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 20);
     Trigger currentIntakeSwitch = new Trigger(() -> intake.getHighCurrent());
     Trigger algaeMode = new Trigger(() -> getModeMethod());
-    Trigger l4Ready = new Trigger(() -> elevator.getElevatorHeight() > 57);
+    Trigger l4Ready = new Trigger(() -> elevator.getElevatorHeight() > 53);
     Trigger coralMode = new Trigger(() -> !getModeMethod());
 
     // reset the field-centric heading with vision on pov down and without vision on pov up
@@ -248,14 +248,16 @@ public class RobotContainer {
         .and(coralMode)
         .and(intakeProximityTrigger)
         .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
-        .onFalse(intake.coralHold().alongWith(rotatyPart.coralScore()));
+        .onFalse((rotatyPart.coralScore()).alongWith(intake.stop()));
     // L2
     joystick
         .button(7)
         .and(coralMode)
         .onTrue(elevator.toL2().alongWith(rotatyPart.coralScore()))
         .onFalse(intake.outTake());
-    (intakeProximityTrigger).onTrue(elevator.toBottom().andThen(intake.stop()));
+    (intakeProximityTrigger)
+        .and(coralMode)
+        .onTrue(elevator.toBottom().alongWith(rotatyPart.coralScore()).andThen(intake.stop()));
     // L3
     joystick
         .button(6)

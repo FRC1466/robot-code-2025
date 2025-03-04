@@ -107,7 +107,7 @@ public final class Constants {
   public static final class RotationConstants {
     public static final int armPort = 14, dutyCyclePort = 0;
     // DO NOT TOUCH!!!!
-    public static final Gains rotationPosition = new Gains(.16, 0.13, 0.05, 0.0, 0, .2);
+    public static final Gains rotationPosition = new Gains(.22, 0.11, 0.05, 0.0, 0, .2);
     public static final double restRadians = .05,
         coralPosRadians = .505,
         l4coralPosRadians = 1,
