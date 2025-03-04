@@ -35,7 +35,7 @@ public class Intake extends SubsystemBase {
   }
 
   public Command algaeHold() {
-    return runOnce(() -> setVoltage(.75));
+    return runOnce(() -> setVoltage(.4));
   }
 
   public Command coralHold() {

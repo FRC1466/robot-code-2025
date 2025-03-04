@@ -4,7 +4,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
-import static edu.wpi.first.wpilibj2.command.Commands.run;
+import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -225,20 +225,20 @@ public class RobotContainer {
                   }
                 }));
 
-    safeButton1 // TEMPORARY BINDING
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  stationCommand = m_pathfinder.getPathfindingCommandStation(getClosestStation());
-                  stationCommand.schedule();
-                }))
-        .onFalse(
-            Commands.runOnce(
-                () -> {
-                  if (stationCommand != null) {
-                    stationCommand.cancel();
-                  }
-                }));
+    /*   safeButton1 // TEMPORARY BINDING
+    .onTrue(
+        Commands.runOnce(
+            () -> {
+              stationCommand = m_pathfinder.getPathfindingCommandStation(getClosestStation());
+              stationCommand.schedule();
+            }))
+    .onFalse(
+        Commands.runOnce(
+            () -> {
+              if (stationCommand != null) {
+                stationCommand.cancel();
+              }
+            }));*/
 
     // Note that X is defined as forward according to WPILib convention,
     // and Y is defined as to the left according to WPILib convention.
@@ -276,6 +276,7 @@ public class RobotContainer {
     Trigger intakeProximityTrigger = new Trigger(() -> intake.getIntakeDistanceBool());
     Trigger falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
     Trigger algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 20);
+    Trigger processorReady = new Trigger(() -> elevator.getElevatorHeight() > 4);
     Trigger currentIntakeSwitch = new Trigger(() -> intake.getHighCurrent());
     Trigger algaeMode = new Trigger(() -> getModeMethod());
     Trigger l4Ready = new Trigger(() -> elevator.getElevatorHeight() > 53);
@@ -309,7 +310,7 @@ public class RobotContainer {
         .and(coralMode)
         .onTrue(elevator.toL2().alongWith(rotatyPart.coralScore()))
         .onFalse(intake.outTake());
-    (intakeProximityTrigger)
+    intakeProximityTrigger
         .and(coralMode)
         .onTrue(elevator.toBottom().alongWith(rotatyPart.coralScore()).andThen(intake.stop()));
     // L3
@@ -322,18 +323,35 @@ public class RobotContainer {
         .and(coralMode)
         .onTrue(elevator.toL4().alongWith(rotatyPart.coralScore()))
         .onFalse(intake.outTake());
-    safeButton5.and(l4Ready).onTrue(rotatyPart.l4coralScore().alongWith(intake.coralHold()));
-    // L2 Removal
+    safeButton5
+        .and(l4Ready)
+        .and(coralMode)
+        .onTrue(rotatyPart.l4coralScore().alongWith(intake.coralHold()));
+    // Processor
+    /*  safeButton1
+    .and(algaeMode)
+    .and(processorReady)
+    .onTrue(intake.outTake())
+    .onFalse(rotatyPart.coralScore().alongWith(elevator.toBottom()));*/
+
     safeButton1
         .and(algaeMode)
-        .onTrue(intake.outTake())
-        .onFalse(rotatyPart.coralScore().alongWith(elevator.toBottom()));
+        .onTrue(elevator.toProcessor())
+        .onFalse(
+            intake
+                .outTake()
+                .alongWith(Commands.waitSeconds(.3))
+                .andThen(
+                    rotatyPart
+                        .coralScore()
+                        .alongWith(elevator.toBottom())
+                        .alongWith(intake.stop())));
+    // L2 Removal
     safeButton3.and(algaeMode).onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()));
     safeButton3
         .and(algaeMode)
         .and(algaeHeightReady)
         .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
-
     safeButton3.and(algaeMode).and(currentIntakeSwitch).onFalse((intake.algaeHold()));
     // L3 Removal
     safeButton4.and(algaeMode).onTrue(rotatyPart.coralScore().alongWith(elevator.toL3Algae()));
@@ -341,18 +359,15 @@ public class RobotContainer {
         .and(algaeMode)
         .and(algaeHeightReady)
         .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
+    safeButton4.and(algaeMode).and(currentIntakeSwitch).onFalse((intake.algaeHold()));
 
-    safeButton4
-        .and(algaeMode)
-        .and(currentIntakeSwitch)
-        .onFalse(elevator.toL2().alongWith(intake.algaeHold()));
-
+    joystick.button(12).onTrue(switchState(true)).onFalse(switchState(false));
     drivetrain.registerTelemetry(logger::telemeterize);
   }
 
   // Switch state command
   public Command switchState(boolean bool) {
-    return run(() -> changeState(bool));
+    return runOnce(() -> changeState(bool));
   }
 
   // Change state method

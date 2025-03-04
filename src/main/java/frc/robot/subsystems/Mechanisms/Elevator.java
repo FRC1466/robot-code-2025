@@ -105,7 +105,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public Command toL3Algae() {
-    return runOnce(() -> goToGoal(40));
+    return runOnce(() -> goToGoal(39));
   }
 
   public Command toL4() {
@@ -116,12 +116,8 @@ public class Elevator extends SubsystemBase {
     return runOnce(() -> goToGoal(10));
   }
 
-  public Command removeAlgaeLow() {
-    return runOnce(() -> goToGoal(10));
-  }
-
-  public Command removeAlgaeHigh() {
-    return runOnce(() -> goToGoal(10));
+  public Command toProcessor() {
+    return runOnce(() -> goToGoal(3));
   }
 
   public void setArmHold() {

@@ -11,6 +11,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.IterativeRobotBase;
 import edu.wpi.first.wpilibj.PowerDistribution;
@@ -71,6 +72,8 @@ public class Robot extends LoggedRobot {
 
   @SuppressWarnings("unused")
   private boolean checkState = false;
+
+  private DigitalInput beamBreak = new DigitalInput(1);
 
   @SuppressWarnings("unused")
   private boolean limitSwitchCounter = false;
@@ -216,7 +219,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotPeriodic() {
-
+    Logger.recordOutput("Beam Break", beamBreak.get());
     vision.logSeenAprilTags();
     // Color detectedColor = m_colorSensor.getColor();
 
