@@ -147,8 +147,21 @@ public class RobotContainer {
 
   @SuppressWarnings("unused")
   private void configureBindings() {
-    joystick
-        .povLeft()
+    // Create safe versions of all joystick trigger inputs
+    Trigger safePovLeft = createSafeJoystickTrigger(joystick.povLeft());
+    Trigger safePovRight = createSafeJoystickTrigger(joystick.povRight());
+    Trigger safePovUp = createSafeJoystickTrigger(joystick.povUp());
+    Trigger safePovDown = createSafeJoystickTrigger(joystick.povDown());
+    Trigger safeButton1 = createSafeJoystickTrigger(joystick.button(1));
+    Trigger safeButton2 = createSafeJoystickTrigger(joystick.button(2));
+    Trigger safeButton3 = createSafeJoystickTrigger(joystick.button(3));
+    Trigger safeButton4 = createSafeJoystickTrigger(joystick.button(4));
+    Trigger safeButton5 = createSafeJoystickTrigger(joystick.button(5));
+    Trigger safeButton6 = createSafeJoystickTrigger(joystick.button(6));
+    Trigger safeButton7 = createSafeJoystickTrigger(joystick.button(7));
+
+    // Use safe triggers in all bindings
+    safePovLeft
         .onTrue(
             Commands.runOnce(
                 () -> {
@@ -163,8 +176,7 @@ public class RobotContainer {
                   }
                 }));
 
-    joystick
-        .povRight()
+    safePovRight
         .onTrue(
             Commands.runOnce(
                 () -> {
@@ -179,8 +191,7 @@ public class RobotContainer {
                   }
                 }));
 
-    joystick
-        .button(1) // TEMPORARY BINDING
+    safeButton1 // TEMPORARY BINDING
         .onTrue(
             Commands.runOnce(
                 () -> {
@@ -203,13 +214,28 @@ public class RobotContainer {
             () ->
                 drive
                     .withVelocityX(
-                        Math.pow((MathUtil.applyDeadband(-joystick.getY(), .05)), 3)
+                        Math.pow(
+                                (MathUtil.applyDeadband(
+                                    -getAdjustedJoystickAxis(
+                                        1, Robot.getInstance().shouldIgnoreJoystickInput()),
+                                    .05)),
+                                3)
                             * MaxSpeed) // Drive forward with negative Y (forward)
                     .withVelocityY(
-                        Math.pow((MathUtil.applyDeadband(-joystick.getX(), .05)), 3)
+                        Math.pow(
+                                (MathUtil.applyDeadband(
+                                    -getAdjustedJoystickAxis(
+                                        0, Robot.getInstance().shouldIgnoreJoystickInput()),
+                                    .05)),
+                                3)
                             * MaxSpeed) // Drive left with negative X (left)
                     .withRotationalRate(
-                        Math.pow((MathUtil.applyDeadband(-joystick.getZ(), .05)), 3)
+                        Math.pow(
+                                (MathUtil.applyDeadband(
+                                    -getAdjustedJoystickAxis(
+                                        2, Robot.getInstance().shouldIgnoreJoystickInput()),
+                                    .05)),
+                                3)
                             * MaxAngularRate) // Drive counterclockwise with negative X (left)
             ));
 
@@ -222,36 +248,30 @@ public class RobotContainer {
     Trigger coralMode = new Trigger(() -> !getModeMethod());
 
     // reset the field-centric heading with vision on pov down and without vision on pov up
-    joystick
-        .povDown()
-        .onTrue(
-            drivetrain.runOnce(
-                () -> {
-                  visionEnabled = true;
-                  drivetrain.seedFieldCentric();
-                }));
-    joystick
-        .povUp()
-        .onTrue(
-            drivetrain.runOnce(
-                () -> {
-                  visionEnabled = false;
-                  drivetrain.seedFieldCentric();
-                }));
+    safePovDown.onTrue(
+        drivetrain.runOnce(
+            () -> {
+              visionEnabled = true;
+              drivetrain.seedFieldCentric();
+            }));
+    safePovUp.onTrue(
+        drivetrain.runOnce(
+            () -> {
+              visionEnabled = false;
+              drivetrain.seedFieldCentric();
+            }));
 
     // Mode Switch
-    joystick.button(2).onTrue(changeMode());
+    safeButton2.onTrue(changeMode());
 
     // Intake Coral
-    joystick
-        .button(3)
+    safeButton3
         .and(coralMode)
         .and(intakeProximityTrigger)
         .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
         .onFalse((rotatyPart.coralScore()).alongWith(intake.stop()));
     // L2
-    joystick
-        .button(7)
+    safeButton7
         .and(coralMode)
         .onTrue(elevator.toL2().alongWith(rotatyPart.coralScore()))
         .onFalse(intake.outTake());
@@ -259,48 +279,36 @@ public class RobotContainer {
         .and(coralMode)
         .onTrue(elevator.toBottom().alongWith(rotatyPart.coralScore()).andThen(intake.stop()));
     // L3
-    joystick
-        .button(6)
+    safeButton6
         .and(coralMode)
         .onTrue(elevator.toL3().alongWith(rotatyPart.coralScore()))
         .onFalse(intake.outTake());
     // L4
-    joystick
-        .button(5)
+    safeButton5
         .and(coralMode)
         .onTrue(elevator.toL4().alongWith(rotatyPart.coralScore()))
         .onFalse(intake.outTake());
-    joystick.button(5).and(l4Ready).onTrue(rotatyPart.l4coralScore().alongWith(intake.coralHold()));
+    safeButton5.and(l4Ready).onTrue(rotatyPart.l4coralScore().alongWith(intake.coralHold()));
     // L2 Removal
-    joystick
-        .button(1)
+    safeButton1
         .and(algaeMode)
         .onTrue(intake.outTake())
         .onFalse(rotatyPart.coralScore().alongWith(elevator.toBottom()));
-    joystick
-        .button(3)
-        .and(algaeMode)
-        .onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()));
-    joystick
-        .button(3)
+    safeButton3.and(algaeMode).onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()));
+    safeButton3
         .and(algaeMode)
         .and(algaeHeightReady)
         .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
 
-    joystick.button(3).and(algaeMode).and(currentIntakeSwitch).onFalse((intake.algaeHold()));
+    safeButton3.and(algaeMode).and(currentIntakeSwitch).onFalse((intake.algaeHold()));
     // L3 Removal
-    joystick
-        .button(4)
-        .and(algaeMode)
-        .onTrue(rotatyPart.coralScore().alongWith(elevator.toL3Algae()));
-    joystick
-        .button(4)
+    safeButton4.and(algaeMode).onTrue(rotatyPart.coralScore().alongWith(elevator.toL3Algae()));
+    safeButton4
         .and(algaeMode)
         .and(algaeHeightReady)
         .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
 
-    joystick
-        .button(4)
+    safeButton4
         .and(algaeMode)
         .and(currentIntakeSwitch)
         .onFalse(elevator.toL2().alongWith(intake.algaeHold()));
@@ -414,5 +422,50 @@ public class RobotContainer {
     }
     Logger.recordOutput("Logger/closestStation", closestStation);
     return closestStation;
+  }
+
+  public double getAdjustedJoystickAxis(int axis, boolean ignoreInput) {
+    if (ignoreInput) {
+      return 0.0;
+    }
+    return joystick.getRawAxis(axis);
+  }
+
+  /**
+   * Checks if a button should be considered pressed, respecting the ignoreInput flag
+   *
+   * @param button The button index to check
+   * @param ignoreInput Whether input should be ignored
+   * @return true if the button is pressed and inputs are not being ignored
+   */
+  public boolean getAdjustedJoystickButton(int button, boolean ignoreInput) {
+    if (ignoreInput) {
+      return false;
+    }
+    return joystick.getHID().getRawButton(button);
+  }
+
+  /**
+   * Gets the POV value, respecting the ignoreInput flag
+   *
+   * @param pov The POV index to check
+   * @param ignoreInput Whether input should be ignored
+   * @return POV angle in degrees, or -1 if POV is not pressed or inputs are being ignored
+   */
+  public int getAdjustedJoystickPOV(int pov, boolean ignoreInput) {
+    if (ignoreInput) {
+      return -1; // -1 means POV is not pressed
+    }
+    return joystick.getHID().getPOV(pov);
+  }
+
+  /**
+   * Creates a trigger that considers the joystick's enabled state
+   *
+   * @param buttonTrigger The original button trigger
+   * @return A trigger that only activates when the joystick is enabled
+   */
+  private Trigger createSafeJoystickTrigger(Trigger buttonTrigger) {
+    return buttonTrigger.and(() -> !Robot.getInstance().shouldIgnoreJoystickInput());
   }
 }

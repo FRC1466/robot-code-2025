@@ -21,8 +21,9 @@ import webblib.Gains;
 
 public final class Constants {
   public static boolean disableHAL = false;
+  public static final boolean CHECK_ROBOT_TYPE = false; // Enables robot type check during builds
 
-  private static RobotType robotType = RobotType.COMPBOT;
+  private static RobotType robotType = RobotType.SIMBOT;
   public static Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.REPLAY;
 
   @SuppressWarnings("resource")

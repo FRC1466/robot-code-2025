@@ -44,6 +44,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 public class Robot extends LoggedRobot {
+  private static Robot instance;
   private static final double loopOverrunWarningTimeout = 0.2;
   private static final double lowBatteryVoltage = 11.8;
   private static final double lowBatteryDisabledTime = 1.5;
@@ -74,6 +75,10 @@ public class Robot extends LoggedRobot {
   @SuppressWarnings("unused")
   private boolean limitSwitchCounter = false;
 
+  private boolean ignoreJoystickInput = false;
+
+  boolean allInputsNeutral = true;
+
   @SuppressWarnings("unused")
   private final StructPublisher<Pose2d> posePublisher =
       NetworkTableInstance.getDefault().getStructTopic("Test", Pose2d.struct).publish();
@@ -83,21 +88,23 @@ public class Robot extends LoggedRobot {
           "Battery voltage is very low, consider turning off the robot or replacing the battery.",
           AlertType.kWarning);
 
-  // Alert is no longer needed since we're commenting out the type switching functionality
-  /*
-  private final Alert typeSwitchAlert =
+  private final Alert flightstickNotCenteredAlert =
       new Alert(
-          "Cannot switch robot type while enabled. Disable the robot first.", AlertType.kWarning);
-  */
+          "Flightstick not centered! Center stick before using teleop controls.", AlertType.kError);
+
+  private final Alert flightstickCenteredAlert =
+      new Alert("Flightstick centered. Controls re-enabled.", AlertType.kInfo);
+
+  // Flag to track if there are active warnings or errors
+  private boolean activeWarnings = false;
 
   @SuppressWarnings("resource")
   public Robot() {
-
-    // Start logging! No more data receivers, replay sources, or metadata values may be added.
+    instance = this;
 
     m_robotContainer = new RobotContainer();
 
-    AutoLogOutputManager.addObject(this); // Add this object for logging
+    AutoLogOutputManager.addObject(this);
 
     // Record metadata
     Logger.recordMetadata("ProjectName", "Robot-Code-2025");
@@ -252,8 +259,6 @@ public class Robot extends LoggedRobot {
         && disabledTimer.hasElapsed(lowBatteryDisabledTime)
         && lowBatteryCycleCount >= lowBatteryMinCycleCount) {
       lowBatteryAlert.set(true);
-
-      // Useful when LEDs are implemented
     }
 
     // Print auto duration
@@ -272,6 +277,9 @@ public class Robot extends LoggedRobot {
     // Robot container periodic methods
     m_robotContainer.updateAlerts();
     m_robotContainer.updateDashboardOutputs();
+
+    // Check for alerts on each robot periodic cycle
+    checkAndHandleAlerts();
   }
 
   public void periodic() {}
@@ -299,6 +307,15 @@ public class Robot extends LoggedRobot {
   @Override
   public void disabledExit() {}
 
+  public boolean shouldIgnoreJoystickInput() {
+    return ignoreJoystickInput;
+  }
+
+  // get instance code
+  public static Robot getInstance() {
+    return instance;
+  }
+
   @Override
   public void autonomousInit() {
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
@@ -321,18 +338,109 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
+
+    // Reset joystick safety flag
+    ignoreJoystickInput = false;
+
+    allInputsNeutral = true;
+
+    // Check if any joystick inputs are active
+    boolean inputsActive = false;
+
+    // Check main axes (with small deadband)
+    if (Math.abs(m_robotContainer.joystick.getRawAxis(0)) > 0.1
+        || // X axis
+        Math.abs(m_robotContainer.joystick.getRawAxis(1)) > 0.1
+        || // Y axis
+        Math.abs(m_robotContainer.joystick.getRawAxis(2)) > 0.1) { // Twist axis
+      inputsActive = true;
+    }
+
+    // Check all buttons (typically 1-12 for a standard flightstick)
+    for (int i = 1; i <= 12; i++) {
+      if (m_robotContainer.joystick.button(i) != null) {
+        inputsActive = true;
+        break;
+      }
+    }
+
+    // Check all POVs (usually just one, but check all possible)
+    for (int i = 0; i < m_robotContainer.joystick.getHID().getPOVCount(); i++) {
+      if (m_robotContainer.joystick.getHID().getPOV(i) != -1) { // -1 means POV not pressed
+        inputsActive = true;
+        break;
+      }
+    }
+
+    if (inputsActive) {
+      // If any inputs are active, disable controls and set alert
+      ignoreJoystickInput = true;
+      flightstickNotCenteredAlert.set(true);
+      flightstickCenteredAlert.set(false);
+      DriverStation.reportError(
+          "Flightstick not centered or buttons pressed! Controls disabled until all inputs are neutral.",
+          false);
+    } else {
+      // All inputs are neutral
+      flightstickNotCenteredAlert.set(false);
+      flightstickCenteredAlert.set(true);
+    }
+
     RobotContainer.rotatyPart.coralScore();
   }
 
   @Override
   public void teleopPeriodic() {
+    // In teleopPeriodic, periodically check if all joystick inputs are neutral
+    if (ignoreJoystickInput) {
+      allInputsNeutral = true;
+
+      // Check main axes
+      if (Math.abs(m_robotContainer.joystick.getRawAxis(0)) > 0.1
+          || Math.abs(m_robotContainer.joystick.getRawAxis(1)) > 0.1
+          || Math.abs(m_robotContainer.joystick.getRawAxis(2)) > 0.1) {
+        allInputsNeutral = false;
+      }
+
+      // Check all buttons
+      for (int i = 1; i <= 12; i++) {
+        if (m_robotContainer.joystick.button(i) != null) {
+          allInputsNeutral = false;
+          break;
+        }
+      }
+
+      // Check all POVs
+      for (int i = 0; i < m_robotContainer.joystick.getHID().getPOVCount(); i++) {
+        if (m_robotContainer.joystick.getHID().getPOV(i) != -1) {
+          allInputsNeutral = false;
+          break;
+        }
+      }
+
+      if (allInputsNeutral) {
+        // Re-enable joystick input
+        ignoreJoystickInput = false;
+        flightstickNotCenteredAlert.set(false);
+        flightstickCenteredAlert.set(true);
+        DriverStation.reportWarning("All controller inputs neutral. Controls re-enabled.", false);
+      }
+    }
+
+    // Rest of your existing teleopPeriodic code
     if (RobotContainer.sliderEnabled) {
       RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
     }
   }
 
   @Override
-  public void teleopExit() {}
+  public void teleopExit() {
+    ignoreJoystickInput = false;
+    flightstickNotCenteredAlert.set(false);
+    flightstickCenteredAlert.set(true);
+    allInputsNeutral = true;
+    DriverStation.reportWarning("Controls re-enabled.", false);
+  }
 
   @Override
   public void testInit() {
@@ -350,8 +458,32 @@ public class Robot extends LoggedRobot {
     vision.simulationPeriodic(RobotContainer.drivetrain.getState().Pose);
 
     var debugField = vision.getSimDebugField();
-    debugField
-        .getObject("EstimatedRobot")
-        .setPose(RobotPose = RobotContainer.drivetrain.getState().Pose);
+    debugField.getObject("EstimatedRobot");
+  }
+
+  // Check for active alerts of WARNING or ERROR type
+  private void checkAndHandleAlerts() {
+    // Check if there are any active warnings or errors
+    boolean hasActiveAlerts =
+        lowBatteryAlert.get()
+            || flightstickNotCenteredAlert.get()
+            || flightstickCenteredAlert.get();
+
+    // If warning state changed, update lights accordingly
+    if (hasActiveAlerts != activeWarnings) {
+      activeWarnings = hasActiveAlerts;
+
+      if (activeWarnings) {
+        // Activate warning lights when there are warnings/errors
+        blinkin.warningLights();
+      } else {
+        // Return to normal light pattern when no warnings/errors
+        if (RobotState.isAutonomous()) {
+          blinkin.rainbowPartyLights();
+        } else if (RobotState.isTeleop()) {
+          blinkin.coralLights();
+        }
+      }
+    }
   }
 }
