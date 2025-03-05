@@ -97,9 +97,6 @@ public class Robot extends LoggedRobot {
       new Alert(
           "Flightstick not centered! Center stick before using teleop controls.", AlertType.kError);
 
-  private final Alert flightstickCenteredAlert =
-      new Alert("Flightstick centered. Controls re-enabled.", AlertType.kInfo);
-
   // Flag to track if there are active warnings or errors
   private boolean activeWarnings = false;
 
@@ -385,14 +382,12 @@ public class Robot extends LoggedRobot {
       // If any inputs are active, disable controls and set alert
       ignoreJoystickInput = true;
       flightstickNotCenteredAlert.set(true);
-      flightstickCenteredAlert.set(false);
       DriverStation.reportError(
           "Flightstick not centered or buttons pressed! Controls disabled until all inputs are neutral.",
           false);
     } else {
       // All inputs are neutral
       flightstickNotCenteredAlert.set(false);
-      flightstickCenteredAlert.set(true);
     }
 
     RobotContainer.rotatyPart.coralScore();
@@ -427,19 +422,10 @@ public class Robot extends LoggedRobot {
         }
       }
 
-      // Check all POVs
-      for (int i = 0; i < m_robotContainer.joystick.getHID().getPOVCount(); i++) {
-        if (m_robotContainer.joystick.getHID().getPOV(i) != -1) {
-          allInputsNeutral = false;
-          break;
-        }
-      }
-
       if (allInputsNeutral) {
         // Re-enable joystick input
         ignoreJoystickInput = false;
         flightstickNotCenteredAlert.set(false);
-        flightstickCenteredAlert.set(true);
         DriverStation.reportWarning("All controller inputs neutral. Controls re-enabled.", false);
       }
     }
@@ -454,9 +440,7 @@ public class Robot extends LoggedRobot {
   public void teleopExit() {
     ignoreJoystickInput = false;
     flightstickNotCenteredAlert.set(false);
-    flightstickCenteredAlert.set(true);
     allInputsNeutral = true;
-    DriverStation.reportWarning("Controls re-enabled.", false);
   }
 
   @Override
@@ -481,10 +465,7 @@ public class Robot extends LoggedRobot {
   // Check for active alerts of WARNING or ERROR type
   private void checkAndHandleAlerts() {
     // Check if there are any active warnings or errors
-    boolean hasActiveAlerts =
-        lowBatteryAlert.get()
-            || flightstickNotCenteredAlert.get()
-            || flightstickCenteredAlert.get();
+    boolean hasActiveAlerts = lowBatteryAlert.get() || flightstickNotCenteredAlert.get();
 
     // If warning state changed, update lights accordingly
     if (hasActiveAlerts != activeWarnings) {

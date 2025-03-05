@@ -43,8 +43,6 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   private Command reefCommand = null;
 
-
-  @SuppressWarnings("unused")
   private Command stationCommand = null;
 
   // Warnings
@@ -201,28 +199,24 @@ public class RobotContainer {
     Trigger safeButton9 = createSafeJoystickTrigger(joystick.button(9));
 
     // Use safe triggers in all bindings
-    safePovLeft
-    .onTrue(switchCoralDirection(0));
+    safePovLeft.onTrue(switchCoralDirection(0));
 
-         
+    safePovRight.onTrue(switchCoralDirection(1));
 
-    safePovRight
-        .onTrue(switchCoralDirection(1));
-
-    /* 
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  rightReefCommand = m_pathfinder.getPathfindingCommandReef(1, getClosestTag());
-                  rightReefCommand.schedule();
-                }))
-        .onFalse(
-            Commands.runOnce(
-                () -> {
-                  if (rightReefCommand != null) {
-                    rightReefCommand.cancel();
-                  }
-                }));*/
+    /*
+    .onTrue(
+        Commands.runOnce(
+            () -> {
+              rightReefCommand = m_pathfinder.getPathfindingCommandReef(1, getClosestTag());
+              rightReefCommand.schedule();
+            }))
+    .onFalse(
+        Commands.runOnce(
+            () -> {
+              if (rightReefCommand != null) {
+                rightReefCommand.cancel();
+              }
+            }));*/
 
     /*   safeButton1 // TEMPORARY BINDING
     .onTrue(
@@ -283,8 +277,8 @@ public class RobotContainer {
     Trigger l4ArmReady = new Trigger(() -> elevator.getElevatorHeight() > 53);
     Trigger l4ScoreReady = new Trigger(() -> elevator.getElevatorHeight() > 61);
     Trigger coralMode = new Trigger(() -> !getModeMethod());
-    Trigger armScoreReady = new Trigger(() -> armFieldReady(leftCoral,.1));
-    Trigger armRaiseReady = new Trigger(() -> armFieldReady(leftCoral,5));
+    Trigger armScoreReady = new Trigger(() -> armFieldReady(leftCoral, .1));
+    Trigger armRaiseReady = new Trigger(() -> armFieldReady(leftCoral, 5));
     Trigger coralIntakeReady = new Trigger(() -> coralIntakeReady());
 
     // reset the field-centric heading with vision on pov down and without vision on pov up
@@ -324,9 +318,9 @@ public class RobotContainer {
                 }))
         .onFalse(
             Commands.runOnce(
-               () -> {
-                 if (stationCommand != null) {
-                   stationCommand.cancel();
+                () -> {
+                  if (stationCommand != null) {
+                    stationCommand.cancel();
                   }
                 }));
     // L2
@@ -337,15 +331,15 @@ public class RobotContainer {
                 () -> {
                   reefCommand = m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
 
-              reefCommand.schedule();
-            }))
-    .onFalse(
-        Commands.runOnce(
-            () -> {
-              if (reefCommand != null) {
-                reefCommand.cancel();
-              }
-            }));
+                  reefCommand.schedule();
+                }))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  if (reefCommand != null) {
+                    reefCommand.cancel();
+                  }
+                }));
     safeButton7
         .and(coralMode)
         .and(armScoreReady)
@@ -354,36 +348,35 @@ public class RobotContainer {
     safeButton7
         .and(coralMode)
         .and(armRaiseReady)
-        .onTrue(rotatyPart.coralScore().alongWith(elevator.toL2()));  
-
+        .onTrue(rotatyPart.coralScore().alongWith(elevator.toL2()));
 
     // L3
     safeButton6
-    .and(coralMode)
-    .onTrue(
-        Commands.runOnce(
-            () -> {
-              reefCommand = m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
+        .and(coralMode)
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  reefCommand = m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
 
-          reefCommand.schedule();
-        }))
-.onFalse(
-    Commands.runOnce(
-        () -> {
-          if (reefCommand != null) {
-            reefCommand.cancel();
-          }
-        }));
-safeButton6
-    .and(coralMode)
-    .and(armScoreReady)
-    .and(l3Ready)
-    .onTrue(Commands.waitSeconds(.3).andThen(intake.outTake()));
-safeButton6
-    .and(coralMode)
-    .and(armRaiseReady)
-    .onTrue(rotatyPart.coralScore().alongWith(elevator.toL3()));  
-    
+                  reefCommand.schedule();
+                }))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  if (reefCommand != null) {
+                    reefCommand.cancel();
+                  }
+                }));
+    safeButton6
+        .and(coralMode)
+        .and(armScoreReady)
+        .and(l3Ready)
+        .onTrue(Commands.waitSeconds(.3).andThen(intake.outTake()));
+    safeButton6
+        .and(coralMode)
+        .and(armRaiseReady)
+        .onTrue(rotatyPart.coralScore().alongWith(elevator.toL3()));
+
     // L4
     safeButton5
         .and(coralMode)
@@ -392,34 +385,34 @@ safeButton6
                 () -> {
                   reefCommand = m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
 
-              reefCommand.schedule();
-            }))
-    .onFalse(
-        Commands.runOnce(
-            () -> {
-              if (reefCommand != null) {
-                reefCommand.cancel();
-              }
-            }));
+                  reefCommand.schedule();
+                }))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  if (reefCommand != null) {
+                    reefCommand.cancel();
+                  }
+                }));
 
-    //L4 begining to raise arm
+    // L4 begining to raise arm
     safeButton5
         .and(coralMode)
         .and(armRaiseReady)
-        .onTrue(rotatyPart.coralScore().alongWith(elevator.toL4())); 
-    //Flip arm over and apply a low negative current to hold
+        .onTrue(rotatyPart.coralScore().alongWith(elevator.toL4()));
+    // Flip arm over and apply a low negative current to hold
     safeButton5
         .and(coralMode)
         .and(armRaiseReady)
         .and(l4ArmReady)
         .onTrue(rotatyPart.l4coralScore().alongWith(intake.coralHold()));
-    //Arm is at max height and in position to score
+    // Arm is at max height and in position to score
     safeButton5
         .and(coralMode)
         .and(armScoreReady)
         .and(l4ScoreReady)
-        .onTrue(Commands.waitSeconds(.3).andThen(intake.outTake()));  
- 
+        .onTrue(Commands.waitSeconds(.3).andThen(intake.outTake()));
+
     // Processor
     /*  safeButton1
     .and(algaeMode)
@@ -490,11 +483,11 @@ safeButton6
     return algaeMode;
   }
 
-  public void changeCoralDirection(int i){
+  public void changeCoralDirection(int i) {
     leftCoral = i;
   }
 
-  public Command switchCoralDirection(int i){
+  public Command switchCoralDirection(int i) {
     return runOnce(() -> changeCoralDirection(i));
   }
 
