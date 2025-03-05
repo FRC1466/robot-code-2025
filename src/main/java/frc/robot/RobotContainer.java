@@ -42,8 +42,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
   private Command reefCommand = null;
-
-  @SuppressWarnings("unused")
+  private Command algaeCommand = null;
   private Command stationCommand = null;
 
   // Warnings
@@ -434,19 +433,59 @@ public class RobotContainer {
                         .alongWith(elevator.toBottom())
                         .alongWith(intake.stop())));
     // L2 Removal
-    safeButton3.and(algaeMode).onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()));
     safeButton3
         .and(algaeMode)
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  algaeCommand = m_pathfinder.getPathfindingCommandAlgae(getClosestTag());
+                  algaeCommand.schedule();
+                }))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  if (algaeCommand != null) {
+                    algaeCommand.cancel();
+                  }
+                }));
+    safeButton3
+        .and(algaeMode)
+        .and(armScoreReady)
         .and(algaeHeightReady)
         .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
+    safeButton3
+        .and(algaeMode)
+        .and(armRaiseReady)
+        .onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()));
     safeButton3.and(algaeMode).and(currentIntakeSwitch).onFalse((intake.algaeHold()));
+
     // L3 Removal
-    safeButton4.and(algaeMode).onTrue(rotatyPart.coralScore().alongWith(elevator.toL3Algae()));
     safeButton4
         .and(algaeMode)
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  algaeCommand = m_pathfinder.getPathfindingCommandAlgae(2);
+                  algaeCommand.schedule();
+                }))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  if (algaeCommand != null) {
+                    algaeCommand.cancel();
+                  }
+                }));
+    safeButton4
+        .and(algaeMode)
+        .and(armScoreReady)
         .and(algaeHeightReady)
         .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
+    safeButton4
+        .and(algaeMode)
+        .and(armRaiseReady)
+        .onTrue(rotatyPart.coralScore().alongWith(elevator.toL3Algae()));
     safeButton4.and(algaeMode).and(currentIntakeSwitch).onFalse((intake.algaeHold()));
+
     safeButton9
         .and(algaeMode)
         .onTrue(elevator.toL4Algae())
