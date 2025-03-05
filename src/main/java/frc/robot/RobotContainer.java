@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.Constants;
+import frc.robot.constants.PathfindConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsTester;
 import frc.robot.subsystems.Mechanisms.Elevator;
@@ -42,6 +43,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   private Command leftReefCommand = null;
   private Command rightReefCommand = null;
+
+  @SuppressWarnings("unused")
   private Command stationCommand = null;
 
   // Warnings
@@ -140,28 +143,27 @@ public class RobotContainer {
         elevator
             .toL3()
             .alongWith(rotatyPart.coralScore())
-            .andThen(intake.outTake().withTimeout(3))
+            .alongWith(Commands.waitSeconds(1))
+            .andThen(intake.outTake().withTimeout(1))
             .andThen(elevator.toBottom().alongWith(rotatyPart.coralScore()));
 
     // Create the L4 command with conditional follow-up action when elevator reaches position
-    Command l4Command =
-        elevator
-            .toL4()
-            .alongWith(rotatyPart.coralScore())
-            .andThen(
-                Commands.waitUntil(() -> elevator.getElevatorHeight() > 53)
-                    .andThen(
-                        rotatyPart
-                            .l4coralScore()
-                            .alongWith(intake.coralHold())
-                            .andThen(intake.outTake().withTimeout(3))
-                            .andThen(elevator.toBottom().alongWith(rotatyPart.coralScore()))));
+    /*  Command l4Command =
+    elevator
+        .toL4()
+        .alongWith(rotatyPart.coralScore())
+        .alongWith(
+            Commands.waitUntil(() -> elevator.getElevatorHeight() > 53)
+                .andThen(
+                    rotatyPart.l4coralScore().alongWith(intake.coralHold().withTimeout(.5)))
+                .andThen(intake.outTake().withTimeout(.5))
+                .andThen(elevator.toBottom().alongWith(rotatyPart.coralScore())));*/
 
     // Register the named commands
     NamedCommands.registerCommand("Intake", intakeCommand);
     NamedCommands.registerCommand("l2", l2Command);
     NamedCommands.registerCommand("l3", l3Command);
-    NamedCommands.registerCommand("l4", l4Command);
+    //    NamedCommands.registerCommand("l4", l4Command);
 
     autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));
     autoChooser.addOption("3 Piece", new PathPlannerAuto("3 Piece Auto"));
@@ -193,6 +195,8 @@ public class RobotContainer {
     Trigger safeButton5 = createSafeJoystickTrigger(joystick.button(5));
     Trigger safeButton6 = createSafeJoystickTrigger(joystick.button(6));
     Trigger safeButton7 = createSafeJoystickTrigger(joystick.button(7));
+    Trigger safeButton8 = createSafeJoystickTrigger(joystick.button(8));
+    Trigger safeButton9 = createSafeJoystickTrigger(joystick.button(9));
 
     // Use safe triggers in all bindings
     safePovLeft
@@ -280,7 +284,10 @@ public class RobotContainer {
     Trigger currentIntakeSwitch = new Trigger(() -> intake.getHighCurrent());
     Trigger algaeMode = new Trigger(() -> getModeMethod());
     Trigger l4Ready = new Trigger(() -> elevator.getElevatorHeight() > 53);
+    Trigger l2Ready = new Trigger(() -> elevator.getElevatorHeight() > 14.5);
     Trigger coralMode = new Trigger(() -> !getModeMethod());
+    Trigger armScoreReadyLeft = new Trigger(() -> armScoreReady(0));
+    Trigger coralIntakeReady = new Trigger(() -> coralIntakeReady());
 
     // reset the field-centric heading with vision on pov down and without vision on pov up
     safePovDown.onTrue(
@@ -298,21 +305,54 @@ public class RobotContainer {
 
     // Mode Switch
     safeButton2.onTrue(changeMode());
-
+    // Stop arm when coral leaves
+    intakeProximityTrigger
+        .and(coralMode)
+        .onTrue(elevator.toBottom().alongWith(rotatyPart.coralScore()).andThen(intake.stop()));
     // Intake Coral
     safeButton3
         .and(coralMode)
         .and(intakeProximityTrigger)
+        //     .and(coralIntakeReady)
         .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
         .onFalse((rotatyPart.coralScore()).alongWith(intake.stop()));
+    /*safeButton3
+    .and(coralMode)
+    .onTrue(
+        Commands.runOnce(
+            () -> {
+              stationCommand = m_pathfinder.getPathfindingCommandStation(getClosestStation());
+              stationCommand.schedule();
+            }))
+    .onFalse(
+        Commands.runOnce(
+            () -> {
+              if (stationCommand != null) {
+                stationCommand.cancel();
+              }
+            }));*/
     // L2
+    /*safeButton7
+    .onTrue(
+        Commands.runOnce(
+            () -> {
+              rightReefCommand = m_pathfinder.getPathfindingCommandReef(0, getClosestTag());
+
+              rightReefCommand.schedule();
+            }))
+    .onFalse(
+        Commands.runOnce(
+            () -> {
+              if (rightReefCommand != null) {
+                rightReefCommand.cancel();
+              }
+            }));*/
     safeButton7
         .and(coralMode)
+        .and(armScoreReadyLeft)
         .onTrue(elevator.toL2().alongWith(rotatyPart.coralScore()))
         .onFalse(intake.outTake());
-    intakeProximityTrigger
-        .and(coralMode)
-        .onTrue(elevator.toBottom().alongWith(rotatyPart.coralScore()).andThen(intake.stop()));
+
     // L3
     safeButton6
         .and(coralMode)
@@ -360,6 +400,11 @@ public class RobotContainer {
         .and(algaeHeightReady)
         .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
     safeButton4.and(algaeMode).and(currentIntakeSwitch).onFalse((intake.algaeHold()));
+    safeButton9
+        .and(algaeMode)
+        .onTrue(elevator.toL4Algae())
+        .onFalse(
+            rotatyPart.coralScore().alongWith(Commands.waitSeconds(.01)).andThen(intake.outTake()));
 
     joystick.button(12).onTrue(switchState(true)).onFalse(switchState(false));
     drivetrain.registerTelemetry(logger::telemeterize);
@@ -407,6 +452,44 @@ public class RobotContainer {
   // Update dashboard data
   public void updateDashboardOutputs() {
     SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
+  }
+
+  public int armLiftReady() {
+    return 0;
+  }
+
+  public boolean armScoreReady(int goingLeft) {
+    double distAway =
+        Math.sqrt(
+            Math.pow(
+                    drivetrain.getState().Pose.getX()
+                        - PathfindConstants.redTargetPoseReef[getClosestTag()][goingLeft].getX(),
+                    2)
+                + Math.pow(
+                    drivetrain.getState().Pose.getY()
+                        - PathfindConstants.redTargetPoseReef[getClosestTag()][goingLeft].getY(),
+                    2));
+    if (distAway < .1) {
+      return true;
+    }
+    return false;
+  }
+
+  public boolean coralIntakeReady() {
+    double distAway =
+        Math.sqrt(
+            Math.pow(
+                    drivetrain.getState().Pose.getX()
+                        - PathfindConstants.redTargetPoseStation[getClosestStation()].getX(),
+                    2)
+                + Math.pow(
+                    drivetrain.getState().Pose.getY()
+                        - PathfindConstants.redTargetPoseStation[getClosestStation()].getY(),
+                    2));
+    if (distAway < .1) {
+      return true;
+    }
+    return false;
   }
 
   // Should probably get an error handler and some data printing

@@ -75,6 +75,8 @@ public class Robot extends LoggedRobot {
 
   private DigitalInput beamBreak = new DigitalInput(1);
 
+  private boolean lastBoolean = true;
+
   @SuppressWarnings("unused")
   private boolean limitSwitchCounter = false;
 
@@ -220,6 +222,10 @@ public class Robot extends LoggedRobot {
   @Override
   public void robotPeriodic() {
     Logger.recordOutput("Beam Break", beamBreak.get());
+    if (!lastBoolean && beamBreak.get()) {
+      m_robotContainer.elevator.setSelectedSensorPosition(1.75);
+    }
+    lastBoolean = beamBreak.get();
     vision.logSeenAprilTags();
     // Color detectedColor = m_colorSensor.getColor();
 
@@ -296,7 +302,7 @@ public class Robot extends LoggedRobot {
       DriverStationSim.notifyNewData();
     }
 
-    RobotContainer.elevator.goToGoal(.5);
+    RobotContainer.elevator.goToGoal(1);
     // fix later
     // m_robotContainer.rotatyPart.setGoal(Rotation2d.fromRadians(.05));
   }

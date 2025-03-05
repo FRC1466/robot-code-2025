@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.Constants.RotationConstants;
 import java.util.function.DoubleSupplier;
+import org.littletonrobotics.junction.Logger;
 import webblib.ArmPIDController;
 
 public class RotatyPart extends SubsystemBase {
@@ -225,7 +226,7 @@ public class RotatyPart extends SubsystemBase {
 
     // Logger.putData(absoluteArmEncoder);
     // Logger.recordOutput("Arm Raw Absolute Encoder", absoluteArmEncoder.get());
-    // Logger.recordOutput("Arm Processed Absolute Encoder", getPosition().getRadians());
+    Logger.recordOutput("Arm Processed Absolute Encoder", getPosition().getRadians());
     // Logger.recordOutput("Get Shifted Absolute Position",
     // getShiftedAbsoluteDistance().getRadians());
     // Logger.recordOutput("Get Arm P", armPID_P);
