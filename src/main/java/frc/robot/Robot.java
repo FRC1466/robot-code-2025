@@ -223,7 +223,7 @@ public class Robot extends LoggedRobot {
   public void robotPeriodic() {
     Logger.recordOutput("Beam Break", beamBreak.get());
     if (!lastBoolean && beamBreak.get()) {
-      m_robotContainer.elevator.setSelectedSensorPosition(1.75);
+      RobotContainer.elevator.setSelectedSensorPosition(1.75);
     }
     lastBoolean = beamBreak.get();
     vision.logSeenAprilTags();
