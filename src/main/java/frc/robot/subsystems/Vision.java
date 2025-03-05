@@ -93,8 +93,8 @@ public class Vision {
   }
 
   /**
-   * The latest estimated robot pose on the field from vision data. This may be empty. This should
-   * only be called once per loop.
+   * The latest estimated robot pose on the field from vision data, combining data from all cameras.
+   * This may be empty. This should only be called once per loop.
    *
    * <p>Also includes updates for the standard deviations, which can (optionally) be retrieved with
    * {@link getEstimationStdDevs}
@@ -103,10 +103,12 @@ public class Vision {
    *     used for estimation.
    */
   public Optional<EstimatedRobotPose> getEstimatedGlobalPose() {
-    Optional<EstimatedRobotPose> bestEstimate = Optional.empty();
-    double lowestAmbiguity = Double.MAX_VALUE;
-    List<PhotonTrackedTarget> bestTargets = new ArrayList<>();
+    // Lists to collect all targets and estimates
+    List<PhotonTrackedTarget> allTargets = new ArrayList<>();
+    List<EstimatedRobotPose> allEstimates = new ArrayList<>();
+    Map<String, Optional<EstimatedRobotPose>> cameraEstimates = new HashMap<>();
 
+    // Process results from each camera
     for (String cameraName : VisionConstants.CAMERA_NAMES) {
       PhotonCamera camera = cameras.get(cameraName);
       PhotonPoseEstimator estimator = photonEstimators.get(cameraName);
@@ -116,39 +118,85 @@ public class Vision {
         if (result.hasTargets()) {
           Optional<EstimatedRobotPose> cameraEstimate = estimator.update(result);
 
-          if (cameraEstimate.isPresent()) {
-            // Find the average ambiguity of all targets
-            double avgAmbiguity =
-                result.getTargets().stream()
-                    .mapToDouble(PhotonTrackedTarget::getPoseAmbiguity)
-                    .average()
-                    .orElse(1.0);
+          cameraEstimates.put(cameraName, cameraEstimate);
 
-            // Use the estimate with the lowest ambiguity
-            if (avgAmbiguity < lowestAmbiguity) {
-              lowestAmbiguity = avgAmbiguity;
-              bestEstimate = cameraEstimate;
-              bestTargets = result.getTargets();
-            }
+          if (cameraEstimate.isPresent()) {
+            allEstimates.add(cameraEstimate.get());
+            allTargets.addAll(result.getTargets());
+
+            // Log individual camera estimates
+            Logger.recordOutput(
+                "Vision/" + cameraName, cameraEstimate.get().estimatedPose.toPose2d());
+          } else {
+            Logger.recordOutput("Vision/" + cameraName, new Pose2d());
           }
         }
       }
     }
 
-    // Update standard deviations based on best estimate
-    updateEstimationStdDevs(bestEstimate, bestTargets);
+    // Return empty if no valid estimates were found
+    if (allEstimates.isEmpty()) {
+      return Optional.empty();
+    }
+
+    // Calculate the combined pose by averaging all valid pose estimates
+    double totalX = 0;
+    double totalY = 0;
+    double totalCos = 0;
+    double totalSin = 0;
+    double latestTimestamp = 0;
+
+    for (EstimatedRobotPose estimate : allEstimates) {
+      Pose2d pose = estimate.estimatedPose.toPose2d();
+      totalX += pose.getX();
+      totalY += pose.getY();
+
+      // Add rotation components for proper angle averaging
+      totalCos += Math.cos(pose.getRotation().getRadians());
+      totalSin += Math.sin(pose.getRotation().getRadians());
+
+      // Keep track of the latest timestamp
+      latestTimestamp = Math.max(latestTimestamp, estimate.timestampSeconds);
+    }
+
+    // Calculate average pose
+    double avgX = totalX / allEstimates.size();
+    double avgY = totalY / allEstimates.size();
+    double avgRotation = Math.atan2(totalSin, totalCos);
+
+    Pose2d combinedPose = new Pose2d(avgX, avgY, new Rotation2d(avgRotation));
+
+    // Create combined estimate with the latest timestamp
+    EstimatedRobotPose combinedEstimate =
+        new EstimatedRobotPose(
+            new Pose3d(combinedPose),
+            latestTimestamp,
+            allTargets,
+            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR);
+
+    // Log the combined estimate
+    Logger.recordOutput("Vision/CombinedEstimate", combinedPose);
+
+    // Update standard deviations based on all targets
+    updateEstimationStdDevs(Optional.of(combinedEstimate), allTargets);
 
     // Visualization for simulation
     if (Robot.isSimulation()) {
-      bestEstimate.ifPresentOrElse(
-          est ->
-              getSimDebugField()
-                  .getObject("VisionEstimation")
-                  .setPose(est.estimatedPose.toPose2d()),
-          () -> getSimDebugField().getObject("VisionEstimation").setPoses());
+      getSimDebugField().getObject("VisionEstimation").setPose(combinedPose);
+
+      // Also visualize individual camera estimates
+      for (Map.Entry<String, Optional<EstimatedRobotPose>> entry : cameraEstimates.entrySet()) {
+        entry
+            .getValue()
+            .ifPresent(
+                est ->
+                    getSimDebugField()
+                        .getObject("Vision_" + entry.getKey())
+                        .setPose(est.estimatedPose.toPose2d()));
+      }
     }
 
-    return bestEstimate;
+    return Optional.of(combinedEstimate);
   }
 
   /**
@@ -233,21 +281,47 @@ public class Vision {
 
   /** Logs all AprilTags currently seen by any camera */
   public void logSeenAprilTags() {
+    Map<String, List<Pose3d>> cameraTagMap = new HashMap<>();
     List<Pose3d> allSeenTagPoses = new ArrayList<>();
 
+    // Process each camera
     for (String cameraName : VisionConstants.CAMERA_NAMES) {
       PhotonCamera camera = cameras.get(cameraName);
       var result = camera.getLatestResult();
+      List<Pose3d> cameraTagPoses = new ArrayList<>();
 
       if (result.hasTargets()) {
         for (PhotonTrackedTarget target : result.getTargets()) {
           var tagPose = VisionConstants.TAG_LAYOUT.getTagPose(target.getFiducialId());
-          tagPose.ifPresent(allSeenTagPoses::add);
+          if (tagPose.isPresent()) {
+            // Add to both the camera-specific and all tags lists
+            cameraTagPoses.add(tagPose.get());
+            allSeenTagPoses.add(tagPose.get());
+
+            // Also log individual tag IDs and ambiguity for each camera
+            Logger.recordOutput(
+                "Vision/" + cameraName + "/Tag_" + target.getFiducialId() + "/ID",
+                target.getFiducialId());
+            Logger.recordOutput(
+                "Vision/" + cameraName + "/Tag_" + target.getFiducialId() + "/Ambiguity",
+                target.getPoseAmbiguity());
+          }
         }
       }
+
+      // Store tags seen by this camera
+      cameraTagMap.put(cameraName, cameraTagPoses);
+
+      // Log tags seen by this camera
+      Logger.recordOutput(
+          "Vision/" + cameraName + "/SeenTags", cameraTagPoses.toArray(new Pose3d[0]));
+
+      // Log the number of tags seen by this camera
+      Logger.recordOutput("Vision/" + cameraName + "/TagCount", cameraTagPoses.size());
     }
 
     // Log the array of Pose3d objects from all cameras
-    Logger.recordOutput("SeenAprilTags", allSeenTagPoses.toArray(new Pose3d[0]));
+    Logger.recordOutput("Vision/AllSeenTags", allSeenTagPoses.toArray(new Pose3d[0]));
+    Logger.recordOutput("Vision/TotalTagCount", allSeenTagPoses.size());
   }
 }
