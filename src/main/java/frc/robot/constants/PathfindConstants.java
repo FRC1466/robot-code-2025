@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 
 public class PathfindConstants {
   // Red Target Poses for Reef
+  // 6-11 as 0-5 , First is Left and Second is Right
   public static final Pose2d[][] redTargetPoseReef = {
     {
       new Pose2d(13.550, 2.837, Rotation2d.fromDegrees(120)),
@@ -18,11 +19,11 @@ public class PathfindConstants {
       new Pose2d(14.347, 4.190, Rotation2d.fromDegrees(-180))
     },
     {
-      new Pose2d(13.80, 5.01, Rotation2d.fromDegrees(-120)),
-      new Pose2d(13.560, 5.216, Rotation2d.fromDegrees(-120))
+      new Pose2d(13.75, 5.01, Rotation2d.fromDegrees(-120)),
+      new Pose2d(13.5, 5.26, Rotation2d.fromDegrees(-120))
     },
     {
-      new Pose2d(12.561, 5.237, Rotation2d.fromDegrees(-60)),
+      new Pose2d(12.53, 5.32, Rotation2d.fromDegrees(-60)),
       new Pose2d(12.301, 5.237, Rotation2d.fromDegrees(-60))
     },
     {

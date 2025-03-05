@@ -43,6 +43,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   private Command reefCommand = null;
 
+  @SuppressWarnings("unused")
   private Command stationCommand = null;
 
   // Warnings
@@ -411,7 +412,7 @@ public class RobotContainer {
         .and(coralMode)
         .and(armScoreReady)
         .and(l4ScoreReady)
-        .onTrue(Commands.waitSeconds(.3).andThen(intake.outTake()));
+        .onTrue(Commands.waitSeconds(.5).andThen(intake.outTake()));
 
     // Processor
     /*  safeButton1
