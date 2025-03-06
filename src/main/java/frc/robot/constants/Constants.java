@@ -14,7 +14,7 @@ public final class Constants {
   public static boolean disableHAL = false;
   public static final boolean CHECK_ROBOT_TYPE = false; // Enables robot type check during builds
 
-  private static RobotType robotType = RobotType.SIMBOT;
+  private static RobotType robotType = RobotType.COMPBOT;
   public static Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.REPLAY;
 
   @SuppressWarnings("resource")
@@ -72,7 +72,7 @@ public final class Constants {
     public static final int armPort = 14, dutyCyclePort = 0;
     // DO NOT TOUCH!!!!
     public static final Gains rotationPosition = new Gains(.18, 0.02, 0.02, 0.0, 0, .25);
-    public static final double restRadians = .05,
+    public static final double restRadians = .0,
         coralPosRadians = .505,
         l4coralPosRadians = 1,
         algaePosition = 3;

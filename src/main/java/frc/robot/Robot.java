@@ -222,6 +222,9 @@ public class Robot extends LoggedRobot {
     if (!lastBoolean && beamBreak.get()) {
       RobotContainer.elevator.setSelectedSensorPosition(1.75);
     }
+    if (lastBoolean && !beamBreak.get()) {
+      RobotContainer.elevator.setSelectedSensorPosition(.5);
+    }
     lastBoolean = beamBreak.get();
     vision.logSeenAprilTags();
     // Color detectedColor = m_colorSensor.getColor();
