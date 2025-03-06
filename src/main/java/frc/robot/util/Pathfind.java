@@ -83,4 +83,53 @@ public class Pathfind {
         allianceOptional.orElse(Alliance.Blue); // choose default alliance if not present
     return alliance == Alliance.Red ? redPathfindingCommand : bluePathfindingCommand;
   }
+
+  // Calculate average of left and right reef poses
+  private Pose2d[] calculateAverageRedReefPoses() {
+    Pose2d[] averagePoses = new Pose2d[PathfindConstants.redTargetPoseReef.length];
+    for (int i = 0; i < PathfindConstants.redTargetPoseReef.length; i++) {
+      Pose2d left = PathfindConstants.redTargetPoseReef[i][0];
+      Pose2d right = PathfindConstants.redTargetPoseReef[i][1];
+      averagePoses[i] =
+          new Pose2d(
+              (left.getX() + right.getX()) / 2,
+              (left.getY() + right.getY()) / 2,
+              left.getRotation() // Using left pose rotation as reference
+              );
+    }
+    return averagePoses;
+  }
+
+  private Pose2d[] calculateAverageBlueReefPoses() {
+    Pose2d[] averagePoses = new Pose2d[PathfindConstants.blueTargetPoseReef.length];
+    for (int i = 0; i < PathfindConstants.blueTargetPoseReef.length; i++) {
+      Pose2d left = PathfindConstants.blueTargetPoseReef[i][0];
+      Pose2d right = PathfindConstants.blueTargetPoseReef[i][1];
+      averagePoses[i] =
+          new Pose2d(
+              (left.getX() + right.getX()) / 2,
+              (left.getY() + right.getY()) / 2,
+              left.getRotation() // Using left pose rotation as reference
+              );
+    }
+    return averagePoses;
+  }
+
+  public Command getPathfindingCommandAlgae(int closestTag) {
+    int currentClosestTag = closestTag;
+
+    // Get dynamically calculated average poses
+    Pose2d[] redAveragePoses = calculateAverageRedReefPoses();
+    Pose2d[] blueAveragePoses = calculateAverageBlueReefPoses();
+
+    redPathfindingCommand =
+        AutoBuilder.pathfindToPose(redAveragePoses[currentClosestTag], constraints, 0.0);
+    bluePathfindingCommand =
+        AutoBuilder.pathfindToPose(blueAveragePoses[currentClosestTag], constraints, 0.0);
+
+    Optional<Alliance> allianceOptional = DriverStation.getAlliance();
+    Alliance alliance =
+        allianceOptional.orElse(Alliance.Blue); // choose default alliance if not present
+    return alliance == Alliance.Red ? redPathfindingCommand : bluePathfindingCommand;
+  }
 }
