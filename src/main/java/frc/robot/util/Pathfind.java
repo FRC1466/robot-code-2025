@@ -56,9 +56,12 @@ public class Pathfind {
             PathfindConstants.redTargetPoseReef[currentClosestTag][targetLeftOrRight],
             constraints,
             0.0);
+
+    // Use FlipField.flipPose() to create blue alliance pose from red alliance pose
     bluePathfindingCommand =
         AutoBuilder.pathfindToPose(
-            PathfindConstants.blueTargetPoseReef[currentClosestTag][targetLeftOrRight],
+            FlipField.flipPose(
+                PathfindConstants.redTargetPoseReef[currentClosestTag][targetLeftOrRight]),
             constraints,
             0.0);
 
@@ -74,9 +77,13 @@ public class Pathfind {
     redPathfindingCommand =
         AutoBuilder.pathfindToPose(
             PathfindConstants.redTargetPoseStation[currentClosestStation], constraints, 0.0);
+
+    // Use FlipField.flipPose() to create blue alliance pose from red alliance pose
     bluePathfindingCommand =
         AutoBuilder.pathfindToPose(
-            PathfindConstants.blueTargetPoseStation[currentClosestStation], constraints, 0.0);
+            FlipField.flipPose(PathfindConstants.redTargetPoseStation[currentClosestStation]),
+            constraints,
+            0.0);
 
     Optional<Alliance> allianceOptional = DriverStation.getAlliance();
     Alliance alliance =
@@ -84,7 +91,7 @@ public class Pathfind {
     return alliance == Alliance.Red ? redPathfindingCommand : bluePathfindingCommand;
   }
 
-  // Calculate average of left and right reef poses
+  // Calculate average of left and right reef poses for red alliance
   private Pose2d[] calculateAverageRedReefPoses() {
     Pose2d[] averagePoses = new Pose2d[PathfindConstants.redTargetPoseReef.length];
     for (int i = 0; i < PathfindConstants.redTargetPoseReef.length; i++) {
@@ -100,19 +107,18 @@ public class Pathfind {
     return averagePoses;
   }
 
+  // Calculate average of left and right reef poses for blue alliance
   private Pose2d[] calculateAverageBlueReefPoses() {
-    Pose2d[] averagePoses = new Pose2d[PathfindConstants.blueTargetPoseReef.length];
-    for (int i = 0; i < PathfindConstants.blueTargetPoseReef.length; i++) {
-      Pose2d left = PathfindConstants.blueTargetPoseReef[i][0];
-      Pose2d right = PathfindConstants.blueTargetPoseReef[i][1];
-      averagePoses[i] =
-          new Pose2d(
-              (left.getX() + right.getX()) / 2,
-              (left.getY() + right.getY()) / 2,
-              left.getRotation() // Using left pose rotation as reference
-              );
+    // Get the average red poses first
+    Pose2d[] averageRedPoses = calculateAverageRedReefPoses();
+
+    // Then flip each average pose to get the blue alliance equivalents
+    Pose2d[] averageBluePoses = new Pose2d[averageRedPoses.length];
+    for (int i = 0; i < averageRedPoses.length; i++) {
+      averageBluePoses[i] = FlipField.flipPose(averageRedPoses[i]);
     }
-    return averagePoses;
+
+    return averageBluePoses;
   }
 
   public Command getPathfindingCommandAlgae(int closestTag) {

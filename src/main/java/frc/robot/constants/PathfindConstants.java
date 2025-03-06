@@ -24,7 +24,7 @@ public class PathfindConstants {
     },
     {
       new Pose2d(12.53, 5.32, Rotation2d.fromDegrees(-60)),
-      new Pose2d(12.301, 5.237, Rotation2d.fromDegrees(-60))
+      new Pose2d(12.6, 5.1, Rotation2d.fromDegrees(-60))
     },
     {
       new Pose2d(11.695, 4.169, Rotation2d.fromDegrees(0)),
@@ -40,39 +40,5 @@ public class PathfindConstants {
   public static final Pose2d[] redTargetPoseStation = {
     new Pose2d(16.288, 7.064, Rotation2d.fromDegrees(-125.000)),
     new Pose2d(16.288, 0.937, Rotation2d.fromDegrees(125.000)),
-  };
-
-  // Blue target poses for reef
-  public static final Pose2d[][] blueTargetPoseReef = {
-    {
-      new Pose2d(4.022, 2.837, Rotation2d.fromDegrees(-60)),
-      new Pose2d(3.719, 3.003, Rotation2d.fromDegrees(-60))
-    },
-    {
-      new Pose2d(3.225, 3.860, Rotation2d.fromDegrees(0)),
-      new Pose2d(3.225, 4.190, Rotation2d.fromDegrees(0))
-    },
-    {
-      new Pose2d(3.732, 5.044, Rotation2d.fromDegrees(60)),
-      new Pose2d(4.012, 5.216, Rotation2d.fromDegrees(60))
-    },
-    {
-      new Pose2d(5.011, 5.237, Rotation2d.fromDegrees(120)),
-      new Pose2d(5.271, 12.301, Rotation2d.fromDegrees(120))
-    },
-    {
-      new Pose2d(5.877, 4.169, Rotation2d.fromDegrees(180)),
-      new Pose2d(5.877, 3.860, Rotation2d.fromDegrees(180))
-    },
-    {
-      new Pose2d(5.289, 2.998, Rotation2d.fromDegrees(-120)),
-      new Pose2d(5.018, 2.850, Rotation2d.fromDegrees(-120))
-    }
-  };
-
-  // Blue Target Poses for Station
-  public static final Pose2d[] blueTargetPoseStation = {
-    new Pose2d(1.295, 7.064, Rotation2d.fromDegrees(-55.000)),
-    new Pose2d(1.295, 0.937, Rotation2d.fromDegrees(55.000)),
   };
 }

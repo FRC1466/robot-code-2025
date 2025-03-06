@@ -81,7 +81,7 @@ public class RobotContainer {
 
   public static boolean visionEnabled = true;
 
-  public static int leftCoral = 0;
+  public static int leftCoral = 1;
 
   // Joystick and telemetry
   public final CommandJoystick joystick = new CommandJoystick(0);
