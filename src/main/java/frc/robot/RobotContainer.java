@@ -129,20 +129,17 @@ public class RobotContainer {
   // Initialize autonomous chooser with options
   public void initializeChooser() {
     // Create the Intake command that runs for exactly 2 seconds
+    Command intakeHeightCommand = elevator.toBottom().alongWith(rotatyPart.store());
     Command intakeCommand =
-        intake
-            .intake()
-            .alongWith(rotatyPart.store())
-            .alongWith(elevator.toBottom())
-            .withTimeout(3) // Run for exactly 2 seconds
-            .andThen(rotatyPart.coralScore().alongWith(intake.stop()));
+        intake.intake().withTimeout(3).andThen(rotatyPart.coralScore().alongWith(intake.stop()));
 
     // L2 command - go to position, outtake, hold for 2 seconds, then return to bottom
-    Command l2Command =
-        elevator
-            .toL2()
-            .alongWith(rotatyPart.coralScore())
-            .andThen(intake.outTake().withTimeout(3))
+    Command l2HeightCommand = elevator.toL2();
+
+    Command l2ScoreCommand =
+        rotatyPart
+            .coralScore()
+            .andThen(intake.outTake().withTimeout(1))
             .andThen(elevator.toBottom().alongWith(rotatyPart.coralScore()));
 
     // L3 command - go to position, outtake, hold for 2 seconds, then return to bottom
@@ -155,23 +152,25 @@ public class RobotContainer {
             .andThen(elevator.toBottom().alongWith(rotatyPart.coralScore()));
 
     // Create the L4 command with conditional follow-up action when elevator reaches position
-    /*  Command l4Command =
-    elevator
-        .toL4()
-        .alongWith(rotatyPart.coralScore())
-        .alongWith(
-            Commands.waitUntil(() -> elevator.getElevatorHeight() > 53)
-                .andThen(
-                    rotatyPart.l4coralScore().alongWith(intake.coralHold().withTimeout(.5)))
-                .andThen(intake.outTake().withTimeout(.5))
-                .andThen(elevator.toBottom().alongWith(rotatyPart.coralScore())));*/
+    Command l4Command =
+        elevator
+            .toL4()
+            .alongWith(rotatyPart.coralScore())
+            .until(() -> elevator.getElevatorHeight() > 53)
+            .andThen(rotatyPart.l4coralScore())
+            .alongWith(intake.coralHold());
+    /*    .andThen(intake.outTake().withTimeout(.5))
+    .andThen(elevator.toBottom().alongWith(rotatyPart.coralScore()))*/
 
     // Register the named commands
+    NamedCommands.registerCommand("IntakeElevator", intakeHeightCommand);
     NamedCommands.registerCommand("Intake", intakeCommand);
-    NamedCommands.registerCommand("l2", l2Command);
+    NamedCommands.registerCommand("l2Elevator", l2HeightCommand);
+    NamedCommands.registerCommand("l2Score", l2ScoreCommand);
     NamedCommands.registerCommand("l3", l3Command);
-    //    NamedCommands.registerCommand("l4", l4Command);
+    NamedCommands.registerCommand("l4", l4Command);
 
+    autoChooser.addOption("1 Piece", new PathPlannerAuto("Taxi"));
     autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));
     autoChooser.addOption("3 Piece", new PathPlannerAuto("3 Piece Auto"));
     autoChooser.addOption("4 Piece", new PathPlannerAuto("4 Piece Auto Faster"));

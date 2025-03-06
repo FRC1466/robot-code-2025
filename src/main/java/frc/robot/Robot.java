@@ -73,7 +73,7 @@ public class Robot extends LoggedRobot {
   @SuppressWarnings("unused")
   private boolean checkState = false;
 
-  private DigitalInput beamBreak = new DigitalInput(1);
+  private DigitalInput beamBreak = new DigitalInput(9);
 
   private boolean lastBoolean = true;
 

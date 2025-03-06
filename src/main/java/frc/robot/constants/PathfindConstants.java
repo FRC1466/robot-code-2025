@@ -41,4 +41,7 @@ public class PathfindConstants {
     new Pose2d(16.288, 7.064, Rotation2d.fromDegrees(-125.000)),
     new Pose2d(16.288, 0.937, Rotation2d.fromDegrees(125.000)),
   };
+
+  public static final Pose2d redTargetPoseProcessor =
+      new Pose2d(11.496, 7.495, Rotation2d.fromDegrees(90.000));
 }

@@ -5,6 +5,7 @@ package frc.robot.subsystems.Mechanisms;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.ColorSensorV3;
+import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -12,6 +13,7 @@ import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
   private final TalonFX intakeMotor;
+  private final SparkMax funnelMotor;
 
   private boolean highCurrentBool;
   private final I2C.Port i2cPort = I2C.Port.kOnboard;
@@ -20,34 +22,63 @@ public class Intake extends SubsystemBase {
   /** Create a new Gripper subsystem. */
   public Intake() {
     intakeMotor = new TalonFX(15);
+    funnelMotor = new SparkMax(18, SparkMax.MotorType.kBrushless);
   }
 
-  public void setVoltage(double outputVoltage) {
+  public void setIntakeVoltage(double outputVoltage) {
     intakeMotor.setVoltage(outputVoltage);
   }
 
+  public void setFunnelVoltage(double outputVoltage) {
+    funnelMotor.setVoltage(outputVoltage);
+  }
+
   public Command stop() {
-    return runOnce(() -> setVoltage(0));
+    return runOnce(
+        () -> {
+          setIntakeVoltage(0);
+          setFunnelVoltage(0);
+        });
   }
 
   public Command reverseIntake() {
-    return runOnce(() -> setVoltage(6));
+    return runOnce(
+        () -> {
+          setIntakeVoltage(6);
+          setFunnelVoltage(0);
+        });
   }
 
   public Command algaeHold() {
-    return runOnce(() -> setVoltage(.4));
+    return runOnce(
+        () -> {
+          setIntakeVoltage(.4);
+          setFunnelVoltage(0);
+        });
   }
 
   public Command coralHold() {
-    return runOnce(() -> setVoltage(.3));
+    return runOnce(
+        () -> {
+          setIntakeVoltage(.3);
+          setFunnelVoltage(0);
+        });
   }
 
   public Command intake() {
-    return runOnce(() -> setVoltage(-2));
+    return runOnce(
+        () -> {
+          setIntakeVoltage(-2);
+          setFunnelVoltage(-1.5);
+        });
   }
 
   public Command outTake() {
-    return runOnce(() -> setVoltage(-6));
+    return runOnce(
+        () -> {
+          setIntakeVoltage(-6);
+          setFunnelVoltage(0);
+        });
   }
 
   public boolean getIntakeDistanceBool() {

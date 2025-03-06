@@ -38,7 +38,7 @@ public final class VisionConstants {
           new Transform3d(new Translation3d(-.267, .292, .2), new Rotation3d(0, 0, Math.PI)),*/
           "Camera_BackRight",
           new Transform3d(
-              new Translation3d(-.267, -.292, .2), new Rotation3d(0, -(Math.PI / 6), Math.PI)));
+              new Translation3d(-.270, -.292, .2), new Rotation3d(0, -(Math.PI / 6), Math.PI)));
 
   // Standard deviations for vision measurements (x, y, theta)
   // Smaller values = more trust in vision measurements
@@ -47,7 +47,7 @@ public final class VisionConstants {
   public static final Matrix<N3, N1> SINGLE_TAG_STD_DEVS = VecBuilder.fill(.1, .2, .3);
 
   // When using multiple April tags for pose estimation (more accurate)
-  public static final Matrix<N3, N1> MULTI_TAG_STD_DEVS = VecBuilder.fill(.1, .1, .2);
+  public static final Matrix<N3, N1> MULTI_TAG_STD_DEVS = VecBuilder.fill(.1, .2, .3);
 
   // Minimum ambiguity to accept a tag detection
   public static final double MAX_AMBIGUITY = 0.2;

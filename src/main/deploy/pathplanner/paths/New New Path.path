@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.2165983606557385,
-        "y": 4.025
+        "x": 13.977663934426227,
+        "y": 6.224743852459016
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.105874214721137,
-        "y": 4.040245165215843
+        "x": 14.977663934426232,
+        "y": 6.224743852459016
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.873975409836065,
-        "y": 4.025
+        "x": 11.496,
+        "y": 7.495
       },
       "prevControl": {
-        "x": 6.9110941161719275,
-        "y": 4.043783642747807
+        "x": 8.271868363762076,
+        "y": 6.495546096720558
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,14 +31,7 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "l2Elevator",
-      "waypointRelativePos": 0.4243379571248454,
-      "endWaypointRelativePos": null,
-      "command": null
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 10.0,
     "maxAcceleration": 5.2,
@@ -49,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 90.0
   },
   "reversed": false,
-  "folder": "Taxi",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }
