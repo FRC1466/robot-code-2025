@@ -41,7 +41,8 @@ public class Vision {
 
   // List of all camera names to use in simulation
   private static final String[] SIM_CAMERA_NAMES = {
-    "Camera_FrontLeft", "Camera_FrontRight", "Camera_BackLeft", "Camera_BackRight"
+    "Camera_FrontLeft", // "Camera_FrontRight", "Camera_BackLeft",
+    "Camera_BackRight"
   };
 
   public Vision() {

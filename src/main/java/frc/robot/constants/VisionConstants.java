@@ -38,7 +38,7 @@ public final class VisionConstants {
           new Transform3d(new Translation3d(-.267, .292, .2), new Rotation3d(0, 0, Math.PI)),*/
           "Camera_BackRight",
           new Transform3d(
-              new Translation3d(-.267, -.292, .2), new Rotation3d(0, Math.PI / 6, Math.PI)));
+              new Translation3d(-.267, -.292, .2), new Rotation3d(0, -(Math.PI / 6), Math.PI)));
 
   // Standard deviations for vision measurements (x, y, theta)
   // Smaller values = more trust in vision measurements
