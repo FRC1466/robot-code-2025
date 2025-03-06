@@ -91,6 +91,11 @@ public class RobotContainer {
   public static CommandSwerveDrivetrain drivetrain;
   public static boolean sliderEnabled = false;
 
+  // Kill switch for autonomous pathing
+  public static boolean autoPathingEnabled = true;
+  private final edu.wpi.first.wpilibj.smartdashboard.SendableChooser<Boolean>
+      pathingEnabledChooser = new edu.wpi.first.wpilibj.smartdashboard.SendableChooser<>();
+
   public RobotContainer() {
     // Initialize drivetrain once based on robot type
     switch (Constants.getRobot()) {
@@ -117,6 +122,8 @@ public class RobotContainer {
 
     configureBindings();
     initializeChooser();
+    // Initialize the pathing kill switch chooser
+    setupPathingKillSwitch();
   }
 
   // Initialize autonomous chooser with options
@@ -172,6 +179,29 @@ public class RobotContainer {
 
     // Publish the chooser to the dashboard
     SmartDashboard.putData("Auto Selector", autoChooser.getSendableChooser());
+  }
+
+  /** Sets up the kill switch for autonomous pathing */
+  private void setupPathingKillSwitch() {
+    pathingEnabledChooser.setDefaultOption("Auto Pathing Enabled", true);
+    pathingEnabledChooser.addOption("Manual Control Only", false);
+    SmartDashboard.putData("Pathing Control", pathingEnabledChooser);
+
+    // Create a trigger that fires when the chooser value changes
+    new Trigger(() -> pathingEnabledChooser.getSelected() != autoPathingEnabled)
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  autoPathingEnabled = pathingEnabledChooser.getSelected();
+                  Logger.recordOutput("AutoPathing/isEnabled", autoPathingEnabled);
+
+                  // Cancel any active pathing commands when disabled
+                  if (!autoPathingEnabled) {
+                    if (reefCommand != null) reefCommand.cancel();
+                    if (stationCommand != null) stationCommand.cancel();
+                    if (algaeCommand != null) algaeCommand.cancel();
+                  }
+                }));
   }
 
   // Configure joystick bindings
@@ -313,8 +343,11 @@ public class RobotContainer {
         .onTrue(
             Commands.runOnce(
                 () -> {
-                  stationCommand = m_pathfinder.getPathfindingCommandStation(getClosestStation());
-                  stationCommand.schedule();
+                  // Only schedule the command if auto pathing is enabled
+                  if (autoPathingEnabled) {
+                    stationCommand = m_pathfinder.getPathfindingCommandStation(getClosestStation());
+                    stationCommand.schedule();
+                  }
                 }))
         .onFalse(
             Commands.runOnce(
@@ -329,9 +362,12 @@ public class RobotContainer {
         .onTrue(
             Commands.runOnce(
                 () -> {
-                  reefCommand = m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
-
-                  reefCommand.schedule();
+                  // Only schedule the command if auto pathing is enabled
+                  if (autoPathingEnabled) {
+                    reefCommand =
+                        m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
+                    reefCommand.schedule();
+                  }
                 }))
         .onFalse(
             Commands.runOnce(
@@ -356,9 +392,12 @@ public class RobotContainer {
         .onTrue(
             Commands.runOnce(
                 () -> {
-                  reefCommand = m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
-
-                  reefCommand.schedule();
+                  // Only schedule the command if auto pathing is enabled
+                  if (autoPathingEnabled) {
+                    reefCommand =
+                        m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
+                    reefCommand.schedule();
+                  }
                 }))
         .onFalse(
             Commands.runOnce(
@@ -383,9 +422,12 @@ public class RobotContainer {
         .onTrue(
             Commands.runOnce(
                 () -> {
-                  reefCommand = m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
-
-                  reefCommand.schedule();
+                  // Only schedule the command if auto pathing is enabled
+                  if (autoPathingEnabled) {
+                    reefCommand =
+                        m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
+                    reefCommand.schedule();
+                  }
                 }))
         .onFalse(
             Commands.runOnce(
@@ -438,8 +480,11 @@ public class RobotContainer {
         .onTrue(
             Commands.runOnce(
                 () -> {
-                  algaeCommand = m_pathfinder.getPathfindingCommandAlgae(getClosestTag());
-                  algaeCommand.schedule();
+                  // Only schedule the command if auto pathing is enabled
+                  if (autoPathingEnabled) {
+                    algaeCommand = m_pathfinder.getPathfindingCommandAlgae(getClosestTag());
+                    algaeCommand.schedule();
+                  }
                 }))
         .onFalse(
             Commands.runOnce(
@@ -465,8 +510,11 @@ public class RobotContainer {
         .onTrue(
             Commands.runOnce(
                 () -> {
-                  algaeCommand = m_pathfinder.getPathfindingCommandAlgae(2);
-                  algaeCommand.schedule();
+                  // Only schedule the command if auto pathing is enabled
+                  if (autoPathingEnabled) {
+                    algaeCommand = m_pathfinder.getPathfindingCommandAlgae(2);
+                    algaeCommand.schedule();
+                  }
                 }))
         .onFalse(
             Commands.runOnce(
@@ -546,6 +594,8 @@ public class RobotContainer {
   // Update dashboard data
   public void updateDashboardOutputs() {
     SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
+    // Log the current status of automatic pathing
+    Logger.recordOutput("AutoPathing/Enabled", autoPathingEnabled);
   }
 
   public int armLiftReady() {
