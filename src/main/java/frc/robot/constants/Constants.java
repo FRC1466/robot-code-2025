@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import webblib.Gains;
 
 public final class Constants {
+  public static double MAX_ROBOT_SPEED = 5;
   public static boolean disableHAL = false;
   public static final boolean CHECK_ROBOT_TYPE = false; // Enables robot type check during builds
 

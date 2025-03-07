@@ -11,8 +11,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import frc.robot.Robot;
+import frc.robot.constants.Constants;
 import frc.robot.constants.VisionConstants;
 import java.util.List;
 import java.util.Optional;
@@ -54,6 +56,9 @@ public class Vision {
   private EstimatedRobotPose latestEstimateFR = null;
   private EstimatedRobotPose latestEstimateBL = null;
   private EstimatedRobotPose latestEstimateBR = null;
+
+  // Timestamp for the last measurement
+  private double lastMeasurementTimestamp = 0.0;
 
   public Vision() {
     Logger.recordOutput("Vision/Status", "Initializing");
@@ -271,7 +276,21 @@ public class Vision {
 
     var pose2d = estimate.estimatedPose.toPose2d();
 
-    // Calculate confidence based on the estimate
+    // Get current pose and calculate jump distance
+    Pose2d currentPose = poseEstimator.getEstimatedPosition();
+    double jumpDistance = currentPose.getTranslation().getDistance(pose2d.getTranslation());
+
+    // Calculate time since last measurement
+    double timeSinceLastMeasurement = Timer.getFPGATimestamp() - lastMeasurementTimestamp;
+    double maxReasonableDistance =
+        Constants.MAX_ROBOT_SPEED * timeSinceLastMeasurement + 0.1; // meters
+
+    if (jumpDistance > maxReasonableDistance) {
+      Logger.recordOutput("Vision/" + cameraName + "/RejectedJump", jumpDistance);
+      return; // Reject this measurement
+    }
+
+    // Continue with existing confidence calculation and pose update
     Matrix<N3, N1> confidence = confidenceCalculator(estimate);
 
     // Log the actual values in the matrix
@@ -284,6 +303,8 @@ public class Vision {
 
     // Add the vision measurement to the pose estimator
     poseEstimator.addVisionMeasurement(pose2d, estimate.timestampSeconds, confidence);
+
+    lastMeasurementTimestamp = Timer.getFPGATimestamp();
   }
 
   /** Calculates the confidence in a vision measurement based on distance and ambiguity */
