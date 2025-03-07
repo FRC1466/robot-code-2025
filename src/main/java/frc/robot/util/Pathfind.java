@@ -60,7 +60,7 @@ public class Pathfind {
     // Use FlipField.flipPose() to create blue alliance pose from red alliance pose
     bluePathfindingCommand =
         AutoBuilder.pathfindToPose(
-            FlipField.flipPose(
+            FlipField.FieldFlip(
                 PathfindConstants.redTargetPoseReef[currentClosestTag][targetLeftOrRight]),
             constraints,
             0.0);
@@ -81,7 +81,7 @@ public class Pathfind {
     // Use FlipField.flipPose() to create blue alliance pose from red alliance pose
     bluePathfindingCommand =
         AutoBuilder.pathfindToPose(
-            FlipField.flipPose(PathfindConstants.redTargetPoseStation[currentClosestStation]),
+            FlipField.FieldFlip(PathfindConstants.redTargetPoseStation[currentClosestStation]),
             constraints,
             0.0);
 
@@ -115,7 +115,7 @@ public class Pathfind {
     // Then flip each average pose to get the blue alliance equivalents
     Pose2d[] averageBluePoses = new Pose2d[averageRedPoses.length];
     for (int i = 0; i < averageRedPoses.length; i++) {
-      averageBluePoses[i] = FlipField.flipPose(averageRedPoses[i]);
+      averageBluePoses[i] = FlipField.FieldFlip(averageRedPoses[i]);
     }
 
     return averageBluePoses;
