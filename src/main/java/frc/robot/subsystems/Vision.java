@@ -280,29 +280,50 @@ public class Vision {
     Pose2d currentPose = poseEstimator.getEstimatedPosition();
     double jumpDistance = currentPose.getTranslation().getDistance(pose2d.getTranslation());
 
-    // Calculate time since last measurement
+    // Calculate time since last measurement and the maximum reasonable travel distance
     double timeSinceLastMeasurement = Timer.getFPGATimestamp() - lastMeasurementTimestamp;
     double maxReasonableDistance =
         Constants.MAX_ROBOT_SPEED * timeSinceLastMeasurement + 0.1; // meters
 
+    Pose2d measurementToUse = pose2d;
+
+    // If jump distance is greater than expected, apply smoothing instead of outright rejection
     if (jumpDistance > maxReasonableDistance) {
+      double alpha = 0.5; // smoothing factor between 0 (trust current) and 1 (trust new)
+      Logger.recordOutput("Vision/" + cameraName + "/SmoothingApplied", true);
+
+      // Blend translations
+      double smoothX =
+          currentPose.getTranslation().getX() * (1 - alpha)
+              + pose2d.getTranslation().getX() * alpha;
+      double smoothY =
+          currentPose.getTranslation().getY() * (1 - alpha)
+              + pose2d.getTranslation().getY() * alpha;
+
+      // Blend rotations using interpolation
+      Rotation2d smoothRot = currentPose.getRotation().interpolate(pose2d.getRotation(), alpha);
+
+      measurementToUse = new Pose2d(smoothX, smoothY, smoothRot);
+
       Logger.recordOutput("Vision/" + cameraName + "/RejectedJump", jumpDistance);
-      return; // Reject this measurement
+      Logger.recordOutput("Vision/" + cameraName + "/SmoothedMeasurementPose", measurementToUse);
+    } else {
+      Logger.recordOutput("Vision/" + cameraName + "/JumpOk", jumpDistance);
     }
 
     // Continue with existing confidence calculation and pose update
     Matrix<N3, N1> confidence = confidenceCalculator(estimate);
 
-    // Log the actual values in the matrix
+    // Log the confidence values
     Logger.recordOutput("Vision/" + cameraName + "/ConfidenceX", confidence.get(0, 0));
     Logger.recordOutput("Vision/" + cameraName + "/ConfidenceY", confidence.get(1, 0));
     Logger.recordOutput("Vision/" + cameraName + "/ConfidenceRot", confidence.get(2, 0));
 
-    // Log the pose being added
-    Logger.recordOutput("Vision/" + cameraName + "/MeasurementPose", pose2d);
+    // Log the pose being added (either raw or smoothed)
+    Logger.recordOutput("Vision/" + cameraName + "/MeasurementPose", measurementToUse);
 
-    // Add the vision measurement to the pose estimator
-    poseEstimator.addVisionMeasurement(pose2d, estimate.timestampSeconds, confidence);
+    // Add the (possibly smoothed) vision measurement to the pose estimator
+    poseEstimator.addVisionMeasurement(measurementToUse, estimate.timestampSeconds, confidence);
 
     lastMeasurementTimestamp = Timer.getFPGATimestamp();
   }
