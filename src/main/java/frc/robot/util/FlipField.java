@@ -15,7 +15,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 public class FlipField {
   // Field dimensions for 2025 Reefscape
   // If the middle Y is 6.08, then the full width would be approximately 12.16 meters
-  public static final double FIELD_LENGTH_METERS = 17.53; // 54'1"
+  public static final double FIELD_LENGTH_METERS = 17.548; // 54'1"
   // public static final double FIELD_WIDTH_METERS = 12.16; // Calculated from center Y position
 
   // Field center point

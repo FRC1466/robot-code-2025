@@ -69,7 +69,7 @@ public class Intake extends SubsystemBase {
     return runOnce(
         () -> {
           setIntakeVoltage(-2);
-          setFunnelVoltage(-1.5);
+          setFunnelVoltage(-.75);
         });
   }
 

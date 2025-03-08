@@ -13,6 +13,7 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -32,10 +33,12 @@ import frc.robot.subsystems.Mechanisms.Intake;
 import frc.robot.subsystems.Mechanisms.RotatyPart;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
+import frc.robot.util.FlipField;
 import frc.robot.util.Pathfind;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -212,7 +215,7 @@ public class RobotContainer {
 
   @SuppressWarnings("unused")
   private void configureBindings() {
-    // Create safe versions of all joystick trigger inputs
+    // Create safe versions of all joystick trigger inputs that respect the ignoreJoystickInput flag
     Trigger safePovLeft = createSafeJoystickTrigger(joystick.povLeft());
     Trigger safePovRight = createSafeJoystickTrigger(joystick.povRight());
     Trigger safePovUp = createSafeJoystickTrigger(joystick.povUp());
@@ -227,74 +230,29 @@ public class RobotContainer {
     Trigger safeButton8 = createSafeJoystickTrigger(joystick.button(8));
     Trigger safeButton9 = createSafeJoystickTrigger(joystick.button(9));
 
-    // Use safe triggers in all bindings
+    // Direction selection triggers
     safePovLeft.onTrue(switchCoralDirection(0));
-
     safePovRight.onTrue(switchCoralDirection(1));
 
-    /*
-    .onTrue(
-        Commands.runOnce(
+    // Vision/field-centric heading reset triggers
+    safePovDown.onTrue(
+        drivetrain.runOnce(
             () -> {
-              rightReefCommand = m_pathfinder.getPathfindingCommandReef(1, getClosestTag());
-              rightReefCommand.schedule();
-            }))
-    .onFalse(
-        Commands.runOnce(
-            () -> {
-              if (rightReefCommand != null) {
-                rightReefCommand.cancel();
-              }
-            }));*/
+              visionEnabled = true;
+              drivetrain.seedFieldCentric();
+            }));
 
-    /*   safeButton1 // TEMPORARY BINDING
-    .onTrue(
-        Commands.runOnce(
+    safePovUp.onTrue(
+        drivetrain.runOnce(
             () -> {
-              stationCommand = m_pathfinder.getPathfindingCommandStation(getClosestStation());
-              stationCommand.schedule();
-            }))
-    .onFalse(
-        Commands.runOnce(
-            () -> {
-              if (stationCommand != null) {
-                stationCommand.cancel();
-              }
-            }));*/
+              visionEnabled = false;
+              drivetrain.seedFieldCentric();
+            }));
 
-    // Note that X is defined as forward according to WPILib convention,
-    // and Y is defined as to the left according to WPILib convention.
-    drivetrain.setDefaultCommand(
-        // Drivetrain will execute this command periodically
-        drivetrain.applyRequest(
-            () ->
-                drive
-                    .withVelocityX(
-                        Math.pow(
-                                (MathUtil.applyDeadband(
-                                    -getAdjustedJoystickAxis(
-                                        1, Robot.getInstance().shouldIgnoreJoystickInput()),
-                                    .05)),
-                                3)
-                            * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(
-                        Math.pow(
-                                (MathUtil.applyDeadband(
-                                    -getAdjustedJoystickAxis(
-                                        0, Robot.getInstance().shouldIgnoreJoystickInput()),
-                                    .05)),
-                                3)
-                            * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(
-                        Math.pow(
-                                (MathUtil.applyDeadband(
-                                    -getAdjustedJoystickAxis(
-                                        2, Robot.getInstance().shouldIgnoreJoystickInput()),
-                                    .05)),
-                                3)
-                            * MaxAngularRate) // Drive counterclockwise with negative X (left)
-            ));
+    // Mode Switch
+    safeButton2.onTrue(changeMode());
 
+    // Basic triggers (not position-dependent)
     Trigger intakeProximityTrigger = new Trigger(() -> intake.getIntakeDistanceBool());
     Trigger falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
     Trigger algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 20);
@@ -306,37 +264,83 @@ public class RobotContainer {
     Trigger l4ArmReady = new Trigger(() -> elevator.getElevatorHeight() > 53);
     Trigger l4ScoreReady = new Trigger(() -> elevator.getElevatorHeight() > 61);
     Trigger coralMode = new Trigger(() -> !getModeMethod());
-    Trigger armScoreReady = new Trigger(() -> armFieldReady(leftCoral, .1));
-    Trigger armRaiseReady = new Trigger(() -> armFieldReady(leftCoral, 5));
-    Trigger coralIntakeReady = new Trigger(() -> coralIntakeReady());
 
-    // reset the field-centric heading with vision on pov down and without vision on pov up
-    safePovDown.onTrue(
-        drivetrain.runOnce(
-            () -> {
-              visionEnabled = true;
-              drivetrain.seedFieldCentric();
-            }));
-    safePovUp.onTrue(
-        drivetrain.runOnce(
-            () -> {
-              visionEnabled = false;
-              drivetrain.seedFieldCentric();
-            }));
+    // Create conditional position triggers that bypass checks when autoPathingEnabled is false
+    // For reef/field position
+    BooleanSupplier armReefPositionCheck =
+        () -> !autoPathingEnabled || armFieldReady(leftCoral, .1);
+    Trigger conditionalArmReefReady = new Trigger(armReefPositionCheck);
 
-    // Mode Switch
-    safeButton2.onTrue(changeMode());
-    // Stop arm when coral leaves
+    BooleanSupplier armRaiseReefPositionCheck =
+        () -> !autoPathingEnabled || armFieldReady(leftCoral, 1);
+    Trigger conditionalArmRaiseReefReady = new Trigger(armRaiseReefPositionCheck);
+
+    // For algae position
+    BooleanSupplier armAlgaePositionCheck = () -> !autoPathingEnabled || armAlgaeReady(.1);
+    Trigger conditionalArmAlgaeReady = new Trigger(armAlgaePositionCheck);
+
+    BooleanSupplier armRaiseAlgaePositionCheck = () -> !autoPathingEnabled || armAlgaeReady(1);
+    Trigger conditionalArmRaiseAlgaeReady = new Trigger(armRaiseAlgaePositionCheck);
+
+    // For barge position
+    BooleanSupplier armBargePositionCheck = () -> !autoPathingEnabled || armBargeReady(.1);
+    Trigger conditionalArmBargeReady = new Trigger(armBargePositionCheck);
+
+    BooleanSupplier armRaiseBargePositionCheck = () -> !autoPathingEnabled || armBargeReady(1);
+    Trigger conditionalArmRaiseBargeReady = new Trigger(armRaiseBargePositionCheck);
+
+    // For processor position
+    BooleanSupplier armProcessorPositionCheck = () -> !autoPathingEnabled || armProcessorReady(.1);
+    Trigger conditionalArmProcessorReady = new Trigger(armProcessorPositionCheck);
+
+    // For coral intake position
+    BooleanSupplier coralIntakePositionCheck = () -> !autoPathingEnabled || coralIntakeReady();
+    Trigger conditionalCoralIntakeReady = new Trigger(coralIntakePositionCheck);
+
+    // Drivetrain default command setup
+    drivetrain.setDefaultCommand(
+        drivetrain.applyRequest(
+            () ->
+                drive
+                    .withVelocityX(
+                        Math.pow(
+                                (MathUtil.applyDeadband(
+                                    -getAdjustedJoystickAxis(
+                                        1, Robot.getInstance().shouldIgnoreJoystickInput()),
+                                    .05)),
+                                3)
+                            * MaxSpeed)
+                    .withVelocityY(
+                        Math.pow(
+                                (MathUtil.applyDeadband(
+                                    -getAdjustedJoystickAxis(
+                                        0, Robot.getInstance().shouldIgnoreJoystickInput()),
+                                    .05)),
+                                3)
+                            * MaxSpeed)
+                    .withRotationalRate(
+                        Math.pow(
+                                (MathUtil.applyDeadband(
+                                    -getAdjustedJoystickAxis(
+                                        2, Robot.getInstance().shouldIgnoreJoystickInput()),
+                                    .05)),
+                                3)
+                            * MaxAngularRate)));
+
+    // Intake stop on coral leaving
     intakeProximityTrigger
         .and(coralMode)
         .onTrue(elevator.toBottom().alongWith(rotatyPart.coralScore()).andThen(intake.stop()));
-    // Intake Coral
+
+    // Coral intake - Button 3
     safeButton3
         .and(coralMode)
         .and(intakeProximityTrigger)
-        .and(coralIntakeReady)
+        .and(conditionalCoralIntakeReady) // Use conditional trigger
         .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
         .onFalse((rotatyPart.coralScore()).alongWith(intake.stop()));
+
+    // Coral station pathfinding - Button 3
     safeButton3
         .and(coralMode)
         .onTrue(
@@ -355,13 +359,13 @@ public class RobotContainer {
                     stationCommand.cancel();
                   }
                 }));
-    // L2
+
+    // L2 Reef - Button 7
     safeButton7
         .and(coralMode)
         .onTrue(
             Commands.runOnce(
                 () -> {
-                  // Only schedule the command if auto pathing is enabled
                   if (autoPathingEnabled) {
                     reefCommand =
                         m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
@@ -375,23 +379,24 @@ public class RobotContainer {
                     reefCommand.cancel();
                   }
                 }));
+
     safeButton7
         .and(coralMode)
-        .and(armScoreReady)
+        .and(conditionalArmReefReady) // Use conditional trigger
         .and(l2Ready)
         .onTrue(Commands.waitSeconds(.3).andThen(intake.outTake()));
+
     safeButton7
         .and(coralMode)
-        .and(armRaiseReady)
+        .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .onTrue(rotatyPart.coralScore().alongWith(elevator.toL2()));
 
-    // L3
+    // L3 Reef - Button 6
     safeButton6
         .and(coralMode)
         .onTrue(
             Commands.runOnce(
                 () -> {
-                  // Only schedule the command if auto pathing is enabled
                   if (autoPathingEnabled) {
                     reefCommand =
                         m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
@@ -405,23 +410,24 @@ public class RobotContainer {
                     reefCommand.cancel();
                   }
                 }));
+
     safeButton6
         .and(coralMode)
-        .and(armScoreReady)
+        .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .and(l3Ready)
         .onTrue(Commands.waitSeconds(.3).andThen(intake.outTake()));
+
     safeButton6
         .and(coralMode)
-        .and(armRaiseReady)
+        .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .onTrue(rotatyPart.coralScore().alongWith(elevator.toL3()));
 
-    // L4
+    // L4 Reef - Button 5
     safeButton5
         .and(coralMode)
         .onTrue(
             Commands.runOnce(
                 () -> {
-                  // Only schedule the command if auto pathing is enabled
                   if (autoPathingEnabled) {
                     reefCommand =
                         m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
@@ -436,31 +442,24 @@ public class RobotContainer {
                   }
                 }));
 
-    // L4 begining to raise arm
     safeButton5
         .and(coralMode)
-        .and(armRaiseReady)
+        .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .onTrue(rotatyPart.coralScore().alongWith(elevator.toL4()));
-    // Flip arm over and apply a low negative current to hold
+
     safeButton5
         .and(coralMode)
-        .and(armRaiseReady)
+        .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .and(l4ArmReady)
         .onTrue(rotatyPart.l4coralScore().alongWith(intake.coralHold()));
-    // Arm is at max height and in position to score
+
     safeButton5
         .and(coralMode)
-        .and(armScoreReady)
+        .and(conditionalArmReefReady) // Use conditional trigger
         .and(l4ScoreReady)
         .onTrue(Commands.waitSeconds(.5).andThen(intake.outTake()));
 
-    // Processor
-    /*  safeButton1
-    .and(algaeMode)
-    .and(processorReady)
-    .onTrue(intake.outTake())
-    .onFalse(rotatyPart.coralScore().alongWith(elevator.toBottom()));*/
-
+    // Processor - Button 1
     safeButton1
         .and(algaeMode)
         .onTrue(elevator.toProcessor())
@@ -473,13 +472,13 @@ public class RobotContainer {
                         .coralScore()
                         .alongWith(elevator.toBottom())
                         .alongWith(intake.stop())));
-    // L2 Removal
+
+    // L2 Algae - Button 3
     safeButton3
         .and(algaeMode)
         .onTrue(
             Commands.runOnce(
                 () -> {
-                  // Only schedule the command if auto pathing is enabled
                   if (autoPathingEnabled) {
                     algaeCommand = m_pathfinder.getPathfindingCommandAlgae(getClosestTag());
                     algaeCommand.schedule();
@@ -492,26 +491,28 @@ public class RobotContainer {
                     algaeCommand.cancel();
                   }
                 }));
+
     safeButton3
         .and(algaeMode)
-        .and(armScoreReady)
+        .and(conditionalArmAlgaeReady) // Use conditional trigger
         .and(algaeHeightReady)
         .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
+
     safeButton3
         .and(algaeMode)
-        .and(armRaiseReady)
+        .and(conditionalArmRaiseAlgaeReady) // Use conditional trigger
         .onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()));
+
     safeButton3.and(algaeMode).and(currentIntakeSwitch).onFalse((intake.algaeHold()));
 
-    // L3 Removal
+    // L3 Algae - Button 4
     safeButton4
         .and(algaeMode)
         .onTrue(
             Commands.runOnce(
                 () -> {
-                  // Only schedule the command if auto pathing is enabled
                   if (autoPathingEnabled) {
-                    algaeCommand = m_pathfinder.getPathfindingCommandAlgae(2);
+                    algaeCommand = m_pathfinder.getPathfindingCommandAlgae(getClosestTag());
                     algaeCommand.schedule();
                   }
                 }))
@@ -522,24 +523,51 @@ public class RobotContainer {
                     algaeCommand.cancel();
                   }
                 }));
+
     safeButton4
         .and(algaeMode)
-        .and(armScoreReady)
+        .and(conditionalArmAlgaeReady) // Use conditional trigger
         .and(algaeHeightReady)
         .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
+
     safeButton4
         .and(algaeMode)
-        .and(armRaiseReady)
+        .and(conditionalArmRaiseAlgaeReady) // Use conditional trigger
         .onTrue(rotatyPart.coralScore().alongWith(elevator.toL3Algae()));
+
     safeButton4.and(algaeMode).and(currentIntakeSwitch).onFalse((intake.algaeHold()));
 
+    // Barge - Button 9
     safeButton9
+        .and(conditionalArmBargeReady) // Use conditional trigger
         .and(algaeMode)
         .onTrue(elevator.toL4Algae())
         .onFalse(
             rotatyPart.coralScore().alongWith(Commands.waitSeconds(.01)).andThen(intake.outTake()));
 
+    safeButton9
+        .and(algaeMode)
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  if (autoPathingEnabled) {
+                    algaeCommand =
+                        m_pathfinder.getPathfindingCommandBarge(drivetrain.getState().Pose.getY());
+                    algaeCommand.schedule();
+                  }
+                }))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  if (algaeCommand != null) {
+                    algaeCommand.cancel();
+                  }
+                }));
+
+    // Slider control - Button 12
     joystick.button(12).onTrue(switchState(true)).onFalse(switchState(false));
+
+    // Enable telemetry
     drivetrain.registerTelemetry(logger::telemeterize);
   }
 
@@ -602,37 +630,95 @@ public class RobotContainer {
   }
 
   public boolean armFieldReady(int goingLeft, double displacement) {
+    Optional<Alliance> allianceOptional = DriverStation.getAlliance();
+    Alliance alliance = allianceOptional.orElse(Alliance.Blue);
+
+    Pose2d targetPose = PathfindConstants.redTargetPoseReef[getClosestTag()][goingLeft];
+
+    // If blue alliance, flip the target pose
+    if (alliance == Alliance.Blue) {
+      targetPose = FlipField.FieldFlip(targetPose);
+    }
+
     double distAway =
         Math.sqrt(
-            Math.pow(
-                    drivetrain.getState().Pose.getX()
-                        - PathfindConstants.redTargetPoseReef[getClosestTag()][goingLeft].getX(),
-                    2)
-                + Math.pow(
-                    drivetrain.getState().Pose.getY()
-                        - PathfindConstants.redTargetPoseReef[getClosestTag()][goingLeft].getY(),
-                    2));
-    if (distAway < displacement) {
-      return true;
+            Math.pow(drivetrain.getState().Pose.getX() - targetPose.getX(), 2)
+                + Math.pow(drivetrain.getState().Pose.getY() - targetPose.getY(), 2));
+
+    return distAway < displacement;
+  }
+
+  public boolean armProcessorReady(double displacement) {
+    Optional<Alliance> allianceOptional = DriverStation.getAlliance();
+    Alliance alliance = allianceOptional.orElse(Alliance.Blue);
+
+    Pose2d targetPose = PathfindConstants.redTargetPoseProcessor;
+
+    // If blue alliance, flip the target pose
+    if (alliance == Alliance.Blue) {
+      targetPose = FlipField.FieldFlip(targetPose);
     }
-    return false;
+
+    double distAway =
+        Math.sqrt(
+            Math.pow(drivetrain.getState().Pose.getX() - targetPose.getX(), 2)
+                + Math.pow(drivetrain.getState().Pose.getY() - targetPose.getY(), 2));
+
+    return distAway < displacement;
+  }
+
+  public boolean armAlgaeReady(double displacement) {
+    Optional<Alliance> allianceOptional = DriverStation.getAlliance();
+    Alliance alliance = allianceOptional.orElse(Alliance.Blue);
+
+    Pose2d targetPose = Pathfind.redAveragePoses[getClosestTag()];
+
+    // If blue alliance, flip the target pose
+    if (alliance == Alliance.Blue) {
+      targetPose = FlipField.FieldFlip(targetPose);
+    }
+
+    double distAway =
+        Math.sqrt(
+            Math.pow(drivetrain.getState().Pose.getX() - targetPose.getX(), 2)
+                + Math.pow(drivetrain.getState().Pose.getY() - targetPose.getY(), 2));
+
+    return distAway < displacement;
+  }
+
+  public boolean armBargeReady(double displacement) {
+    Optional<Alliance> allianceOptional = DriverStation.getAlliance();
+    Alliance alliance = allianceOptional.orElse(Alliance.Blue);
+
+    double targetX = PathfindConstants.redTargetPoseXBarge;
+
+    // If blue alliance, flip the X coordinate
+    if (alliance == Alliance.Blue) {
+      targetX = FlipField.FIELD_LENGTH_METERS - targetX;
+    }
+
+    double distAway = Math.abs(drivetrain.getState().Pose.getX() - targetX);
+
+    return distAway < displacement;
   }
 
   public boolean coralIntakeReady() {
+    Optional<Alliance> allianceOptional = DriverStation.getAlliance();
+    Alliance alliance = allianceOptional.orElse(Alliance.Blue);
+
+    Pose2d targetPose = PathfindConstants.redTargetPoseStation[getClosestStation()];
+
+    // If blue alliance, flip the target pose
+    if (alliance == Alliance.Blue) {
+      targetPose = FlipField.FieldFlip(targetPose);
+    }
+
     double distAway =
         Math.sqrt(
-            Math.pow(
-                    drivetrain.getState().Pose.getX()
-                        - PathfindConstants.redTargetPoseStation[getClosestStation()].getX(),
-                    2)
-                + Math.pow(
-                    drivetrain.getState().Pose.getY()
-                        - PathfindConstants.redTargetPoseStation[getClosestStation()].getY(),
-                    2));
-    if (distAway < .1) {
-      return true;
-    }
-    return false;
+            Math.pow(drivetrain.getState().Pose.getX() - targetPose.getX(), 2)
+                + Math.pow(drivetrain.getState().Pose.getY() - targetPose.getY(), 2));
+
+    return distAway < 0.1;
   }
 
   // Should probably get an error handler and some data printing

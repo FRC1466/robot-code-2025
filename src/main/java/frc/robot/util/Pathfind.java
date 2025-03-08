@@ -7,6 +7,8 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -23,6 +25,8 @@ public class Pathfind {
   PathConstraints constraints;
   static Command redPathfindingCommand;
   static Command bluePathfindingCommand;
+  public static Pose2d[] redAveragePoses = calculateAverageRedReefPoses();
+  public static Pose2d[] blueAveragePoses = calculateAverageBlueReefPoses();
 
   // sendable chooser for pathfinding testing
   static Command TestPathfindingCommand;
@@ -91,8 +95,45 @@ public class Pathfind {
     return alliance == Alliance.Red ? redPathfindingCommand : bluePathfindingCommand;
   }
 
+  public Command getPathfindingCommandAlgae(int closestTag) {
+    int currentClosestTag = closestTag;
+
+    redPathfindingCommand =
+        AutoBuilder.pathfindToPose(redAveragePoses[currentClosestTag], constraints, 0.0);
+    bluePathfindingCommand =
+        AutoBuilder.pathfindToPose(blueAveragePoses[currentClosestTag], constraints, 0.0);
+
+    Optional<Alliance> allianceOptional = DriverStation.getAlliance();
+    Alliance alliance =
+        allianceOptional.orElse(Alliance.Blue); // choose default alliance if not present
+    return alliance == Alliance.Red ? redPathfindingCommand : bluePathfindingCommand;
+  }
+
+  public Command getPathfindingCommandBarge(double yBarge) {
+    redPathfindingCommand =
+        AutoBuilder.pathfindToPose(
+            new Pose2d(
+                new Translation2d(PathfindConstants.redTargetPoseXBarge, yBarge),
+                new Rotation2d(Math.PI)),
+            constraints,
+            0.0);
+    bluePathfindingCommand =
+        AutoBuilder.pathfindToPose(
+            FlipField.FieldFlip(
+                new Pose2d(
+                    new Translation2d(PathfindConstants.redTargetPoseXBarge, yBarge),
+                    new Rotation2d(Math.PI))),
+            constraints,
+            0.0);
+
+    Optional<Alliance> allianceOptional = DriverStation.getAlliance();
+    Alliance alliance =
+        allianceOptional.orElse(Alliance.Blue); // choose default alliance if not present
+    return alliance == Alliance.Red ? redPathfindingCommand : bluePathfindingCommand;
+  }
+
   // Calculate average of left and right reef poses for red alliance
-  private Pose2d[] calculateAverageRedReefPoses() {
+  private static Pose2d[] calculateAverageRedReefPoses() {
     Pose2d[] averagePoses = new Pose2d[PathfindConstants.redTargetPoseReef.length];
     for (int i = 0; i < PathfindConstants.redTargetPoseReef.length; i++) {
       Pose2d left = PathfindConstants.redTargetPoseReef[i][0];
@@ -108,7 +149,7 @@ public class Pathfind {
   }
 
   // Calculate average of left and right reef poses for blue alliance
-  private Pose2d[] calculateAverageBlueReefPoses() {
+  private static Pose2d[] calculateAverageBlueReefPoses() {
     // Get the average red poses first
     Pose2d[] averageRedPoses = calculateAverageRedReefPoses();
 
@@ -119,23 +160,5 @@ public class Pathfind {
     }
 
     return averageBluePoses;
-  }
-
-  public Command getPathfindingCommandAlgae(int closestTag) {
-    int currentClosestTag = closestTag;
-
-    // Get dynamically calculated average poses
-    Pose2d[] redAveragePoses = calculateAverageRedReefPoses();
-    Pose2d[] blueAveragePoses = calculateAverageBlueReefPoses();
-
-    redPathfindingCommand =
-        AutoBuilder.pathfindToPose(redAveragePoses[currentClosestTag], constraints, 0.0);
-    bluePathfindingCommand =
-        AutoBuilder.pathfindToPose(blueAveragePoses[currentClosestTag], constraints, 0.0);
-
-    Optional<Alliance> allianceOptional = DriverStation.getAlliance();
-    Alliance alliance =
-        allianceOptional.orElse(Alliance.Blue); // choose default alliance if not present
-    return alliance == Alliance.Red ? redPathfindingCommand : bluePathfindingCommand;
   }
 }

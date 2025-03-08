@@ -238,7 +238,7 @@ public class Robot extends LoggedRobot {
     */
 
     var visionEst = RobotContainer.photonCamera.getEstimatedGlobalPose();
-    CommandScheduler.getInstance().run();
+
     RobotPose = RobotContainer.drivetrain.getState().Pose;
     visionEst.ifPresent(
         est -> {
@@ -288,6 +288,7 @@ public class Robot extends LoggedRobot {
 
     // Check for alerts on each robot periodic cycle
     checkAndHandleAlerts();
+    CommandScheduler.getInstance().run();
   }
 
   public void periodic() {}
