@@ -15,6 +15,10 @@ import edu.wpi.first.math.numbers.N3;
 import java.util.Map;
 
 public final class VisionConstants {
+  // Single Cam Constants
+  public static final String CAMERA_NAME = "Camera_FrontLeft";
+  public static final Transform3d CAMERA_TRANSFORM =
+      new Transform3d(new Translation3d(.267, .292, .2), new Rotation3d(0, 0, 0));
 
   // Camera names
   public static final String[] CAMERA_NAMES = {
@@ -50,10 +54,10 @@ public final class VisionConstants {
   public static final Matrix<N3, N1> MULTI_TAG_STD_DEVS = VecBuilder.fill(.1, .1, .2);
 
   // Minimum ambiguity to accept a tag detection
-  public static final double MAX_AMBIGUITY = 0.2;
+  public static final double MAX_AMBIGUITY = 0.3;
 
   // Maximum distance to trust a single tag (in meters)
-  public static final double MAX_SINGLE_TAG_DISTANCE = 4.0;
+  public static final double MAX_SINGLE_TAG_DISTANCE = 3;
 
   // Camera properties for simulation
   public static final int SIM_CAMERA_WIDTH_PX = 960;
