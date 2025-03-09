@@ -18,7 +18,9 @@ public final class VisionConstants {
 
   // Camera names
   public static final String[] CAMERA_NAMES = {
-    "Camera_FrontLeft", "Camera_FrontRight", "Camera_BackLeft", "Camera_BackRight"
+    "Camera_FrontLeft",
+    // "Camera_FrontRight", "Camera_BackLeft",
+    "Camera_BackRight"
   };
 
   public static final AprilTagFieldLayout TAG_LAYOUT =
@@ -30,12 +32,13 @@ public final class VisionConstants {
       Map.of(
           "Camera_FrontLeft",
           new Transform3d(new Translation3d(.267, .292, .2), new Rotation3d(0, 0, 0)),
-          "Camera_FrontRight",
+          /*  "Camera_FrontRight",
           new Transform3d(new Translation3d(.267, -.292, .2), new Rotation3d(0, 0, 0)),
           "Camera_BackLeft",
-          new Transform3d(new Translation3d(-.267, .292, .2), new Rotation3d(0, 0, Math.PI)),
+          new Transform3d(new Translation3d(-.267, .292, .2), new Rotation3d(0, 0, Math.PI)),*/
           "Camera_BackRight",
-          new Transform3d(new Translation3d(-.267, -.292, .2), new Rotation3d(0, 0, Math.PI)));
+          new Transform3d(
+              new Translation3d(-.267, -.292, .2), new Rotation3d(0, -(Math.PI / 6), Math.PI)));
 
   // Standard deviations for vision measurements (x, y, theta)
   // Smaller values = more trust in vision measurements

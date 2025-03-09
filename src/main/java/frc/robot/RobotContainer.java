@@ -86,6 +86,8 @@ public class RobotContainer {
 
   public static int leftCoral = 1;
 
+  public static double gyroMultiplier = 0;
+
   // Joystick and telemetry
   public final CommandJoystick joystick = new CommandJoystick(0);
   final Telemetry logger = new Telemetry(MaxSpeed);
@@ -231,10 +233,10 @@ public class RobotContainer {
     Trigger safeButton9 = createSafeJoystickTrigger(joystick.button(9));
 
     // Direction selection triggers
+
     safePovLeft.onTrue(switchCoralDirection(0));
     safePovRight.onTrue(switchCoralDirection(1));
 
-    // Vision/field-centric heading reset triggers
     safePovDown.onTrue(
         drivetrain.runOnce(
             () -> {
@@ -248,6 +250,11 @@ public class RobotContainer {
               visionEnabled = false;
               drivetrain.seedFieldCentric();
             }));
+    /*   // Vision/field-centric heading reset triggers
+
+    safePovDown.onTrue(resetGyroCommand(0));
+
+    safePovUp.onTrue(resetGyroCommand(drivetrain.getState().Pose.getRotation().getRadians()));*/
 
     // Mode Switch
     safeButton2.onTrue(changeMode());
@@ -259,9 +266,9 @@ public class RobotContainer {
     Trigger processorReady = new Trigger(() -> elevator.getElevatorHeight() > 4);
     Trigger currentIntakeSwitch = new Trigger(() -> intake.getHighCurrent());
     Trigger algaeMode = new Trigger(() -> getModeMethod());
-    Trigger l2Ready = new Trigger(() -> elevator.getElevatorHeight() > 14);
+    Trigger l2Ready = new Trigger(() -> elevator.getElevatorHeight() > 13);
     Trigger l3Ready = new Trigger(() -> elevator.getElevatorHeight() > 29);
-    Trigger l4ArmReady = new Trigger(() -> elevator.getElevatorHeight() > 53);
+    Trigger l4ArmReady = new Trigger(() -> elevator.getElevatorHeight() > 58);
     Trigger l4ScoreReady = new Trigger(() -> elevator.getElevatorHeight() > 61);
     Trigger coralMode = new Trigger(() -> !getModeMethod());
 
@@ -306,7 +313,13 @@ public class RobotContainer {
                         Math.pow(
                                 (MathUtil.applyDeadband(
                                     -getAdjustedJoystickAxis(
-                                        1, Robot.getInstance().shouldIgnoreJoystickInput()),
+                                        1, Robot.getInstance().shouldIgnoreJoystickInput())
+                                    /*Math.cos(gyroMultiplier)
+                                        * -getAdjustedJoystickAxis(
+                                            1, Robot.getInstance().shouldIgnoreJoystickInput())
+                                    - Math.sin(gyroMultiplier)
+                                        * -getAdjustedJoystickAxis(
+                                            0, Robot.getInstance().shouldIgnoreJoystickInput())*/ ,
                                     .05)),
                                 3)
                             * MaxSpeed)
@@ -314,7 +327,13 @@ public class RobotContainer {
                         Math.pow(
                                 (MathUtil.applyDeadband(
                                     -getAdjustedJoystickAxis(
-                                        0, Robot.getInstance().shouldIgnoreJoystickInput()),
+                                        0, Robot.getInstance().shouldIgnoreJoystickInput())
+                                    /*Math.sin(gyroMultiplier)
+                                        * -getAdjustedJoystickAxis(
+                                            1, Robot.getInstance().shouldIgnoreJoystickInput())
+                                    + Math.cos(gyroMultiplier)
+                                        * -getAdjustedJoystickAxis(
+                                            0, Robot.getInstance().shouldIgnoreJoystickInput())*/ ,
                                     .05)),
                                 3)
                             * MaxSpeed)
@@ -336,7 +355,7 @@ public class RobotContainer {
     safeButton3
         .and(coralMode)
         .and(intakeProximityTrigger)
-        .and(conditionalCoralIntakeReady) // Use conditional trigger
+        // .and(conditionalCoralIntakeReady) // Use conditional trigger
         .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
         .onFalse((rotatyPart.coralScore()).alongWith(intake.stop()));
 
@@ -359,7 +378,6 @@ public class RobotContainer {
                     stationCommand.cancel();
                   }
                 }));
-
     // L2 Reef - Button 7
     safeButton7
         .and(coralMode)
@@ -430,7 +448,7 @@ public class RobotContainer {
                 () -> {
                   if (autoPathingEnabled) {
                     reefCommand =
-                        m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
+                        m_pathfinder.getPathfindingCommandReefL4(leftCoral, getClosestTag());
                     reefCommand.schedule();
                   }
                 }))
@@ -598,7 +616,25 @@ public class RobotContainer {
     return algaeMode;
   }
 
+  public void resetGyro(double radians) {
+    gyroMultiplier = radians;
+  }
+
+  public Command resetGyroCommand(double radians) {
+    return runOnce(() -> resetGyro(radians));
+  }
+
   public void changeCoralDirection(int i) {
+    var alliance = DriverStation.getAlliance();
+    if (alliance.isPresent()) {
+      if (alliance.get() == Alliance.Blue) {
+        if (i == 1) {
+          i = 0;
+        } else {
+          i = 1;
+        }
+      }
+    }
     leftCoral = i;
   }
 
@@ -625,6 +661,7 @@ public class RobotContainer {
     Logger.recordOutput("AutoPathing/Enabled", autoPathingEnabled);
   }
 
+  // Is this here for a reason?
   public int armLiftReady() {
     return 0;
   }

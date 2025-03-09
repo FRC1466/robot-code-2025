@@ -75,6 +75,36 @@ public class Pathfind {
     return alliance == Alliance.Red ? redPathfindingCommand : bluePathfindingCommand;
   }
 
+  public Command getPathfindingCommandReefL4(int targetLeftOrRight, int closestTag) {
+    int currentClosestTag = closestTag;
+    Pose2d targetPose = PathfindConstants.redTargetPoseReef[currentClosestTag][targetLeftOrRight];
+
+    redPathfindingCommand =
+        AutoBuilder.pathfindToPose(
+            new Pose2d(
+                targetPose.getX() - (.1) * Math.cos(targetPose.getRotation().getRadians()),
+                targetPose.getY() - (.1) * Math.cos(targetPose.getRotation().getRadians()),
+                targetPose.getRotation()),
+            constraints,
+            0.0);
+
+    // Use FlipField.flipPose() to create blue alliance pose from red alliance pose
+    bluePathfindingCommand =
+        AutoBuilder.pathfindToPose(
+            FlipField.FieldFlip(
+                new Pose2d(
+                    targetPose.getX() - (.1) * Math.cos(targetPose.getRotation().getRadians()),
+                    targetPose.getY() - (.1) * Math.cos(targetPose.getRotation().getRadians()),
+                    targetPose.getRotation())),
+            constraints,
+            0.0);
+
+    Optional<Alliance> allianceOptional = DriverStation.getAlliance();
+    Alliance alliance =
+        allianceOptional.orElse(Alliance.Blue); // choose default alliance if not present
+    return alliance == Alliance.Red ? redPathfindingCommand : bluePathfindingCommand;
+  }
+
   public Command getPathfindingCommandStation(int closestStation) {
     int currentClosestStation = closestStation;
 

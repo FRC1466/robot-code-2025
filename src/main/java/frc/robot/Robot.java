@@ -29,6 +29,7 @@ import frc.robot.constants.Constants;
 import frc.robot.constants.Constants.RobotType;
 import frc.robot.subsystems.Vision;
 import frc.robot.util.Blinkin;
+import frc.robot.util.FlipField;
 import frc.robot.util.LocalADStarAK;
 import java.io.File;
 import java.lang.reflect.Field;
@@ -226,6 +227,8 @@ public class Robot extends LoggedRobot {
       RobotContainer.elevator.setSelectedSensorPosition(.5);
     }
     lastBoolean = beamBreak.get();
+    Logger.recordOutput(
+        "Flipped Position", FlipField.flipPose(m_robotContainer.drivetrain.getState().Pose));
     // Color detectedColor = m_colorSensor.getColor();
 
     /*

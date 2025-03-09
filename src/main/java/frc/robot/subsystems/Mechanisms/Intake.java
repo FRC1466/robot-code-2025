@@ -22,7 +22,7 @@ public class Intake extends SubsystemBase {
   /** Create a new Gripper subsystem. */
   public Intake() {
     intakeMotor = new TalonFX(15);
-    funnelMotor = new SparkMax(18, SparkMax.MotorType.kBrushless);
+    funnelMotor = new SparkMax(19, SparkMax.MotorType.kBrushless);
   }
 
   public void setIntakeVoltage(double outputVoltage) {
@@ -44,7 +44,7 @@ public class Intake extends SubsystemBase {
   public Command reverseIntake() {
     return runOnce(
         () -> {
-          setIntakeVoltage(6);
+          setIntakeVoltage(1);
           setFunnelVoltage(0);
         });
   }
@@ -69,7 +69,7 @@ public class Intake extends SubsystemBase {
     return runOnce(
         () -> {
           setIntakeVoltage(-2);
-          setFunnelVoltage(-.75);
+          setFunnelVoltage(-3);
         });
   }
 

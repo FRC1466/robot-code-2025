@@ -131,6 +131,8 @@ public class Vision {
             Logger.recordOutput("Vision/" + cameraName, new Pose2d());
           }
         }
+        // Make this work
+        // Logger.recordOutput("Seen April Tags", allTargets);
       }
     }
 
