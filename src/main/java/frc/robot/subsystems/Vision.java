@@ -87,7 +87,12 @@ public class Vision {
         cameraSim.enableDrawWireframe(true);
         cameraSims.put(cameraName, cameraSim);
 
-        visionSim.addCamera(cameraSim, VisionConstants.CAMERA_TRANSFORMS.get(cameraName));
+        // Check if we have a transform for this camera before adding it to the vision sim
+        if (VisionConstants.CAMERA_TRANSFORMS.containsKey(cameraName)) {
+          visionSim.addCamera(cameraSim, VisionConstants.CAMERA_TRANSFORMS.get(cameraName));
+        } else {
+          System.out.println("WARNING: No transform found for camera " + cameraName);
+        }
       }
     }
   }
