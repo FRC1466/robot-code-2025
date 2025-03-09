@@ -18,7 +18,7 @@ import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 import webblib.ArmPIDController;
 
-public class RotatyPart extends SubsystemBase {
+public class RotaryPart extends SubsystemBase {
   public double armSetpoint = 0;
 
   private TalonFX armMotor;
@@ -42,7 +42,7 @@ public class RotatyPart extends SubsystemBase {
   private boolean storedInPerimeter = false;
   private CurrentLimitsConfigs limitsConfigs = new CurrentLimitsConfigs();
 
-  public RotatyPart() {
+  public RotaryPart() {
     armMotor = new TalonFX(RotationConstants.armPort);
 
     peakOutput = RotationConstants.rotationPosition.peakOutput;

@@ -30,7 +30,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsTester;
 import frc.robot.subsystems.Mechanisms.Elevator;
 import frc.robot.subsystems.Mechanisms.Intake;
-import frc.robot.subsystems.Mechanisms.RotatyPart;
+import frc.robot.subsystems.Mechanisms.RotaryPart;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
 import frc.robot.util.FlipField;
@@ -73,7 +73,7 @@ public class RobotContainer {
 
   // Subsystems
   private final Intake intake = new Intake();
-  public static final RotatyPart rotatyPart = new RotatyPart();
+  public static final RotaryPart rotaryPart = new RotaryPart();
   public static final Vision photonCamera = new Vision();
   public static final Elevator elevator = new Elevator();
 
@@ -134,38 +134,38 @@ public class RobotContainer {
   // Initialize autonomous chooser with options
   public void initializeChooser() {
     // Create the Intake command that runs for exactly 2 seconds
-    Command intakeHeightCommand = elevator.toBottom().alongWith(rotatyPart.store());
+    Command intakeHeightCommand = elevator.toBottom().alongWith(rotaryPart.store());
     Command intakeCommand =
-        intake.intake().withTimeout(3).andThen(rotatyPart.coralScore().alongWith(intake.stop()));
+        intake.intake().withTimeout(3).andThen(rotaryPart.coralScore().alongWith(intake.stop()));
 
     // L2 command - go to position, outtake, hold for 2 seconds, then return to bottom
     Command l2HeightCommand = elevator.toL2();
 
     Command l2ScoreCommand =
-        rotatyPart
+        rotaryPart
             .coralScore()
             .andThen(intake.outTake().withTimeout(1))
-            .andThen(elevator.toBottom().alongWith(rotatyPart.coralScore()));
+            .andThen(elevator.toBottom().alongWith(rotaryPart.coralScore()));
 
     // L3 command - go to position, outtake, hold for 2 seconds, then return to bottom
     Command l3Command =
         elevator
             .toL3()
-            .alongWith(rotatyPart.coralScore())
+            .alongWith(rotaryPart.coralScore())
             .alongWith(Commands.waitSeconds(1))
             .andThen(intake.outTake().withTimeout(1))
-            .andThen(elevator.toBottom().alongWith(rotatyPart.coralScore()));
+            .andThen(elevator.toBottom().alongWith(rotaryPart.coralScore()));
 
     // Create the L4 command with conditional follow-up action when elevator reaches position
     Command l4Command =
         elevator
             .toL4()
-            .alongWith(rotatyPart.coralScore())
+            .alongWith(rotaryPart.coralScore())
             .until(() -> elevator.getElevatorHeight() > 53)
-            .andThen(rotatyPart.l4coralScore())
+            .andThen(rotaryPart.l4coralScore())
             .alongWith(intake.coralHold());
     /*    .andThen(intake.outTake().withTimeout(.5))
-    .andThen(elevator.toBottom().alongWith(rotatyPart.coralScore()))*/
+    .andThen(elevator.toBottom().alongWith(rotaryPart.coralScore()))*/
 
     // Register the named commands
     NamedCommands.registerCommand("IntakeElevator", intakeHeightCommand);
@@ -349,15 +349,15 @@ public class RobotContainer {
     // Intake stop on coral leaving
     intakeProximityTrigger
         .and(coralMode)
-        .onTrue(elevator.toBottom().alongWith(rotatyPart.coralScore()).andThen(intake.stop()));
+        .onTrue(elevator.toBottom().alongWith(rotaryPart.coralScore()).andThen(intake.stop()));
 
     // Coral intake - Button 3
     safeButton3
         .and(coralMode)
         .and(intakeProximityTrigger)
         // .and(conditionalCoralIntakeReady) // Use conditional trigger
-        .whileTrue(intake.intake().alongWith(rotatyPart.store()).alongWith(elevator.toBottom()))
-        .onFalse((rotatyPart.coralScore()).alongWith(intake.stop()));
+        .whileTrue(intake.intake().alongWith(rotaryPart.store()).alongWith(elevator.toBottom()))
+        .onFalse((rotaryPart.coralScore()).alongWith(intake.stop()));
 
     // Coral station pathfinding - Button 3
     safeButton3
@@ -407,7 +407,7 @@ public class RobotContainer {
     safeButton7
         .and(coralMode)
         .and(conditionalArmRaiseReefReady) // Use conditional trigger
-        .onTrue(rotatyPart.coralScore().alongWith(elevator.toL2()));
+        .onTrue(rotaryPart.coralScore().alongWith(elevator.toL2()));
 
     // L3 Reef - Button 6
     safeButton6
@@ -438,7 +438,7 @@ public class RobotContainer {
     safeButton6
         .and(coralMode)
         .and(conditionalArmRaiseReefReady) // Use conditional trigger
-        .onTrue(rotatyPart.coralScore().alongWith(elevator.toL3()));
+        .onTrue(rotaryPart.coralScore().alongWith(elevator.toL3()));
 
     // L4 Reef - Button 5
     safeButton5
@@ -463,13 +463,13 @@ public class RobotContainer {
     safeButton5
         .and(coralMode)
         .and(conditionalArmRaiseReefReady) // Use conditional trigger
-        .onTrue(rotatyPart.coralScore().alongWith(elevator.toL4()));
+        .onTrue(rotaryPart.coralScore().alongWith(elevator.toL4()));
 
     safeButton5
         .and(coralMode)
         .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .and(l4ArmReady)
-        .onTrue(rotatyPart.l4coralScore().alongWith(intake.coralHold()));
+        .onTrue(rotaryPart.l4coralScore().alongWith(intake.coralHold()));
 
     safeButton5
         .and(coralMode)
@@ -486,7 +486,7 @@ public class RobotContainer {
                 .outTake()
                 .alongWith(Commands.waitSeconds(.3))
                 .andThen(
-                    rotatyPart
+                    rotaryPart
                         .coralScore()
                         .alongWith(elevator.toBottom())
                         .alongWith(intake.stop())));
@@ -514,12 +514,12 @@ public class RobotContainer {
         .and(algaeMode)
         .and(conditionalArmAlgaeReady) // Use conditional trigger
         .and(algaeHeightReady)
-        .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
+        .onTrue(rotaryPart.algaeGrab().alongWith(intake.reverseIntake()));
 
     safeButton3
         .and(algaeMode)
         .and(conditionalArmRaiseAlgaeReady) // Use conditional trigger
-        .onTrue(rotatyPart.coralScore().alongWith(elevator.toL2Algae()));
+        .onTrue(rotaryPart.coralScore().alongWith(elevator.toL2Algae()));
 
     safeButton3.and(algaeMode).and(currentIntakeSwitch).onFalse((intake.algaeHold()));
 
@@ -546,12 +546,12 @@ public class RobotContainer {
         .and(algaeMode)
         .and(conditionalArmAlgaeReady) // Use conditional trigger
         .and(algaeHeightReady)
-        .onTrue(rotatyPart.algaeGrab().alongWith(intake.reverseIntake()));
+        .onTrue(rotaryPart.algaeGrab().alongWith(intake.reverseIntake()));
 
     safeButton4
         .and(algaeMode)
         .and(conditionalArmRaiseAlgaeReady) // Use conditional trigger
-        .onTrue(rotatyPart.coralScore().alongWith(elevator.toL3Algae()));
+        .onTrue(rotaryPart.coralScore().alongWith(elevator.toL3Algae()));
 
     safeButton4.and(algaeMode).and(currentIntakeSwitch).onFalse((intake.algaeHold()));
 
@@ -561,7 +561,7 @@ public class RobotContainer {
         .and(algaeMode)
         .onTrue(elevator.toL4Algae())
         .onFalse(
-            rotatyPart.coralScore().alongWith(Commands.waitSeconds(.01)).andThen(intake.outTake()));
+            rotaryPart.coralScore().alongWith(Commands.waitSeconds(.01)).andThen(intake.outTake()));
 
     safeButton9
         .and(algaeMode)
@@ -645,7 +645,7 @@ public class RobotContainer {
   // Reset PID controllers
   public void resetPID() {
     elevator.reset();
-    rotatyPart.reset();
+    rotaryPart.reset();
   }
 
   // Update alerts

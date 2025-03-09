@@ -307,7 +307,7 @@ public class Robot extends LoggedRobot {
 
     RobotContainer.elevator.goToGoal(1);
     // fix later
-    // m_robotContainer.rotatyPart.setGoal(Rotation2d.fromRadians(.05));
+    // m_robotContainer.rotaryPart.setGoal(Rotation2d.fromRadians(.05));
   }
 
   @Override
@@ -396,7 +396,7 @@ public class Robot extends LoggedRobot {
       flightstickNotCenteredAlert.set(false);
     }
 
-    RobotContainer.rotatyPart.coralScore();
+    RobotContainer.rotaryPart.coralScore();
   }
 
   @Override
