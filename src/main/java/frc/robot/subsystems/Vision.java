@@ -3,15 +3,19 @@
  
 package frc.robot.subsystems;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import frc.robot.Robot;
-import frc.robot.constants.VisionConstants;
 import java.util.List;
 import java.util.Optional;
 import org.photonvision.EstimatedRobotPose;
@@ -24,6 +28,19 @@ import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 public class Vision {
+  public static final String kCameraName = "Camera_FrontLeft";
+  // Cam mounted facing forward, half a meter forward of center, half a meter up from center.
+  public static final Transform3d kRobotToCam =
+      new Transform3d(new Translation3d(.267, .292, .2), new Rotation3d(0, 0, 0));
+  // The layout of the AprilTags on the field
+  public static final AprilTagFieldLayout kTagLayout =
+      AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+
+  // The standard deviations of our vision estimated poses, which affect correction rate
+  // (Fake values. Experiment and determine estimation noise on an actual robot.)
+  public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
+  public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
+
   private final PhotonCamera camera;
   private final PhotonPoseEstimator photonEstimator;
   private Matrix<N3, N1> curStdDevs;
@@ -33,13 +50,10 @@ public class Vision {
   private VisionSystemSim visionSim;
 
   public Vision() {
-    camera = new PhotonCamera(VisionConstants.CAMERA_NAME);
+    camera = new PhotonCamera(kCameraName);
 
     photonEstimator =
-        new PhotonPoseEstimator(
-            VisionConstants.TAG_LAYOUT,
-            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-            VisionConstants.CAMERA_TRANSFORM);
+        new PhotonPoseEstimator(kTagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, kRobotToCam);
     photonEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
     // ----- Simulation
@@ -47,7 +61,7 @@ public class Vision {
       // Create the vision system simulation which handles cameras and targets on the field.
       visionSim = new VisionSystemSim("main");
       // Add all the AprilTags inside the tag layout as visible targets to this simulated field.
-      visionSim.addAprilTags(VisionConstants.TAG_LAYOUT);
+      visionSim.addAprilTags(kTagLayout);
       // Create simulated camera properties. These can be set to mimic your actual camera.
       var cameraProp = new SimCameraProperties();
       cameraProp.setCalibration(960, 720, Rotation2d.fromDegrees(90));
@@ -59,7 +73,7 @@ public class Vision {
       // targets.
       cameraSim = new PhotonCameraSim(camera, cameraProp);
       // Add the simulated camera to view the targets on this simulated field.
-      visionSim.addCamera(cameraSim, VisionConstants.CAMERA_TRANSFORM);
+      visionSim.addCamera(cameraSim, kRobotToCam);
 
       cameraSim.enableDrawWireframe(true);
     }
@@ -106,11 +120,11 @@ public class Vision {
       Optional<EstimatedRobotPose> estimatedPose, List<PhotonTrackedTarget> targets) {
     if (estimatedPose.isEmpty()) {
       // No pose input. Default to single-tag std devs
-      curStdDevs = VisionConstants.SINGLE_TAG_STD_DEVS;
+      curStdDevs = kSingleTagStdDevs;
 
     } else {
       // Pose present. Start running Heuristic
-      var estStdDevs = VisionConstants.SINGLE_TAG_STD_DEVS;
+      var estStdDevs = kSingleTagStdDevs;
       int numTags = 0;
       double avgDist = 0;
 
@@ -129,12 +143,12 @@ public class Vision {
 
       if (numTags == 0) {
         // No tags visible. Default to single-tag std devs
-        curStdDevs = VisionConstants.SINGLE_TAG_STD_DEVS;
+        curStdDevs = kSingleTagStdDevs;
       } else {
         // One or more tags visible, run the full heuristic.
         avgDist /= numTags;
         // Decrease std devs if multiple targets are visible
-        if (numTags > 1) estStdDevs = VisionConstants.MULTI_TAG_STD_DEVS;
+        if (numTags > 1) estStdDevs = kMultiTagStdDevs;
         // Increase std devs based on (average) distance
         if (numTags == 1 && avgDist > 4)
           estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);

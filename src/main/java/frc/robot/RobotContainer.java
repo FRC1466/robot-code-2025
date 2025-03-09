@@ -139,12 +139,13 @@ public class RobotContainer {
         intake.intake().withTimeout(3).andThen(rotaryPart.coralScore().alongWith(intake.stop()));
 
     // L2 command - go to position, outtake, hold for 2 seconds, then return to bottom
+    Command CoralScoreCommand = rotaryPart.coralScore();
     Command l2HeightCommand = elevator.toL2();
 
     Command l2ScoreCommand =
-        rotaryPart
-            .coralScore()
-            .andThen(intake.outTake().withTimeout(1))
+        intake
+            .outTake()
+            .withTimeout(1)
             .andThen(elevator.toBottom().alongWith(rotaryPart.coralScore()));
 
     // L3 command - go to position, outtake, hold for 2 seconds, then return to bottom
@@ -168,6 +169,7 @@ public class RobotContainer {
     .andThen(elevator.toBottom().alongWith(rotaryPart.coralScore()))*/
 
     // Register the named commands
+    NamedCommands.registerCommand("CoralScore", CoralScoreCommand);
     NamedCommands.registerCommand("IntakeElevator", intakeHeightCommand);
     NamedCommands.registerCommand("Intake", intakeCommand);
     NamedCommands.registerCommand("l2Elevator", l2HeightCommand);

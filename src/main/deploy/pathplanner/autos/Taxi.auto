@@ -5,9 +5,16 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "Taxi-Score;Field-Mid"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Taxi-Score;Field-Mid"
+                }
+              }
+            ]
           }
         },
         {
