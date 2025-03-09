@@ -228,7 +228,7 @@ public class Robot extends LoggedRobot {
     }
     lastBoolean = beamBreak.get();
     Logger.recordOutput(
-        "Flipped Position", FlipField.flipPose(m_robotContainer.drivetrain.getState().Pose));
+        "Flipped Position", FlipField.flipPose(RobotContainer.drivetrain.getState().Pose));
     // Color detectedColor = m_colorSensor.getColor();
 
     /*
