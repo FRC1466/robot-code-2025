@@ -142,6 +142,7 @@ public class RobotContainer {
     Command l2HeightCommand = elevator.toL2();
 
     Command l2ScoreCommand =
+      Commands.waitUntil(armReefPositionCheck)
         rotaryPart
             .coralScore()
             .andThen(intake.outTake().withTimeout(1))
@@ -166,7 +167,13 @@ public class RobotContainer {
             .alongWith(intake.coralHold());
     /*    .andThen(intake.outTake().withTimeout(.5))
     .andThen(elevator.toBottom().alongWith(rotaryPart.coralScore()))*/
-
+    Command driveTo12 = Commands.runOnce(
+      () -> {
+        // Only schedule the command if auto pathing is enabled
+        
+          stationCommand = m_pathfinder.getPathfindingCommandReef(0,5);
+          stationCommand.schedule();
+      });
     // Register the named commands
     NamedCommands.registerCommand("IntakeElevator", intakeHeightCommand);
     NamedCommands.registerCommand("Intake", intakeCommand);
@@ -175,7 +182,7 @@ public class RobotContainer {
     NamedCommands.registerCommand("l3", l3Command);
     NamedCommands.registerCommand("l4", l4Command);
 
-    autoChooser.addOption("1 Piece", new PathPlannerAuto("Taxi"));
+    autoChooser.addOption("1 Piece", driveTo12.alongWith(l2HeightCommand).alongWith(l2ScoreCommand));
     autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));
     autoChooser.addOption("3 Piece", new PathPlannerAuto("3 Piece Auto"));
     autoChooser.addOption("4 Piece", new PathPlannerAuto("4 Piece Auto Faster"));
