@@ -133,6 +133,9 @@ public class RobotContainer {
 
   // Initialize autonomous chooser with options
   public void initializeChooser() {
+    BooleanSupplier armRaiseReefPositionCheck =
+        () -> !autoPathingEnabled || armFieldReady(leftCoral, 1);
+    Trigger conditionalArmRaiseReefReady = new Trigger(armRaiseReefPositionCheck);
     // Create the Intake command that runs for exactly 2 seconds
     Command intakeHeightCommand = elevator.toBottom().alongWith(rotaryPart.store());
     Command intakeCommand =
@@ -143,9 +146,10 @@ public class RobotContainer {
     Command l2HeightCommand = elevator.toL2();
 
     Command l2ScoreCommand =
-        intake
-            .outTake()
-            .withTimeout(1)
+        elevator
+            .toL2()
+            .andThen(intake.outTake())
+            .alongWith(Commands.waitSeconds(2))
             .andThen(elevator.toBottom().alongWith(rotaryPart.coralScore()));
 
     // L3 command - go to position, outtake, hold for 2 seconds, then return to bottom
@@ -169,10 +173,11 @@ public class RobotContainer {
     .andThen(elevator.toBottom().alongWith(rotaryPart.coralScore()))*/
 
     // Register the named commands
-    NamedCommands.registerCommand("CoralScore", CoralScoreCommand);
+    NamedCommands.registerCommand("CoralScore", rotaryPart.coralScore());
     NamedCommands.registerCommand("IntakeElevator", intakeHeightCommand);
     NamedCommands.registerCommand("Intake", intakeCommand);
-    NamedCommands.registerCommand("l2Elevator", l2HeightCommand);
+    NamedCommands.registerCommand(
+        "l2Elevator", Commands.waitUntil(armRaiseReefPositionCheck).andThen(elevator.toL2()));
     NamedCommands.registerCommand("l2Score", l2ScoreCommand);
     NamedCommands.registerCommand("l3", l3Command);
     NamedCommands.registerCommand("l4", l4Command);
