@@ -101,6 +101,6 @@ public final class Constants {
     public static final int masterID = 17;
     public static final int slaveID = 16;
 
-    public static final Gains elevatorPosition = new Gains(.13, 0.00, 0.004, .0, 0, .6);
+    public static final Gains elevatorPosition = new Gains(.13, 0.00, 0.004, .0, 0, .5);
   }
 }

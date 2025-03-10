@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "raise arm to 4",
+      "name": "",
       "waypointRelativePos": 0.673809523809522,
       "endWaypointRelativePos": null,
       "command": null
