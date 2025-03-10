@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "CoralScore"
+          }
+        },
+        {
           "type": "parallel",
           "data": {
             "commands": [
@@ -12,6 +18,12 @@
                 "type": "path",
                 "data": {
                   "pathName": "Middle Right 2"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "l4Raise"
                 }
               }
             ]
