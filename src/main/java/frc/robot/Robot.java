@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -56,6 +57,10 @@ public class Robot extends LoggedRobot {
   private boolean autoMessagePrinted;
 
   private final Timer disabledTimer = new Timer();
+
+  // AutoLog output for the estimated robot state pose.
+  @AutoLogOutput(key = "RobotState/EstimatedPose")
+  private Pose2d RobotPose;
 
   private Blinkin blinkin = new Blinkin();
 
@@ -235,14 +240,25 @@ public class Robot extends LoggedRobot {
      }
     */
 
-    var visionEst = vision.getEstimatedGlobalPose();
+    var visionEst = RobotContainer.photonCamera.getEstimatedGlobalPose();
+
+    RobotPose = RobotContainer.drivetrain.getState().Pose;
     visionEst.ifPresent(
         est -> {
-          var estStdDevs = vision.getEstimationStdDevs();
-          RobotContainer.drivetrain.addVisionMeasurement(
-              est.estimatedPose.toPose2d(),
-              Utils.fpgaToCurrentTime(est.timestampSeconds),
-              estStdDevs);
+          var estStdDevs = RobotContainer.photonCamera.getEstimationStdDevs();
+          if (RobotContainer.visionEnabled) {
+            // With vision - use full pose estimate
+            RobotContainer.drivetrain.addVisionMeasurement(
+                est.estimatedPose.toPose2d(),
+                Utils.fpgaToCurrentTime(est.timestampSeconds),
+                estStdDevs);
+          } else {
+            // Without vision - maintain current rotation
+            RobotContainer.drivetrain.addVisionMeasurement(
+                new Pose2d(est.estimatedPose.toPose2d().getTranslation(), RobotPose.getRotation()),
+                Utils.fpgaToCurrentTime(est.timestampSeconds),
+                estStdDevs);
+          }
         });
 
     // Low battery alert

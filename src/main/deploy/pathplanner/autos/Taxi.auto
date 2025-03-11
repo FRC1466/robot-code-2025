@@ -5,28 +5,9 @@
     "data": {
       "commands": [
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "CoralScore"
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Taxi-Score;Field-Mid"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "l2Elevator"
-                }
-              }
-            ]
+            "pathName": "Taxi-Score;Field-Mid"
           }
         },
         {
