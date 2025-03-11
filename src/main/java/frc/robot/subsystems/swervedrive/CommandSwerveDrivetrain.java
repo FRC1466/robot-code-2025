@@ -67,9 +67,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   private final SysIdRoutine m_sysIdRoutineTranslation =
       new SysIdRoutine(
           new SysIdRoutine.Config(
-              null, // Use default ramp rate (1 V/s)
-              Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
-              null, // Use default timeout (10 s)
+              Volts.of(.25).per(Second), // Use default ramp rate (1 V/s)
+              Volts.of(2), // Reduce dynamic step voltage to 4 V to prevent brownout
+              Seconds.of(10), // Use default timeout (10 s)
               // Log state with SignalLogger class
               state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())),
           new SysIdRoutine.Mechanism(
@@ -98,7 +98,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       new SysIdRoutine(
           new SysIdRoutine.Config(
               /* This is in radians per second², but SysId only supports "volts per second" */
-              Volts.of(Math.PI / 6).per(Second),
+              Volts.of(Math.PI / 2).per(Second),
               /* This is in radians per second, but SysId only supports "volts" */
               Volts.of(Math.PI),
               null, // Use default timeout (10 s)
@@ -125,7 +125,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
    * <p>This constructs the underlying hardware devices, so users should not construct the devices
    * themselves. If they need the devices, they can access them through getters in the classes.
    *
-   * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
+   * @param drivetrainConstants Drivetrain-wide constants for the \[]swerve drive
    * @param modules Constants for each specific module
    */
   public CommandSwerveDrivetrain(

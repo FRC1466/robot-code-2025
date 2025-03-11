@@ -189,33 +189,3 @@ compile_commands.json
 # Version file
 src/main/java/frc/robot/constants/BuildConstants.java
 src/main/java/frc/robot/constants/BuildConstants.java
-
-# Python cache directories
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Model files
-*.pt
-model_cache/
-
-# IDE files
-.vscode/
-.idea/
-
-# Logs
-*.log
-*.hoot
-
-# Build outputs
-bin/
-build/
-dist/
-
-# macOS
-.DS_Store
-
-# Virtual environments
-venv/
-env/
-.env/

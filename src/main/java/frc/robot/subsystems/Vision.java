@@ -3,22 +3,27 @@
  
 package frc.robot.subsystems;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot;
-import frc.robot.constants.VisionConstants;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
@@ -30,76 +35,76 @@ import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 public class Vision {
-  // Collections to manage multiple cameras
-  private final Map<String, PhotonCamera> cameras = new HashMap<>();
-  private final Map<String, PhotonPoseEstimator> photonEstimators = new HashMap<>();
-  private final Map<String, PhotonCameraSim> cameraSims = new HashMap<>();
+  public static final String kCameraName = "Camera_FrontLeft";
+  public static final String kCameraNames[] = {"Camera_FrontLeft", "Camera_FrontRight"};
+  // Cam mounted facing forward, half a meter forward of center, half a meter up from center.
+  public static final Transform3d kRobotToCam =
+      new Transform3d(new Translation3d(.267, .292, .2), new Rotation3d(0, 0, 0));
+  public static final Transform3d kRobotToCams[] = {
+    new Transform3d(new Translation3d(.267, .292, .2), new Rotation3d(0, 0, 0)),
+    new Transform3d(new Translation3d(.267, -.292, .2), new Rotation3d(0, 0, 0))
+  };
+  // The layout of the AprilTags on the field
+  public static final AprilTagFieldLayout kTagLayout =
+      AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
-  // Current standard deviations of the vision pose estimator
-  private Matrix<N3, N1> curStdDevs = VisionConstants.SINGLE_TAG_STD_DEVS;
+  // The standard deviations of our vision estimated poses, which affect correction rate
+  // (Fake values. Experiment and determine estimation noise on an actual robot.)
+  public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
+  public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(2, 2, 4);
+
+  private PhotonCamera[] cameras;
+  private PhotonPoseEstimator[] photonEstimators;
+  private Matrix<N3, N1> curStdDevs;
+
+  // Simulation
+  private PhotonCameraSim[] cameraSims;
   private VisionSystemSim visionSim;
 
-  // List of all camera names to use in simulation
-  private static final String[] SIM_CAMERA_NAMES = {
-    "Camera_FrontLeft", "Camera_FrontRight", "Camera_BackLeft", "Camera_BackRight"
-  };
-
   public Vision() {
-    // Initialize each camera and its estimator
-    for (String cameraName : VisionConstants.CAMERA_NAMES) {
-      PhotonCamera camera = new PhotonCamera(cameraName);
-      cameras.put(cameraName, camera);
+    cameras = new PhotonCamera[kCameraNames.length];
+    photonEstimators = new PhotonPoseEstimator[kCameraNames.length];
+    cameraSims = new PhotonCameraSim[kCameraNames.length];
 
-      PhotonPoseEstimator estimator =
+    for (int i = 0; i < kCameraNames.length; i++) {
+      cameras[i] = new PhotonCamera(kCameraNames[i]);
+      photonEstimators[i] =
           new PhotonPoseEstimator(
-              VisionConstants.TAG_LAYOUT,
-              PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-              VisionConstants.CAMERA_TRANSFORMS.get(cameraName));
-      estimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
-      photonEstimators.put(cameraName, estimator);
+              kTagLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, kRobotToCams[i]);
+      photonEstimators[i].setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
     }
 
-    // Initialize simulation if needed
+    // ----- Simulation
     if (Robot.isSimulation()) {
+      // Create the vision system simulation which handles cameras and targets on the field.
       visionSim = new VisionSystemSim("main");
-      visionSim.addAprilTags(VisionConstants.TAG_LAYOUT);
+      // Add all the AprilTags inside the tag layout as visible targets to this simulated field.
+      visionSim.addAprilTags(kTagLayout);
 
-      // For simulation, we'll use all four cameras regardless of what's enabled on the real robot
-      for (String cameraName : SIM_CAMERA_NAMES) {
-        // Create the camera if it doesn't exist already
-        if (!cameras.containsKey(cameraName)) {
-          PhotonCamera camera = new PhotonCamera(cameraName);
-          cameras.put(cameraName, camera);
-        }
-
+      // Create simulated camera for each physical camera
+      for (int i = 0; i < cameras.length; i++) {
+        // Create simulated camera properties. These can be set to mimic your actual camera.
         var cameraProp = new SimCameraProperties();
-        cameraProp.setCalibration(
-            VisionConstants.SIM_CAMERA_WIDTH_PX,
-            VisionConstants.SIM_CAMERA_HEIGHT_PX,
-            Rotation2d.fromDegrees(VisionConstants.SIM_CAMERA_FOV_DEG));
-        cameraProp.setCalibError(
-            VisionConstants.SIM_CAMERA_CALIB_ERROR_X, VisionConstants.SIM_CAMERA_CALIB_ERROR_Y);
-        cameraProp.setFPS(VisionConstants.SIM_CAMERA_FPS);
-        cameraProp.setAvgLatencyMs(VisionConstants.SIM_CAMERA_AVG_LATENCY_MS);
-        cameraProp.setLatencyStdDevMs(VisionConstants.SIM_CAMERA_LATENCY_STD_DEV_MS);
+        cameraProp.setCalibration(640, 480, Rotation2d.fromDegrees(90));
+        cameraProp.setCalibError(0.50, 0.20);
+        cameraProp.setFPS(15);
+        cameraProp.setAvgLatencyMs(50);
+        cameraProp.setLatencyStdDevMs(15);
 
-        PhotonCameraSim cameraSim = new PhotonCameraSim(cameras.get(cameraName), cameraProp);
-        cameraSim.enableDrawWireframe(true);
-        cameraSims.put(cameraName, cameraSim);
+        // Create a PhotonCameraSim which will update the linked PhotonCamera's values with visible
+        // targets.
+        cameraSims[i] = new PhotonCameraSim(cameras[i], cameraProp);
+        // Add the simulated camera to view the targets on this simulated field.
+        visionSim.addCamera(cameraSims[i], kRobotToCams[i]);
 
-        // Check if we have a transform for this camera before adding it to the vision sim
-        if (VisionConstants.CAMERA_TRANSFORMS.containsKey(cameraName)) {
-          visionSim.addCamera(cameraSim, VisionConstants.CAMERA_TRANSFORMS.get(cameraName));
-        } else {
-          System.out.println("WARNING: No transform found for camera " + cameraName);
-        }
+        cameraSims[i].enableDrawWireframe(true);
       }
     }
   }
 
   /**
-   * The latest estimated robot pose on the field from vision data, combining data from all cameras.
-   * This may be empty. This should only be called once per loop.
+   * The latest estimated robot pose on the field from vision data. This may be empty. This should
+   * only be called once per loop.
    *
    * <p>Also includes updates for the standard deviations, which can (optionally) be retrieved with
    * {@link getEstimationStdDevs}
@@ -108,102 +113,119 @@ public class Vision {
    *     used for estimation.
    */
   public Optional<EstimatedRobotPose> getEstimatedGlobalPose() {
-    // Lists to collect all targets and estimates
-    List<PhotonTrackedTarget> allTargets = new ArrayList<>();
-    List<EstimatedRobotPose> allEstimates = new ArrayList<>();
-    Map<String, Optional<EstimatedRobotPose>> cameraEstimates = new HashMap<>();
+    Optional<EstimatedRobotPose> visionEst = Optional.empty();
+    List<PhotonTrackedTarget> allDetectedTags = new ArrayList<>();
 
-    // Process results from each camera
-    for (String cameraName : VisionConstants.CAMERA_NAMES) {
-      PhotonCamera camera = cameras.get(cameraName);
-      PhotonPoseEstimator estimator = photonEstimators.get(cameraName);
+    // Try each camera until we get a valid result
+    for (int i = 0; i < cameras.length; i++) {
+      var result = cameras[i].getLatestResult();
+      if (result != null) {
+        allDetectedTags.addAll(result.getTargets());
 
-      // Process all unread results from this camera
-      for (var result : camera.getAllUnreadResults()) {
-        if (result.hasTargets()) {
-          Optional<EstimatedRobotPose> cameraEstimate = estimator.update(result);
+        // Log individual camera data - do this for each camera
+        logCameraData(cameras[i], result.getTargets());
 
-          cameraEstimates.put(cameraName, cameraEstimate);
-
-          if (cameraEstimate.isPresent()) {
-            allEstimates.add(cameraEstimate.get());
-            allTargets.addAll(result.getTargets());
-
-            // Log individual camera estimates
-            Logger.recordOutput(
-                "Vision/" + cameraName, cameraEstimate.get().estimatedPose.toPose2d());
-          } else {
-            Logger.recordOutput("Vision/" + cameraName, new Pose2d());
-          }
+        var est = photonEstimators[i].update(result);
+        if (est.isPresent()) {
+          visionEst = est;
+          updateEstimationStdDevs(Optional.of(est.get()), result.getTargets());
+          break;
         }
-        // Make this work
-        // Logger.recordOutput("Seen April Tags", allTargets);
       }
+      if (visionEst.isPresent()) break;
     }
 
-    // Return empty if no valid estimates were found
-    if (allEstimates.isEmpty()) {
-      return Optional.empty();
+    // Log the vision pose estimation
+    visionEst.ifPresent(
+        est -> {
+          Logger.recordOutput("Vision/EstimatedPose", est.estimatedPose.toPose2d());
+          Logger.recordOutput("Vision/EstimationTimestamp", est.timestampSeconds);
+
+          // Create array of field poses for all detected tags
+          Pose2d[] tagPoses = new Pose2d[est.targetsUsed.size()];
+          int[] tagIDs = new int[est.targetsUsed.size()];
+
+          for (int i = 0; i < est.targetsUsed.size(); i++) {
+            PhotonTrackedTarget target = est.targetsUsed.get(i);
+            int tagID = target.getFiducialId();
+            tagIDs[i] = tagID;
+
+            var optTagPose = kTagLayout.getTagPose(tagID);
+            if (optTagPose.isPresent()) {
+              tagPoses[i] = optTagPose.get().toPose2d();
+            } else {
+              tagPoses[i] = new Pose2d();
+            }
+          }
+
+          Logger.recordOutput("Vision/DetectedTagIDs", tagIDs);
+          Logger.recordOutput("Vision/DetectedTagPoses", tagPoses);
+          Logger.recordOutput("Vision/NumberOfDetectedTags", est.targetsUsed.size());
+        });
+
+    // Log if no estimation was found but tags were detected
+    if (visionEst.isEmpty() && !allDetectedTags.isEmpty()) {
+      // Log all detected tags even if no pose estimation was possible
+      int[] tagIDs = new int[allDetectedTags.size()];
+      Pose2d[] tagPoses = new Pose2d[allDetectedTags.size()];
+
+      for (int i = 0; i < allDetectedTags.size(); i++) {
+        PhotonTrackedTarget target = allDetectedTags.get(i);
+        tagIDs[i] = target.getFiducialId();
+
+        var optTagPose = kTagLayout.getTagPose(target.getFiducialId());
+        if (optTagPose.isPresent()) {
+          tagPoses[i] = optTagPose.get().toPose2d();
+        } else {
+          tagPoses[i] = new Pose2d();
+        }
+      }
+
+      Logger.recordOutput("Vision/DetectedTagIDs", tagIDs);
+      Logger.recordOutput("Vision/DetectedTagPoses", tagPoses);
+      Logger.recordOutput("Vision/NumberOfDetectedTags", allDetectedTags.size());
+      Logger.recordOutput("Vision/EstimatedPose", new Pose2d());
     }
 
-    // Calculate the combined pose by averaging all valid pose estimates
-    double totalX = 0;
-    double totalY = 0;
-    double totalCos = 0;
-    double totalSin = 0;
-    double latestTimestamp = 0;
-
-    for (EstimatedRobotPose estimate : allEstimates) {
-      Pose2d pose = estimate.estimatedPose.toPose2d();
-      totalX += pose.getX();
-      totalY += pose.getY();
-
-      // Add rotation components for proper angle averaging
-      totalCos += Math.cos(pose.getRotation().getRadians());
-      totalSin += Math.sin(pose.getRotation().getRadians());
-
-      // Keep track of the latest timestamp
-      latestTimestamp = Math.max(latestTimestamp, estimate.timestampSeconds);
-    }
-
-    // Calculate average pose
-    double avgX = totalX / allEstimates.size();
-    double avgY = totalY / allEstimates.size();
-    double avgRotation = Math.atan2(totalSin, totalCos);
-
-    Pose2d combinedPose = new Pose2d(avgX, avgY, new Rotation2d(avgRotation));
-
-    // Create combined estimate with the latest timestamp
-    EstimatedRobotPose combinedEstimate =
-        new EstimatedRobotPose(
-            new Pose3d(combinedPose),
-            latestTimestamp,
-            allTargets,
-            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR);
-
-    // Log the combined estimate
-    Logger.recordOutput("Vision/CombinedEstimate", combinedPose);
-
-    // Update standard deviations based on all targets
-    updateEstimationStdDevs(Optional.of(combinedEstimate), allTargets);
-
-    // Visualization for simulation
     if (Robot.isSimulation()) {
-      getSimDebugField().getObject("VisionEstimation").setPose(combinedPose);
+      visionEst.ifPresentOrElse(
+          est ->
+              getSimDebugField()
+                  .getObject("VisionEstimation")
+                  .setPose(est.estimatedPose.toPose2d()),
+          () -> {
+            getSimDebugField().getObject("VisionEstimation").setPoses();
+          });
+    }
 
-      // Also visualize individual camera estimates
-      for (Map.Entry<String, Optional<EstimatedRobotPose>> entry : cameraEstimates.entrySet()) {
-        entry
-            .getValue()
-            .ifPresent(
-                est ->
-                    getSimDebugField()
-                        .getObject("Vision_" + entry.getKey())
-                        .setPose(est.estimatedPose.toPose2d()));
+    // Call the logSeenAprilTags method to ensure it runs every cycle
+    logSeenAprilTags();
+
+    return visionEst;
+  }
+
+  /** Helper method to log data from individual cameras */
+  private void logCameraData(PhotonCamera camera, List<PhotonTrackedTarget> targets) {
+    if (targets.isEmpty()) return;
+
+    int[] tagIDs = new int[targets.size()];
+    Pose3d[] tagPoses = new Pose3d[targets.size()];
+
+    for (int i = 0; i < targets.size(); i++) {
+      PhotonTrackedTarget target = targets.get(i);
+      tagIDs[i] = target.getFiducialId();
+
+      var optTagPose = kTagLayout.getTagPose(target.getFiducialId());
+      if (optTagPose.isPresent()) {
+        tagPoses[i] = optTagPose.get();
+      } else {
+        tagPoses[i] = new Pose3d();
       }
     }
 
-    return Optional.of(combinedEstimate);
+    Logger.recordOutput("Vision/" + camera.getName() + "/DetectedTagIDs", tagIDs);
+    Logger.recordOutput("Vision/" + camera.getName() + "/DetectedTagPoses", tagPoses);
+    Logger.recordOutput("Vision/" + camera.getName() + "/NumberOfDetectedTags", targets.size());
   }
 
   /**
@@ -217,41 +239,41 @@ public class Vision {
       Optional<EstimatedRobotPose> estimatedPose, List<PhotonTrackedTarget> targets) {
     if (estimatedPose.isEmpty()) {
       // No pose input. Default to single-tag std devs
-      curStdDevs = VisionConstants.SINGLE_TAG_STD_DEVS;
-      return;
-    }
+      curStdDevs = kSingleTagStdDevs;
 
-    // Pose present. Start running Heuristic
-    var estStdDevs = VisionConstants.SINGLE_TAG_STD_DEVS;
-    int numTags = 0;
-    double avgDist = 0;
-
-    // Precalculation - see how many tags we found, and calculate an average-distance metric
-    for (var tgt : targets) {
-      var tagPose = VisionConstants.TAG_LAYOUT.getTagPose(tgt.getFiducialId());
-      if (tagPose.isEmpty()) continue;
-      numTags++;
-      avgDist +=
-          tagPose
-              .get()
-              .toPose2d()
-              .getTranslation()
-              .getDistance(estimatedPose.get().estimatedPose.toPose2d().getTranslation());
-    }
-
-    if (numTags == 0) {
-      // No tags visible. Default to single-tag std devs
-      curStdDevs = VisionConstants.SINGLE_TAG_STD_DEVS;
     } else {
-      // One or more tags visible, run the full heuristic.
-      avgDist /= numTags;
-      // Decrease std devs if multiple targets are visible
-      if (numTags > 1) estStdDevs = VisionConstants.MULTI_TAG_STD_DEVS;
-      // Increase std devs based on (average) distance
-      if (numTags == 1 && avgDist > VisionConstants.MAX_SINGLE_TAG_DISTANCE)
-        estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
-      else estStdDevs = estStdDevs.times(1 + (avgDist * avgDist / 30));
-      curStdDevs = estStdDevs;
+      // Pose present. Start running Heuristic
+      var estStdDevs = kSingleTagStdDevs;
+      int numTags = 0;
+      double avgDist = 0;
+
+      // Precalculation - see how many tags we found, and calculate an average-distance metric
+      for (var tgt : targets) {
+        var tagPose = photonEstimators[0].getFieldTags().getTagPose(tgt.getFiducialId());
+        if (tagPose.isEmpty()) continue;
+        numTags++;
+        avgDist +=
+            tagPose
+                .get()
+                .toPose2d()
+                .getTranslation()
+                .getDistance(estimatedPose.get().estimatedPose.toPose2d().getTranslation());
+      }
+
+      if (numTags == 0) {
+        // No tags visible. Default to single-tag std devs
+        curStdDevs = kSingleTagStdDevs;
+      } else {
+        // One or more tags visible, run the full heuristic.
+        avgDist /= numTags;
+        // Decrease std devs if multiple targets are visible
+        if (numTags > 1) estStdDevs = kMultiTagStdDevs;
+        // Increase std devs based on (average) distance
+        if (numTags == 1 && avgDist > 4)
+          estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+        else estStdDevs = estStdDevs.times(1 + (avgDist * avgDist / 30));
+        curStdDevs = estStdDevs;
+      }
     }
   }
 
@@ -270,14 +292,14 @@ public class Vision {
   public void simulationPeriodic(Pose2d robotSimPose) {
     if (Robot.isSimulation()) {
       visionSim.update(robotSimPose);
-      Logger.recordOutput("SimPose", robotSimPose);
-      SmartDashboard.putData("Debug Field", getSimDebugField());
     }
   }
 
   /** Reset pose history of the robot in the vision system simulation. */
   public void resetSimPose(Pose2d pose) {
-    if (Robot.isSimulation()) visionSim.resetRobotPose(pose);
+    if (Robot.isSimulation()) {
+      visionSim.resetRobotPose(pose);
+    }
   }
 
   /** A Field2d for visualizing our robot and objects on the field. */
@@ -286,49 +308,84 @@ public class Vision {
     return visionSim.getDebugField();
   }
 
-  /** Logs all AprilTags currently seen by any camera */
-  public void logSeenAprilTags() {
-    Map<String, List<Pose3d>> cameraTagMap = new HashMap<>();
-    List<Pose3d> allSeenTagPoses = new ArrayList<>();
+  /** Logs all AprilTags that have been seen at least once during the match */
+  private final Set<Integer> allSeenTagIds = new HashSet<>();
 
-    // Process each camera
-    for (String cameraName : VisionConstants.CAMERA_NAMES) {
-      PhotonCamera camera = cameras.get(cameraName);
+  private final Set<Integer> currentlyVisibleTagIds = new HashSet<>();
+  private long lastLogTime = 0;
+
+  private void logSeenAprilTags() {
+    // Clear current visible tags before repopulating
+    currentlyVisibleTagIds.clear();
+    boolean updatedSet = false;
+    Map<Integer, Pose3d> seenTagsWithPoses = new HashMap<Integer, Pose3d>();
+
+    // Check all cameras for detected tags
+    for (PhotonCamera camera : cameras) {
       var result = camera.getLatestResult();
-      List<Pose3d> cameraTagPoses = new ArrayList<>();
-
       if (result.hasTargets()) {
         for (PhotonTrackedTarget target : result.getTargets()) {
-          var tagPose = VisionConstants.TAG_LAYOUT.getTagPose(target.getFiducialId());
-          if (tagPose.isPresent()) {
-            // Add to both the camera-specific and all tags lists
-            cameraTagPoses.add(tagPose.get());
-            allSeenTagPoses.add(tagPose.get());
+          int id = target.getFiducialId();
+          var tagPose = kTagLayout.getTagPose(id);
 
-            // Also log individual tag IDs and ambiguity for each camera
-            Logger.recordOutput(
-                "Vision/" + cameraName + "/Tag_" + target.getFiducialId() + "/ID",
-                target.getFiducialId());
-            Logger.recordOutput(
-                "Vision/" + cameraName + "/Tag_" + target.getFiducialId() + "/Ambiguity",
-                target.getPoseAmbiguity());
+          if (tagPose.isPresent()) {
+            // Record that this tag is currently visible
+            currentlyVisibleTagIds.add(id);
+            seenTagsWithPoses.put(id, tagPose.get());
+
+            // Also add to historical set if new
+            if (!allSeenTagIds.contains(id)) {
+              allSeenTagIds.add(id);
+              updatedSet = true;
+            }
           }
         }
       }
-
-      // Store tags seen by this camera
-      cameraTagMap.put(cameraName, cameraTagPoses);
-
-      // Log tags seen by this camera
-      Logger.recordOutput(
-          "Vision/" + cameraName + "/SeenTags", cameraTagPoses.toArray(new Pose3d[0]));
-
-      // Log the number of tags seen by this camera
-      Logger.recordOutput("Vision/" + cameraName + "/TagCount", cameraTagPoses.size());
     }
 
-    // Log the array of Pose3d objects from all cameras
-    Logger.recordOutput("Vision/AllSeenTags", allSeenTagPoses.toArray(new Pose3d[0]));
-    Logger.recordOutput("Vision/TotalTagCount", allSeenTagPoses.size());
+    // Only update the log if we've seen new tags or every second to maintain persistence
+    long currentTime = System.currentTimeMillis();
+    // Convert collections to arrays for logging - historical tags
+    int[] allSeenIds = allSeenTagIds.stream().mapToInt(Integer::intValue).sorted().toArray();
+
+    // Create arrays of currently visible tags
+    int[] currentlyVisibleIds =
+        currentlyVisibleTagIds.stream().mapToInt(Integer::intValue).sorted().toArray();
+
+    // Create arrays of poses for visible tags
+    Pose3d[] visibleTagPoses = new Pose3d[currentlyVisibleTagIds.size()];
+    int index = 0;
+    for (Integer id : currentlyVisibleIds) {
+      visibleTagPoses[index++] = seenTagsWithPoses.get(id);
+    }
+
+    // Create arrays of poses for historical tags
+    Pose3d[] allTagPoses = new Pose3d[allSeenTagIds.size()];
+    index = 0;
+    for (Integer id : allSeenIds) {
+      // Get the pose from the map or layout if available
+      if (seenTagsWithPoses.containsKey(id)) {
+        allTagPoses[index] = seenTagsWithPoses.get(id);
+      } else {
+        var layoutPose = kTagLayout.getTagPose(id);
+        allTagPoses[index] = layoutPose.orElse(new Pose3d());
+      }
+      index++;
+    }
+
+    // Log currently visible IDs and poses
+    Logger.recordOutput("Vision/CurrentlyVisibleTagIDs", currentlyVisibleIds);
+    Logger.recordOutput("Vision/CurrentlyVisibleTagPoses", visibleTagPoses);
+    Logger.recordOutput("Vision/CurrentlyVisibleTagCount", currentlyVisibleIds.length);
+
+    // Log all tags and poses that have ever been seen (every second)
+    if (updatedSet || (currentTime - lastLogTime > 50)) {
+      Logger.recordOutput("Vision/AllSeenAprilTagIDs", allSeenIds);
+      Logger.recordOutput("Vision/AllSeenAprilTagPoses", allTagPoses);
+      Logger.recordOutput("Vision/TotalUniqueTagsSeen", allSeenIds.length);
+      lastLogTime = currentTime;
+    }
+
+    lastLogTime = currentTime;
   }
 }
