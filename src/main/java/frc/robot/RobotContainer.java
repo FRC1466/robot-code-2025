@@ -348,7 +348,7 @@ public class RobotContainer {
     // Create conditional position triggers that bypass checks when autoPathingEnabled is false
     // For reef/field position
     BooleanSupplier armReefPositionCheck =
-        () -> !autoPathingEnabled || armFieldReady(leftCoral, .1);
+        () -> !autoPathingEnabled || armFieldReady(leftCoral, .25);
     Trigger conditionalArmReefReady = new Trigger(armReefPositionCheck);
 
     BooleanSupplier armRaiseReefPositionCheck =
@@ -521,7 +521,7 @@ public class RobotContainer {
                 () -> {
                   if (autoPathingEnabled) {
                     reefCommand =
-                        m_pathfinder.getPathfindingCommandReefL4(leftCoral, getClosestTag());
+                        m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
                     reefCommand.schedule();
                   }
                 }))
@@ -629,16 +629,16 @@ public class RobotContainer {
     safeButton4.and(algaeMode).and(currentIntakeSwitch).onFalse((intake.algaeHold()));
 
     // Barge - Button 9
-    safeButton9
+    /*safeButton9
         .and(conditionalArmBargeReady) // Use conditional trigger
         .and(algaeMode)
         .onTrue(elevator.toL4Algae())
         .onFalse(
             rotaryPart.coralScore().alongWith(Commands.waitSeconds(.01)).andThen(intake.outTake()));
 
-    safeButton9
+    /*safeButton9
         .and(algaeMode)
-        .onTrue(
+         .onTrue(
             Commands.runOnce(
                 () -> {
                   if (autoPathingEnabled) {
@@ -653,7 +653,8 @@ public class RobotContainer {
                   if (algaeCommand != null) {
                     algaeCommand.cancel();
                   }
-                }));
+                }
+                 )); */
 
     joystick.button(11).onTrue(Commands.runOnce(SignalLogger::start));
     joystick.button(12).onTrue(Commands.runOnce(SignalLogger::stop));

@@ -60,7 +60,7 @@ public class Intake extends SubsystemBase {
   public Command coralHold() {
     return runOnce(
         () -> {
-          setIntakeVoltage(.3);
+          setIntakeVoltage(.2);
           setFunnelVoltage(0);
         });
   }
@@ -68,8 +68,8 @@ public class Intake extends SubsystemBase {
   public Command intake() {
     return runOnce(
         () -> {
-          setIntakeVoltage(-2);
-          setFunnelVoltage(-3);
+          setIntakeVoltage(-1.75);
+          setFunnelVoltage(-5);
         });
   }
 
