@@ -39,7 +39,7 @@ public class Elevator extends SubsystemBase {
             Constants.ElevatorConstants.elevatorPosition.I,
             Constants.ElevatorConstants.elevatorPosition.D);
     elevatorPID.setTolerance(.1);
-    setGoal(1);
+    setGoal(.1);
     masterMotor.setVoltage(0);
     leftSlaveFX.setVoltage(0);
     setNeutralMode(NeutralModeValue.Brake);
@@ -85,7 +85,7 @@ public class Elevator extends SubsystemBase {
 
   // lower this and lower PID
   public Command toBottom() {
-    return runOnce(() -> goToGoal(.5));
+    return runOnce(() -> goToGoal(.1));
   }
 
   public Command toL1() {
@@ -97,7 +97,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public Command toL2Algae() {
-    return runOnce(() -> goToGoal(25));
+    return runOnce(() -> goToGoal(24));
   }
 
   public Command toL3() {
@@ -122,6 +122,10 @@ public class Elevator extends SubsystemBase {
 
   public Command toProcessor() {
     return runOnce(() -> goToGoal(3.5));
+  }
+
+  public Command toTestingHeight() {
+    return runOnce(() -> goToGoal(8));
   }
 
   public void setArmHold() {
