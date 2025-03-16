@@ -17,11 +17,11 @@
     {
       "anchor": {
         "x": 5.25061475409836,
-        "y": 2.6643954918032784
+        "y": 2.916137295081967
       },
       "prevControl": {
         "x": 6.006351562487744,
-        "y": 3.033395663385976
+        "y": 3.2851374666646644
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,20 +31,7 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "CoralScore",
-      "waypointRelativePos": 0,
-      "endWaypointRelativePos": null,
-      "command": null
-    },
-    {
-      "name": "l4Raise",
-      "waypointRelativePos": 0.3,
-      "endWaypointRelativePos": null,
-      "command": null
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 1.0,
     "maxAcceleration": 0.25,

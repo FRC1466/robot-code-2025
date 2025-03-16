@@ -64,14 +64,14 @@ public class Robot extends LoggedRobot {
   private final RobotContainer m_robotContainer;
 
   @SuppressWarnings("unused")
-  private Timer timer = new Timer();
+  private Timer algaeIntakeTimer = new Timer();
 
   @SuppressWarnings("unused")
   private boolean checkState = false;
 
   private DigitalInput beamBreak = new DigitalInput(9);
 
-  private boolean lastBoolean = true;
+  private boolean lastBoolean = false;
 
   @SuppressWarnings("unused")
   private boolean limitSwitchCounter = false;
@@ -215,11 +215,12 @@ public class Robot extends LoggedRobot {
   @Override
   public void robotPeriodic() {
     Logger.recordOutput("Beam Break", beamBreak.get());
-    if (!lastBoolean && beamBreak.get()) {
-      RobotContainer.elevator.setSelectedSensorPosition(1.75);
-    }
-    if (lastBoolean && !beamBreak.get()) {
+    /*if (!lastBoolean && beamBreak.get()) {
       RobotContainer.elevator.setSelectedSensorPosition(.5);
+    }*/
+
+    if (lastBoolean && !beamBreak.get()) {
+      RobotContainer.elevator.setSelectedSensorPosition(.25);
     }
     lastBoolean = beamBreak.get();
     Logger.recordOutput(
@@ -296,6 +297,17 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void disabledPeriodic() {
+    /*  m_robotContainer.drivetrain.resetPose(
+        new Pose2d(new Translation2d(7.277, 1.358), new Rotation2d(0)));
+
+    if (m_robotContainer.getAutonomousCommand() instanceof PathPlannerAuto) {
+      SmartDashboard.putNumber(
+          "Starting Pose X",
+          ((PathPlannerAuto) m_robotContainer.getAutonomousCommand()).getStartingPose().getX());
+      SmartDashboard.putNumber(
+          "Starting Pose Y",
+          ((PathPlannerAuto) m_robotContainer.getAutonomousCommand()).getStartingPose().getY());
+    }*/
     m_robotContainer.resetPID();
     CommandScheduler.getInstance().cancelAll();
   }

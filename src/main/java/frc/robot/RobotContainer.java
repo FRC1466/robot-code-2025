@@ -6,7 +6,6 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -22,10 +21,10 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.constants.PathfindConstants;
 import frc.robot.generated.TunerConstants;
@@ -53,6 +52,8 @@ public class RobotContainer {
   // Warnings
   private final Alert driverDisconnected =
       new Alert("Driver controller disconnected (port 0).", AlertType.kWarning);
+  private final Alert TeleopPaused =
+      new Alert("All Teleop commands cancelled.", AlertType.kWarning);
 
   // Maximum speed and angular rate
   private double MaxSpeed =
@@ -90,8 +91,11 @@ public class RobotContainer {
 
   public static double gyroMultiplier = 0;
 
+  public static boolean pathfindingOverride = false;
+
   // Joystick and telemetry
   public final CommandJoystick joystick = new CommandJoystick(0);
+
   final Telemetry logger = new Telemetry(MaxSpeed);
   @AutoLogOutput public static boolean algaeMode = false;
 
@@ -99,9 +103,12 @@ public class RobotContainer {
   public static boolean sliderEnabled = false;
 
   // Kill switch for autonomous pathing
-  public static boolean autoPathingEnabled = true;
+  @AutoLogOutput public static boolean autoPathingEnabled = true;
   private final edu.wpi.first.wpilibj.smartdashboard.SendableChooser<Boolean>
       pathingEnabledChooser = new edu.wpi.first.wpilibj.smartdashboard.SendableChooser<>();
+  private final edu.wpi.first.wpilibj.smartdashboard.SendableChooser<Boolean> testingChooser =
+      new edu.wpi.first.wpilibj.smartdashboard.SendableChooser<>();
+  private boolean testingBoolean = false;
 
   public RobotContainer() {
     // Initialize drivetrain once based on robot type
@@ -128,8 +135,10 @@ public class RobotContainer {
     }
 
     configureBindings();
+    configureTestingBindings();
     initializeChooser();
     // Initialize the pathing kill switch chooser
+    setupTestingChooser();
     setupPathingKillSwitch();
   }
 
@@ -190,40 +199,63 @@ public class RobotContainer {
     NamedCommands.registerCommand("l3", l3Command);
     NamedCommands.registerCommand("l4Raise", l4RaiseCommand);
     NamedCommands.registerCommand("l4Score", l4ScoreCommand);
-
-    autoChooser.addOption("1 Piece", new PathPlannerAuto("Taxi"));
-    autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));
+    // autoChooser.addOption("Taxi", new PathPlannerAuto("Taxi Auto"));
+    autoChooser.addOption("Right Taxi Auto", new PathPlannerAuto("Right Taxi Auto"));
+    autoChooser.addOption("Left Taxi Auto", new PathPlannerAuto("Left Taxi Auto"));
+    autoChooser.addOption("Right 1 Piece", new PathPlannerAuto("Right One Piece"));
+    autoChooser.addOption("Left 1 Piece", new PathPlannerAuto("Left One Piece"));
+    /*  autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));
     autoChooser.addOption("3 Piece", new PathPlannerAuto("3 Piece Auto"));
     autoChooser.addOption("4 Piece", new PathPlannerAuto("4 Piece Auto Faster"));
-    autoChooser.addOption("5 Piece", new PathPlannerAuto("5 Piece Auto Faster"));
-    /*  autoChooser.addOption(
-    "L4 Testing",
-    pathfindingAutoFactory(0, 3)
-        .alongWith(l4RaiseCommandFactory(0, 3))
-        .alongWith(l4ScoreCommand));*/
+    autoChooser.addOption("5 Piece", new PathPlannerAuto("5 Piece Auto Faster"));*/
+    /*autoChooser.addOption(
+        "L4 Testing",
+        CoralScoreCommand.andThen(pathfindingAutoFactory(0, 3, true))
+            .alongWith(l4RaiseCommandFactory(0, 3))); /*
+    /  .alongWith(l4RaiseCommandFactory(0, 3))
+    .alongWith(l4ScoreCommand));*/
 
     // Publish the chooser to the dashboard
     SmartDashboard.putData("Auto Selector", autoChooser.getSendableChooser());
   }
 
-  /*   public Command pathfindingAutoFactory(int leftRight, int tagTo) {
+  public Command pathfindingAutoFactory(int leftRight, int tagTo, boolean L4) {
     return Commands.runOnce(
         () -> {
           if (autoPathingEnabled) {
-            reefCommand = m_pathfinder.getPathfindingCommandReefL4(leftRight, tagTo);
+            if (L4) {
+              reefCommand = m_pathfinder.getPathfindingCommandReefL4(leftRight, tagTo);
+            } else {
+              reefCommand = m_pathfinder.getPathfindingCommandReef(leftRight, tagTo);
+            }
             reefCommand.schedule();
           }
         });
-  }*/
+  }
 
-  /*  public Command l4RaiseCommandFactory(int leftRight, int tagTo) {
-  BooleanSupplier armReefPositionCheck =
-      () -> !autoPathingEnabled || armFieldAutoReady(leftRight, 1, tagTo);
-  Trigger conditionalArmReefReady = new Trigger(armReefPositionCheck);
-  return Commands.waitUntil(conditionalArmReefReady)
-      .andThen(rotaryPart.coralScore().alongWith(elevator.toL4()));
+  public Command l4RaiseCommandFactory(int leftRight, int tagTo) {
+    BooleanSupplier armRaisePositionCheck = () -> armFieldAutoReady(leftRight, 1, tagTo);
+    Trigger conditionalRaiseReefReady = new Trigger(armRaisePositionCheck);
+    BooleanSupplier armReefPositionCheck = () -> armFieldAutoReady(leftRight, 1, tagTo);
+    Trigger conditionalArmReefReady = new Trigger(armReefPositionCheck);
+    return Commands.waitUntil(conditionalArmReefReady)
+        .andThen(
+            rotaryPart
+                .coralScore()
+                .alongWith(elevator.toL4())
+                .alongWith(Commands.waitUntil(() -> elevator.getElevatorHeight() > 58))
+                .andThen(Commands.waitUntil(conditionalRaiseReefReady))
+                .andThen(rotaryPart.l4coralScore())
+                .alongWith(intake.coralHold())
+                .alongWith(Commands.waitUntil(conditionalArmReefReady))
+                .andThen(intake.outTake())
+                .alongWith(Commands.waitSeconds(1))
+                .andThen(intake.stop())
+                .alongWith(rotaryPart.coralScore())
+                .alongWith(elevator.toBottom()));
+  }
 
-  /*  safeButton5
+  /*   safeButton5
       .and(coralMode)
       .and(conditionalArmRaiseReefReady) // Use conditional trigger
       .and(l4ArmReady)
@@ -237,12 +269,14 @@ public class RobotContainer {
 
   // }
 
-  /*public Command l4ScoreCommandFactory(int leftRight, int tagTo) {
-  BooleanSupplier armReefPositionCheck =
-      () -> !autoPathingEnabled || armFieldAutoReady(leftRight, .1, tagTo);
-  Trigger conditionalArmReefReady = new Trigger(armReefPositionCheck);
-  return Commands.waitUntil(conditionalArmReefReady)
-      .andThen(Commands.waitSeconds(.5).andThen(intake.outTake()));
+  public Command l4ScoreCommandFactory(int leftRight, int tagTo) {
+    BooleanSupplier armRaisePositionCheck = () -> armFieldAutoReady(leftRight, 1, tagTo);
+    Trigger conditionalRaiseReefReady = new Trigger(armRaisePositionCheck);
+    BooleanSupplier armReefPositionCheck =
+        () -> !autoPathingEnabled || armFieldAutoReady(leftRight, .1, tagTo);
+    Trigger conditionalArmReefReady = new Trigger(armReefPositionCheck);
+    return Commands.waitUntil(armRaisePositionCheck).andThen();
+  }
 
   /*  safeButton5
       .and(coralMode)
@@ -259,25 +293,42 @@ public class RobotContainer {
   // }
 
   /** Sets up the kill switch for autonomous pathing */
+  private void setupTestingChooser() {
+    testingChooser.setDefaultOption("NOT in debug mode", false);
+    testingChooser.addOption("In Debug Mode", true);
+    SmartDashboard.putData("Debug Mode", testingChooser);
+    new Trigger(() -> testingChooser.getSelected() != testingBoolean)
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  testingBoolean = testingChooser.getSelected();
+
+                  Logger.recordOutput("DebugMode/isEnabled", testingBoolean);
+
+                  // Cancel any active pathing commands when disabled
+
+                }));
+  }
+
   private void setupPathingKillSwitch() {
     pathingEnabledChooser.setDefaultOption("Auto Pathing Enabled", true);
     pathingEnabledChooser.addOption("Manual Control Only", false);
     SmartDashboard.putData("Pathing Control", pathingEnabledChooser);
 
-    // Create a trigger that fires when the chooser value changes
-    new Trigger(() -> pathingEnabledChooser.getSelected() != autoPathingEnabled)
+    new Trigger(
+            () -> pathingEnabledChooser.getSelected() != autoPathingEnabled || pathfindingOverride)
         .onTrue(
             Commands.runOnce(
                 () -> {
-                  autoPathingEnabled = pathingEnabledChooser.getSelected();
+                  if (pathfindingOverride) {
+                    autoPathingEnabled = !pathfindingOverride;
+                  } else {
+                    autoPathingEnabled = pathingEnabledChooser.getSelected();
+                  }
                   Logger.recordOutput("AutoPathing/isEnabled", autoPathingEnabled);
 
                   // Cancel any active pathing commands when disabled
-                  if (!autoPathingEnabled) {
-                    if (reefCommand != null) reefCommand.cancel();
-                    if (stationCommand != null) stationCommand.cancel();
-                    if (algaeCommand != null) algaeCommand.cancel();
-                  }
+
                 }));
   }
 
@@ -304,6 +355,13 @@ public class RobotContainer {
     Trigger safeButton7 = createSafeJoystickTrigger(joystick.button(7));
     Trigger safeButton8 = createSafeJoystickTrigger(joystick.button(8));
     Trigger safeButton9 = createSafeJoystickTrigger(joystick.button(9));
+    Trigger safeButton10 = createSafeJoystickTrigger(joystick.button(10));
+    Trigger safeButton11 = createSafeJoystickTrigger(joystick.button(11));
+    Trigger safeButton12 = createSafeJoystickTrigger(joystick.button(12));
+    Trigger safeButton13 = createSafeJoystickTrigger(joystick.button(13));
+    Trigger safeButton14 = createSafeJoystickTrigger(joystick.button(14));
+    Trigger safeButton15 = createSafeJoystickTrigger(joystick.button(15));
+    Trigger safeButton16 = createSafeJoystickTrigger(joystick.button(16));
 
     // Direction selection triggers
 
@@ -344,6 +402,8 @@ public class RobotContainer {
     Trigger l4ArmReady = new Trigger(() -> elevator.getElevatorHeight() > 58);
     Trigger l4ScoreReady = new Trigger(() -> elevator.getElevatorHeight() > 61);
     Trigger coralMode = new Trigger(() -> !getModeMethod());
+    Trigger normalMode = new Trigger(() -> !testingBoolean);
+    // Change later! -
 
     // Create conditional position triggers that bypass checks when autoPathingEnabled is false
     // For reef/field position
@@ -374,7 +434,7 @@ public class RobotContainer {
     Trigger conditionalArmProcessorReady = new Trigger(armProcessorPositionCheck);
 
     // For coral intake position
-    BooleanSupplier coralIntakePositionCheck = () -> !autoPathingEnabled || coralIntakeReady();
+    BooleanSupplier coralIntakePositionCheck = () -> !autoPathingEnabled || !coralIntakeReady();
     Trigger conditionalCoralIntakeReady = new Trigger(coralIntakePositionCheck);
 
     // Drivetrain default command setup
@@ -434,6 +494,7 @@ public class RobotContainer {
 
     // Coral station pathfinding - Button 3
     safeButton3
+        .and(coralIntakePositionCheck)
         .and(coralMode)
         .onTrue(
             Commands.runOnce(
@@ -453,6 +514,7 @@ public class RobotContainer {
                 }));
     // L2 Reef - Button 7
     safeButton7
+        .and(normalMode)
         .and(coralMode)
         .onTrue(
             Commands.runOnce(
@@ -472,18 +534,21 @@ public class RobotContainer {
                 }));
 
     safeButton7
+        .and(normalMode)
         .and(coralMode)
         .and(conditionalArmReefReady) // Use conditional trigger
         .and(l2Ready)
         .onTrue(Commands.waitSeconds(.3).andThen(intake.outTake()));
 
     safeButton7
+        .and(normalMode)
         .and(coralMode)
         .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .onTrue(rotaryPart.coralScore().alongWith(elevator.toL2()));
 
     // L3 Reef - Button 6
     safeButton6
+        .and(normalMode)
         .and(coralMode)
         .onTrue(
             Commands.runOnce(
@@ -503,12 +568,14 @@ public class RobotContainer {
                 }));
 
     safeButton6
+        .and(normalMode)
         .and(coralMode)
         .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .and(l3Ready)
         .onTrue(Commands.waitSeconds(.3).andThen(intake.outTake()));
 
     safeButton6
+        .and(normalMode)
         .and(coralMode)
         .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .onTrue(rotaryPart.coralScore().alongWith(elevator.toL3()));
@@ -521,7 +588,7 @@ public class RobotContainer {
                 () -> {
                   if (autoPathingEnabled) {
                     reefCommand =
-                        m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
+                        m_pathfinder.getPathfindingCommandReefL4(leftCoral, getClosestTag());
                     reefCommand.schedule();
                   }
                 }))
@@ -546,9 +613,9 @@ public class RobotContainer {
 
     safeButton5
         .and(coralMode)
-        .and(conditionalArmReefReady) // Use conditional trigger
+        .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .and(l4ScoreReady)
-        .onTrue(Commands.waitSeconds(.5).andThen(intake.outTake()));
+        .onFalse(intake.outTake());
 
     // Processor - Button 1
     safeButton1
@@ -594,7 +661,7 @@ public class RobotContainer {
         // .and(conditionalArmRaiseAlgaeReady) // Use conditional trigger
         .onTrue(rotaryPart.coralScore().alongWith(elevator.toL2Algae()));
 
-    safeButton3.and(algaeMode).and(currentIntakeSwitch).onFalse((intake.algaeHold()));
+    safeButton3.and(algaeMode).onFalse((intake.algaeHold()));
 
     // L3 Algae - Button 4
     /*safeButton4
@@ -626,11 +693,25 @@ public class RobotContainer {
         // .and(conditionalArmRaiseAlgaeReady) // Use conditional trigger
         .onTrue(rotaryPart.coralScore().alongWith(elevator.toL3Algae()));
 
-    safeButton4.and(algaeMode).and(currentIntakeSwitch).onFalse((intake.algaeHold()));
+    safeButton4.and(algaeMode).onFalse((intake.algaeHold()));
 
+    safeButton13
+        .or(safeButton11)
+        .or(safeButton12)
+        .onTrue(
+            runOnce(() -> CommandScheduler.getInstance().cancelAll())
+                .alongWith(elevator.setElevatorVoltage(0))
+                .alongWith(runOnce(() -> rotaryPart.setMotor(0)))
+                .alongWith(intake.stop())
+                .alongWith(runOnce(() -> TeleopPaused.set(true))));
+
+    safeButton14
+        .or(safeButton15)
+        .or(safeButton16)
+        .onTrue(runOnce(() -> pathfindingOverride = true));
     // Barge - Button 9
     /*safeButton9
-        .and(conditionalArmBargeReady) // Use conditional trigger
+        .and(conditionalArmBargeReady) // Use conditional triggerau
         .and(algaeMode)
         .onTrue(elevator.toL4Algae())
         .onFalse(
@@ -656,25 +737,33 @@ public class RobotContainer {
                 }
                  )); */
 
-    joystick.button(11).onTrue(Commands.runOnce(SignalLogger::start));
-    joystick.button(12).onTrue(Commands.runOnce(SignalLogger::stop));
-
-    /*
-     * Joystick Y = quasistatic forward
-     * Joystick A = quasistatic reverse
-     * Joystick B = dynamic forward
-     * Joystick X = dyanmic reverse
-     */
-    joystick.button(13).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    joystick.button(14).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    joystick.button(15).whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-    joystick.button(16).whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-
-    // Slider control - Button 12
-    // joystick.button(12).onTrue(switchState(true)).onFalse(switchState(false));
+    // Slider control - Button
+    // joystick.button(9).onTrue(switchState(true)).onFalse(switchState(false));
 
     // Enable telemetry
     drivetrain.registerTelemetry(logger::telemeterize);
+  }
+
+  public void configureTestingBindings() {
+    Trigger safeButton6 = createSafeJoystickTrigger(joystick.button(6));
+    Trigger safeButton7 = createSafeJoystickTrigger(joystick.button(7));
+    Trigger safeButton8 = createSafeJoystickTrigger(joystick.button(8));
+    Trigger safeButton9 = createSafeJoystickTrigger(joystick.button(9));
+    Trigger testingBindingReady = new Trigger(() -> testingBoolean);
+
+    testingBindingReady
+        .and(safeButton9)
+        .onTrue(elevator.toTestingHeight())
+        .onFalse(elevator.toBottom());
+
+    testingBindingReady
+        .and(safeButton8)
+        .onTrue(rotaryPart.coralScore())
+        .onFalse(rotaryPart.store());
+
+    testingBindingReady.and(safeButton7).onTrue(rotaryPart.l4coralScore());
+
+    testingBindingReady.and(safeButton6).onTrue(intake.reverseIntake());
   }
 
   // Switch state command
@@ -862,7 +951,7 @@ public class RobotContainer {
             Math.pow(drivetrain.getState().Pose.getX() - targetPose.getX(), 2)
                 + Math.pow(drivetrain.getState().Pose.getY() - targetPose.getY(), 2));
 
-    return distAway < 0.1;
+    return distAway < 1;
   }
 
   // Should probably get an error handler and some data printing

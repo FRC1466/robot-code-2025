@@ -82,8 +82,8 @@ public class Pathfind {
     redPathfindingCommand =
         AutoBuilder.pathfindToPose(
             new Pose2d(
-                targetPose.getX(), // - ((.05) * Math.sin(targetPose.getRotation().getRadians())),
-                targetPose.getY(), // - ((.05) * Math.sin(targetPose.getRotation().getRadians())),
+                targetPose.getX() - ((.05) * Math.cos(targetPose.getRotation().getRadians())),
+                targetPose.getY() - ((.05) * Math.sin(targetPose.getRotation().getRadians())),
                 targetPose.getRotation()),
             constraints,
             0.0);
@@ -93,8 +93,8 @@ public class Pathfind {
         AutoBuilder.pathfindToPose(
             FlipField.FieldFlip(
                 new Pose2d(
-                    targetPose.getX() - (.1) * Math.cos(targetPose.getRotation().getRadians()),
-                    targetPose.getY() - (.1) * Math.cos(targetPose.getRotation().getRadians()),
+                    targetPose.getX() - ((.05) * Math.cos(targetPose.getRotation().getRadians())),
+                    targetPose.getY() - ((.05) * Math.sin(targetPose.getRotation().getRadians())),
                     targetPose.getRotation())),
             constraints,
             0.0);
