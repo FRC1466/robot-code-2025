@@ -205,8 +205,6 @@ public class Robot extends LoggedRobot {
   @Override
   public void robotInit() {
 
-    vision = new Vision();
-
     Pathfinding.setPathfinder(new LocalADStarAK());
     RobotContainer.elevator.setSelectedSensorPosition(0);
     vision = new Vision();
@@ -237,14 +235,30 @@ public class Robot extends LoggedRobot {
     */
 
     var visionEst = vision.getEstimatedGlobalPose();
-    visionEst.ifPresent(
-        est -> {
-          var estStdDevs = vision.getEstimationStdDevs();
-          RobotContainer.drivetrain.addVisionMeasurement(
-              est.estimatedPose.toPose2d(),
-              Utils.fpgaToCurrentTime(est.timestampSeconds),
-              estStdDevs);
-        });
+    switch (Constants.getRobot()) {
+      case DEVBOT, COMPBOT:
+        visionEst.ifPresent(
+            est -> {
+              var estStdDevs = vision.getEstimationStdDevs();
+              RobotContainer.drivetrain.addVisionMeasurement(
+                  est.estimatedPose.toPose2d(),
+                  Utils.fpgaToCurrentTime(est.timestampSeconds),
+                  estStdDevs);
+            });
+        break;
+      case SIMBOT:
+        break;
+      default:
+        visionEst.ifPresent(
+            est -> {
+              var estStdDevs = vision.getEstimationStdDevs();
+              RobotContainer.drivetrain.addVisionMeasurement(
+                  est.estimatedPose.toPose2d(),
+                  Utils.fpgaToCurrentTime(est.timestampSeconds),
+                  estStdDevs);
+            });
+        break;
+    }
 
     // Low battery alert
     lowBatteryCycleCount += 1;
