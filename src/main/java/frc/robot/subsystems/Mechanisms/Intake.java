@@ -5,21 +5,15 @@ package frc.robot.subsystems.Mechanisms;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.ColorSensorV3;
-import edu.wpi.first.math.filter.LinearFilter;
+import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
   private final TalonFX intakeMotor;
-
-  @SuppressWarnings("unused")
-  private double prevMotorPose = 0;
-
-  private final LinearFilter currentFilter = LinearFilter.movingAverage(10);
-
-  @SuppressWarnings("unused")
-  private double filteredCurrent;
+  private final SparkMax funnelMotor;
 
   private boolean highCurrentBool;
   private final I2C.Port i2cPort = I2C.Port.kOnboard;
@@ -28,34 +22,63 @@ public class Intake extends SubsystemBase {
   /** Create a new Gripper subsystem. */
   public Intake() {
     intakeMotor = new TalonFX(15);
+    funnelMotor = new SparkMax(19, SparkMax.MotorType.kBrushless);
   }
 
-  public void setVoltage(double outputVoltage) {
+  public void setIntakeVoltage(double outputVoltage) {
     intakeMotor.setVoltage(outputVoltage);
   }
 
+  public void setFunnelVoltage(double outputVoltage) {
+    funnelMotor.setVoltage(outputVoltage);
+  }
+
   public Command stop() {
-    return runOnce(() -> setVoltage(0));
+    return runOnce(
+        () -> {
+          setIntakeVoltage(0);
+          setFunnelVoltage(0);
+        });
   }
 
   public Command reverseIntake() {
-    return runOnce(() -> setVoltage(4));
+    return runOnce(
+        () -> {
+          setIntakeVoltage(1);
+          setFunnelVoltage(0);
+        });
   }
 
   public Command algaeHold() {
-    return runOnce(() -> setVoltage(.75));
+    return runOnce(
+        () -> {
+          setIntakeVoltage(.4);
+          setFunnelVoltage(0);
+        });
   }
 
-  public Command hold() {
-    return runOnce(() -> setVoltage(.2));
+  public Command coralHold() {
+    return runOnce(
+        () -> {
+          setIntakeVoltage(.2);
+          setFunnelVoltage(0);
+        });
   }
 
   public Command intake() {
-    return runOnce(() -> setVoltage(-4));
+    return runOnce(
+        () -> {
+          setIntakeVoltage(-1.75);
+          setFunnelVoltage(-5);
+        });
   }
 
   public Command outTake() {
-    return runOnce(() -> setVoltage(-6));
+    return runOnce(
+        () -> {
+          setIntakeVoltage(-6);
+          setFunnelVoltage(0);
+        });
   }
 
   public boolean getIntakeDistanceBool() {
@@ -76,12 +99,8 @@ public class Intake extends SubsystemBase {
   }
 
   public void periodic() {
-    filteredCurrent = currentFilter.calculate(getCurrent(intakeMotor));
-    // SmartDashboard.putNumber("ColorSensed", m_colorSensor.getProximity());
-    // SmartDashboard.putBoolean("ColorSensed boolean", (m_colorSensor.getProximity() <= 120));
-    // Logger.recordOutput(
-    //     "Angle Change", (intakeMotor.getPosition().getValueAsDouble() - prevMotorPose));
-    prevMotorPose = intakeMotor.getPosition().getValueAsDouble();
-    // Logger.recordOutput("motor current", intakeMotor.getTorqueCurrent().getValueAsDouble());
+    Logger.recordOutput("ColorSensed boolean", (m_colorSensor.getProximity() <= 120));
+    Logger.recordOutput("Intake Motor Current", intakeMotor.getTorqueCurrent().getValueAsDouble());
+    Logger.recordOutput("Intake Motor High Current", highCurrentBool);
   }
 }

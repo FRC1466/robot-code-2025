@@ -94,6 +94,88 @@ task(replayWatch, type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
 }
 
+task updateConstants {
+    doLast {
+        def constantsPath = "src/main/java/frc/robot/constants/Constants.java"
+        def constantsFile = file(constantsPath)
+        def constantsText = constantsFile.text
+        def matcher = constantsText =~ /public static final boolean CHECK_ROBOT_TYPE\s*=\s*(true|false);/
+        def checkRobotType = matcher.find() ? matcher.group(1).toBoolean() : true
+        if (!checkRobotType) {
+            println "CHECK_ROBOT_TYPE disabled, skipping updateConstants task."
+            return
+        }
+
+        def robotTypeOptions = ["SIMBOT", "DEVBOT", "COMPBOT"]
+        def robotTypeIndex = 0
+
+        // Check if we can get console input
+        if (System.console() != null) {
+            // Display options
+            println "Select robot type:"
+            robotTypeOptions.eachWithIndex { type, index ->
+                println "${index + 1}. ${type}"
+            }
+
+            // Get user input
+            def robotTypeInput = System.console().readLine("Enter selection (1-${robotTypeOptions.size()}): ")
+
+            try {
+                robotTypeIndex = Integer.parseInt(robotTypeInput) - 1
+                if (robotTypeIndex < 0 || robotTypeIndex >= robotTypeOptions.size()) {
+                    println "Invalid selection, defaulting to SIMBOT"
+                    robotTypeIndex = 0
+                }
+            } catch (NumberFormatException e) {
+                println "Invalid input, defaulting to SIMBOT"
+                robotTypeIndex = 0
+            }
+        } else {
+            // If console is not available, use alternative input method
+            def scanner = new java.util.Scanner(System.in)
+
+            println "Select robot type:"
+            robotTypeOptions.eachWithIndex { type, index ->
+                println "${index + 1}. ${type}"
+            }
+
+            println "Enter selection (1-${robotTypeOptions.size()}):"
+
+            try {
+                if (scanner.hasNextLine()) {
+                    def input = scanner.nextLine()
+                    robotTypeIndex = Integer.parseInt(input) - 1
+                    if (robotTypeIndex < 0 || robotTypeIndex >= robotTypeOptions.size()) {
+                        println "Invalid selection, defaulting to SIMBOT"
+                        robotTypeIndex = 0
+                    }
+                }
+            } catch (Exception e) {
+                println "Error getting input, defaulting to SIMBOT"
+                robotTypeIndex = 0
+            }
+        }
+
+        def robotType = robotTypeOptions[robotTypeIndex]
+        println "Setting robot type to: ${robotType}"
+
+        // Update Constants.java
+        def fileContent = constantsFile.text.replaceAll(
+                /public static final String ROBOT_TYPE = ".*?";/,
+                "public static final String ROBOT_TYPE = \"${robotType}\";"
+                )
+        fileContent = fileContent.replaceAll(
+                /private static RobotType robotType = RobotType\.[A-Z]+;/,
+                "private static RobotType robotType = RobotType.${robotType};"
+                )
+        constantsFile.text = fileContent
+        println "Updated Constants.java with ROBOT_TYPE = ${robotType}"
+    }
+}
+
+// Make sure this task runs before compilation
+compileJava.dependsOn updateConstants
+
 // Configure test task
 test {
     useJUnitPlatform()

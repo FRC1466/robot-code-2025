@@ -4,7 +4,6 @@
 package frc.robot;
 
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -12,27 +11,32 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.IterativeRobotBase;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
 import frc.robot.constants.Constants.RobotType;
-import frc.robot.subsystems.Blinkin;
 import frc.robot.subsystems.Vision;
+import frc.robot.util.Blinkin;
+import frc.robot.util.FlipField;
 import frc.robot.util.LocalADStarAK;
 import java.io.File;
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -41,6 +45,8 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 public class Robot extends LoggedRobot {
+  private static Robot instance;
+  private static final double loopOverrunWarningTimeout = 0.2;
   private static final double lowBatteryVoltage = 11.8;
   private static final double lowBatteryDisabledTime = 1.5;
   private static final double lowBatteryMinCycleCount = 10;
@@ -50,10 +56,6 @@ public class Robot extends LoggedRobot {
   private boolean autoMessagePrinted;
 
   private final Timer disabledTimer = new Timer();
-
-  // AutoLog output for the estimated robot state pose.
-  @AutoLogOutput(key = "RobotState/EstimatedPose")
-  private Pose2d RobotPose;
 
   private Blinkin blinkin = new Blinkin();
 
@@ -67,8 +69,16 @@ public class Robot extends LoggedRobot {
   @SuppressWarnings("unused")
   private boolean checkState = false;
 
+  private DigitalInput beamBreak = new DigitalInput(9);
+
+  private boolean lastBoolean = true;
+
   @SuppressWarnings("unused")
   private boolean limitSwitchCounter = false;
+
+  private boolean ignoreJoystickInput = false;
+
+  boolean allInputsNeutral = true;
 
   @SuppressWarnings("unused")
   private final StructPublisher<Pose2d> posePublisher =
@@ -79,21 +89,20 @@ public class Robot extends LoggedRobot {
           "Battery voltage is very low, consider turning off the robot or replacing the battery.",
           AlertType.kWarning);
 
-  // Alert is no longer needed since we're commenting out the type switching functionality
-  /*
-  private final Alert typeSwitchAlert =
+  private final Alert flightstickNotCenteredAlert =
       new Alert(
-          "Cannot switch robot type while enabled. Disable the robot first.", AlertType.kWarning);
-  */
+          "Flightstick not centered! Center stick before using teleop controls.", AlertType.kError);
+
+  // Flag to track if there are active warnings or errors
+  private boolean activeWarnings = false;
 
   @SuppressWarnings("resource")
   public Robot() {
-
-    // Start logging! No more data receivers, replay sources, or metadata values may be added.
+    instance = this;
 
     m_robotContainer = new RobotContainer();
 
-    AutoLogOutputManager.addObject(this); // Add this object for logging
+    AutoLogOutputManager.addObject(this);
 
     // Record metadata
     Logger.recordMetadata("ProjectName", "Robot-Code-2025");
@@ -129,7 +138,7 @@ public class Robot extends LoggedRobot {
 
       case REPLAY:
         setUseTiming(false);
-        File logsDir = new File("C:/logs");
+        File logsDir = new File("D:/logs");
         File[] logFiles = logsDir.listFiles();
         if (logFiles == null) {
           throw new RuntimeException("Logs directory D:/logs does not exist or is not accessible");
@@ -148,9 +157,27 @@ public class Robot extends LoggedRobot {
 
     // Configure DriverStation for sim
     if (Constants.getRobot() == RobotType.SIMBOT) {
-      DriverStationSim.setAllianceStationId(AllianceStationID.Blue1);
+      DriverStationSim.setAllianceStationId(AllianceStationID.Red1);
       DriverStationSim.notifyNewData();
     }
+
+    // Log active commands
+    Map<String, Integer> commandCounts = new HashMap<>();
+    BiConsumer<Command, Boolean> logCommandFunction =
+        (Command command, Boolean active) -> {
+          String name = command.getName();
+          int count = commandCounts.getOrDefault(name, 0) + (active ? 1 : -1);
+          commandCounts.put(name, count);
+          Logger.recordOutput(
+              "CommandsUnique/" + name + "_" + Integer.toHexString(command.hashCode()), active);
+          Logger.recordOutput("CommandsAll/" + name, count > 0);
+        };
+    CommandScheduler.getInstance()
+        .onCommandInitialize((Command command) -> logCommandFunction.accept(command, true));
+    CommandScheduler.getInstance()
+        .onCommandFinish((Command command) -> logCommandFunction.accept(command, false));
+    CommandScheduler.getInstance()
+        .onCommandInterrupt((Command command) -> logCommandFunction.accept(command, false));
 
     // Set up auto logging for RobotState
     AutoLogOutputManager.addObject(RobotState.class);
@@ -158,11 +185,21 @@ public class Robot extends LoggedRobot {
     DriverStation.silenceJoystickConnectionWarning(true);
     disabledTimer.restart();
 
-    // Switch thread to high priority to improve loop timing
-    Threads.setCurrentThreadPriority(true, 5);
-
     // Start AdvantageKit Logger
     Logger.start();
+
+    // Adjust loop overrun warning timeout
+    try {
+      Field watchdogField = IterativeRobotBase.class.getDeclaredField("m_watchdog");
+      watchdogField.setAccessible(true);
+      Watchdog watchdog = (Watchdog) watchdogField.get(this);
+      watchdog.setTimeout(loopOverrunWarningTimeout);
+    } catch (Exception e) {
+      DriverStation.reportWarning("Failed to disable loop overrun warnings.", false);
+    }
+
+    // Switch thread to high priority to improve loop timing
+    Threads.setCurrentThreadPriority(true, 10);
   }
 
   @Override
@@ -173,77 +210,20 @@ public class Robot extends LoggedRobot {
     Pathfinding.setPathfinder(new LocalADStarAK());
     RobotContainer.elevator.setSelectedSensorPosition(0);
     vision = new Vision();
-
-    // Check specifically for SIMBOT type, not just simulation
-    if (Constants.getRobot() == RobotType.SIMBOT) {
-      System.out.println("Detected SIMBOT - configuring Red1 alliance position");
-      DriverStationSim.setAllianceStationId(AllianceStationID.Red1);
-      DriverStationSim.setEnabled(true);
-      DriverStationSim.notifyNewData();
-
-    } else if (RobotBase.isSimulation()) {
-      System.out.println("In simulation but not SIMBOT - skipping alliance configuration");
-    }
   }
 
   @Override
   public void robotPeriodic() {
-
-    // Commented out robot type switching code
-    /*
-          Constants.RobotType selectedType = m_robotContainer.getSelectedRobotType();
-          if (selectedType != Constants.getRobot()) {
-            if (DriverStation.isEnabled()) {
-              // If robot is enabled, show warning and don't switch
-              typeSwitchAlert.set(true);
-              // Reset chooser to current type to prevent future attempts
-              m_robotContainer.robotTypeChooser.addDefaultOption(
-                  Constants.getRobot().toString(), Constants.getRobot());
-            } else {
-              // Only switch when disabled
-              Constants.setRobot(selectedType);
-              // Reinitialize drivetrain if robot type changes
-              if (RobotContainer.drivetrain != null) {
-                switch (selectedType) {
-                  case COMPBOT -> {
-                    Constants.setMode(Mode.REPLAY);
-                    RobotContainer.drivetrain = TunerConstants.createDrivetrain();
-                  }
-                  case DEVBOT -> {
-                    Constants.setMode(Mode.REPLAY);
-                    RobotContainer.drivetrain = TunerConstantsTester.createDrivetrain();
-                  }
-                  case SIMBOT -> {
-                    Constants.setMode(Mode.SIM);
-                    RobotContainer.drivetrain = TunerConstants.createDrivetrain();
-                  }
-                  default -> throw new IllegalArgumentException("Unexpected value: " + selectedType);
-    =======
-        Constants.RobotType selectedType = m_robotContainer.getSelectedRobotType();
-        if (selectedType != Constants.getRobot()) {
-          if (DriverStation.isEnabled()) {
-            // If robot is enabled, show warning and don't switch
-            typeSwitchAlert.set(true);
-            // Reset chooser to current type to prevent future attempts
-            m_robotContainer.robotTypeChooser.addDefaultOption(
-                Constants.getRobot().toString(), Constants.getRobot());
-          } else {
-            // Only switch when disabled
-            Constants.setRobot(selectedType);
-            // Reinitialize drivetrain if robot type changes
-            if (RobotContainer.drivetrain != null) {
-              switch (selectedType) {
-                case COMPBOT -> {
-                  Constants.setMode(Mode.REPLAY);
-                  RobotContainer.drivetrain = TunerConstants.createDrivetrain();
-
-                }
-              }
-            }
-        }
-          */
-
-    vision.logSeenAprilTags();
+    Logger.recordOutput("Beam Break", beamBreak.get());
+    if (!lastBoolean && beamBreak.get()) {
+      RobotContainer.elevator.setSelectedSensorPosition(1.75);
+    }
+    if (lastBoolean && !beamBreak.get()) {
+      RobotContainer.elevator.setSelectedSensorPosition(.5);
+    }
+    lastBoolean = beamBreak.get();
+    Logger.recordOutput(
+        "Flipped Position", FlipField.flipPose(RobotContainer.drivetrain.getState().Pose));
     // Color detectedColor = m_colorSensor.getColor();
 
     /*
@@ -255,46 +235,15 @@ public class Robot extends LoggedRobot {
      }
     */
 
-    var visionEst = RobotContainer.photonCamera.getEstimatedGlobalPose();
-    // SmartDashboard.putBoolean("booleanSwitch", m_robotContainer.limitSwitch.get());
-
-    CommandScheduler.getInstance().run();
-    RobotPose = RobotContainer.drivetrain.getState().Pose;
+    var visionEst = vision.getEstimatedGlobalPose();
     visionEst.ifPresent(
         est -> {
-          var estStdDevs = RobotContainer.photonCamera.getEstimationStdDevs();
-          SmartDashboard.putNumber("Timestamp", est.timestampSeconds);
-          SmartDashboard.putNumber(
-              "Vision Pose X", visionEst.get().estimatedPose.toPose2d().getX());
-          SmartDashboard.putNumber(
-              "Vision Pose Y", visionEst.get().estimatedPose.toPose2d().getY());
-
-          if (RobotContainer.visionEnabled) {
-            // With vision - use full pose estimate
-            RobotContainer.drivetrain.addVisionMeasurement(
-                est.estimatedPose.toPose2d(),
-                Utils.fpgaToCurrentTime(est.timestampSeconds),
-                estStdDevs);
-          } else {
-            // Without vision - maintain current rotation
-            RobotContainer.drivetrain.addVisionMeasurement(
-                new Pose2d(est.estimatedPose.toPose2d().getTranslation(), RobotPose.getRotation()),
-                Utils.fpgaToCurrentTime(est.timestampSeconds),
-                estStdDevs);
-          }
+          var estStdDevs = vision.getEstimationStdDevs();
+          RobotContainer.drivetrain.addVisionMeasurement(
+              est.estimatedPose.toPose2d(),
+              Utils.fpgaToCurrentTime(est.timestampSeconds),
+              estStdDevs);
         });
-    Logger.recordOutput("apriltag seen", m_robotContainer.getClosestTag());
-
-    // SmartDashboard.pu Boolean("Camera?", photonCamera.getCamera().isConnected());
-    SmartDashboard.putBoolean("Vision Est", visionEst.isPresent());
-
-    SmartDashboard.putNumber("Robot Pose X", RobotContainer.drivetrain.getState().Pose.getX());
-    SmartDashboard.putNumber("Robot Pose Y", RobotContainer.drivetrain.getState().Pose.getY());
-    SmartDashboard.putNumber(
-        "Robot Pose Theta", RobotContainer.drivetrain.getState().Pose.getRotation().getDegrees());
-
-    SwerveDriveState driveState = RobotContainer.drivetrain.getState();
-    Logger.recordOutput("SwerveModuleStates", driveState.ModuleStates);
 
     // Low battery alert
     lowBatteryCycleCount += 1;
@@ -305,8 +254,6 @@ public class Robot extends LoggedRobot {
         && disabledTimer.hasElapsed(lowBatteryDisabledTime)
         && lowBatteryCycleCount >= lowBatteryMinCycleCount) {
       lowBatteryAlert.set(true);
-
-      // Useful when LEDs are implemented
     }
 
     // Print auto duration
@@ -325,6 +272,10 @@ public class Robot extends LoggedRobot {
     // Robot container periodic methods
     m_robotContainer.updateAlerts();
     m_robotContainer.updateDashboardOutputs();
+
+    // Check for alerts on each robot periodic cycle
+    checkAndHandleAlerts();
+    CommandScheduler.getInstance().run();
   }
 
   public void periodic() {}
@@ -338,9 +289,9 @@ public class Robot extends LoggedRobot {
       DriverStationSim.notifyNewData();
     }
 
-    RobotContainer.elevator.goToGoal(.5);
+    RobotContainer.elevator.goToGoal(1);
     // fix later
-    // m_robotContainer.rotatyPart.setGoal(Rotation2d.fromRadians(.05));
+    // m_robotContainer.rotaryPart.setGoal(Rotation2d.fromRadians(.05));
   }
 
   @Override
@@ -352,6 +303,15 @@ public class Robot extends LoggedRobot {
   @Override
   public void disabledExit() {}
 
+  public boolean shouldIgnoreJoystickInput() {
+    return ignoreJoystickInput;
+  }
+
+  // get instance code
+  public static Robot getInstance() {
+    return instance;
+  }
+
   @Override
   public void autonomousInit() {
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
@@ -359,11 +319,12 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
-    blinkin.rainbowPartyLights();
   }
 
   @Override
-  public void autonomousPeriodic() {}
+  public void autonomousPeriodic() {
+    blinkin.rainbowPartyLights();
+  }
 
   @Override
   public void autonomousExit() {}
@@ -373,33 +334,104 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
-    RobotContainer.rotatyPart.coralScore();
+
+    // Reset joystick safety flag
+    ignoreJoystickInput = false;
+
+    allInputsNeutral = true;
+
+    // Check if any joystick inputs are active
+    boolean inputsActive = false;
+
+    // Check main axes (with small deadband)
+    if (Math.abs(m_robotContainer.joystick.getRawAxis(0)) > 0.1
+        || // X axis
+        Math.abs(m_robotContainer.joystick.getRawAxis(1)) > 0.1
+        || // Y axis
+        Math.abs(m_robotContainer.joystick.getRawAxis(2)) > 0.1) { // Twist axis
+      inputsActive = true;
+    }
+
+    // Check all buttons (typically 1-12 for a standard flightstick)
+    for (int i = 1; i <= 12; i++) {
+      if (m_robotContainer.joystick.getHID().getRawButton(i)) {
+        inputsActive = true;
+        break;
+      }
+    }
+
+    // Check all POVs (usually just one, but check all possible)
+    for (int i = 0; i < m_robotContainer.joystick.getHID().getPOVCount(); i++) {
+      if (m_robotContainer.joystick.getHID().getPOV(i) != -1) { // -1 means POV not pressed
+        inputsActive = true;
+        break;
+      }
+    }
+
+    if (inputsActive) {
+      // If any inputs are active, disable controls and set alert
+      ignoreJoystickInput = true;
+      flightstickNotCenteredAlert.set(true);
+      DriverStation.reportError(
+          "Flightstick not centered or buttons pressed! Controls disabled until all inputs are neutral.",
+          false);
+    } else {
+      // All inputs are neutral
+      flightstickNotCenteredAlert.set(false);
+    }
+
+    RobotContainer.rotaryPart.coralScore();
   }
 
   @Override
   public void teleopPeriodic() {
+    // In teleopPeriodic, periodically check if all joystick inputs are neutral
+    if (ignoreJoystickInput) {
+      allInputsNeutral = true;
 
-    // SmartDashboard.putBoolean(
-    //   "Drive Command Running", RobotContainer.drivetrain.getDefaultCommand().isScheduled());
+      // Check main axes
+      if (Math.abs(m_robotContainer.joystick.getRawAxis(0)) > 0.1
+          || Math.abs(m_robotContainer.joystick.getRawAxis(1)) > 0.1
+          || Math.abs(m_robotContainer.joystick.getRawAxis(2)) > 0.1) {
+        allInputsNeutral = false;
+      }
+
+      // Check all buttons
+      for (int i = 1; i <= 12; i++) {
+        if (m_robotContainer.joystick.getHID().getRawButton(i)) {
+          allInputsNeutral = false;
+          break;
+        }
+      }
+
+      // Check all POVs (usually just one, but check all possible)
+      for (int i = 0; i < m_robotContainer.joystick.getHID().getPOVCount(); i++) {
+        if (m_robotContainer.joystick.getHID().getPOV(i) != -1) { // -1 means POV not pressed
+          allInputsNeutral = false;
+          break;
+        }
+      }
+
+      if (allInputsNeutral) {
+        // Re-enable joystick input
+        ignoreJoystickInput = false;
+        flightstickNotCenteredAlert.set(false);
+        DriverStation.reportWarning("All controller inputs neutral. Controls re-enabled.", false);
+      }
+    }
+
+    // Rest of your existing teleopPeriodic code
     if (RobotContainer.sliderEnabled) {
       RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
-    }
-    Logger.recordOutput(
-        "Elevator Slider Position", (((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65));
-
-    if (RobotContainer.elevator.getElevatorHeight() < 7
-        || RobotContainer.elevator.getElevatorHeight() < 52) {
-      RobotContainer.elevator.setP(.05);
-      RobotContainer.elevator.setPeakOutput(.25);
-    } else {
-      RobotContainer.elevator.setP(Constants.ElevatorConstants.elevatorPosition.P);
-      RobotContainer.elevator.setPeakOutput(
-          Constants.ElevatorConstants.elevatorPosition.peakOutput);
     }
   }
 
   @Override
-  public void teleopExit() {}
+  public void teleopExit() {
+    ignoreJoystickInput = false;
+    flightstickNotCenteredAlert.set(false);
+    allInputsNeutral = true;
+  }
 
   @Override
   public void testInit() {
@@ -417,8 +449,29 @@ public class Robot extends LoggedRobot {
     vision.simulationPeriodic(RobotContainer.drivetrain.getState().Pose);
 
     var debugField = vision.getSimDebugField();
-    debugField
-        .getObject("EstimatedRobot")
-        .setPose(RobotPose = RobotContainer.drivetrain.getState().Pose);
+    debugField.getObject("EstimatedRobot");
+  }
+
+  // Check for active alerts of WARNING or ERROR type
+  private void checkAndHandleAlerts() {
+    // Check if there are any active warnings or errors
+    boolean hasActiveAlerts = lowBatteryAlert.get() || flightstickNotCenteredAlert.get();
+
+    // If warning state changed, update lights accordingly
+    if (hasActiveAlerts != activeWarnings) {
+      activeWarnings = hasActiveAlerts;
+
+      if (activeWarnings) {
+        // Activate warning lights when there are warnings/errors
+        blinkin.warningLights();
+      } else {
+        // Return to normal light pattern when no warnings/errors
+        if (RobotState.isAutonomous()) {
+          blinkin.rainbowPartyLights();
+        } else if (RobotState.isTeleop()) {
+          blinkin.coralLights();
+        }
+      }
+    }
   }
 }

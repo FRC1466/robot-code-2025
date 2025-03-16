@@ -25,20 +25,6 @@ public class Elevator extends SubsystemBase {
   private double localSetpoint = 0;
   private DoubleSupplier overrideFeedforward = () -> 0;
 
-  // Will use when we install hall sensor
-  // DigitalInput hallBottom = new DigitalInput(0);
-
-  // figure out what this is
-  @SuppressWarnings("unused")
-  private static final double TICKS_PER_INCH = 1;
-
-  // Also figure this out
-  @SuppressWarnings("unused")
-  private static final double HOME_POSITION_INCHES = 0;
-
-  @SuppressWarnings("unused")
-  private static final double MAX_POSITION_TICKS = 64;
-
   private double peakOutput;
 
   public Elevator() {
@@ -53,7 +39,7 @@ public class Elevator extends SubsystemBase {
             Constants.ElevatorConstants.elevatorPosition.I,
             Constants.ElevatorConstants.elevatorPosition.D);
     elevatorPID.setTolerance(.1);
-    setGoal(.5);
+    setGoal(1);
     masterMotor.setVoltage(0);
     leftSlaveFX.setVoltage(0);
     setNeutralMode(NeutralModeValue.Brake);
@@ -107,7 +93,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public Command toL2() {
-    return runOnce(() -> goToGoal(15));
+    return runOnce(() -> goToGoal(14));
   }
 
   public Command toL2Algae() {
@@ -115,23 +101,27 @@ public class Elevator extends SubsystemBase {
   }
 
   public Command toL3() {
-    return runOnce(() -> goToGoal(32));
+    return runOnce(() -> goToGoal(30));
+  }
+
+  public Command toL3Algae() {
+    return runOnce(() -> goToGoal(42));
   }
 
   public Command toL4() {
-    return runOnce(() -> goToGoal(60));
+    return runOnce(() -> goToGoal(63));
+  }
+
+  public Command toL4Algae() {
+    return runOnce(() -> goToGoal(66));
   }
 
   public Command toStation() {
     return runOnce(() -> goToGoal(10));
   }
 
-  public Command removeAlgaeLow() {
-    return runOnce(() -> goToGoal(10));
-  }
-
-  public Command removeAlgaeHigh() {
-    return runOnce(() -> goToGoal(10));
+  public Command toProcessor() {
+    return runOnce(() -> goToGoal(3.5));
   }
 
   public void setArmHold() {
@@ -165,20 +155,8 @@ public class Elevator extends SubsystemBase {
   @Override
   public void periodic() {
     setArmHold();
-    /*  if(!hallBottom.get()){
-        setSelectedSensorPosition(0);
-    }*/
-
-    SmartDashboard.putNumber("Elevator Position", getElevatorHeight());
-    SmartDashboard.putNumber("Get Elevator P", elevatorPID.getP());
-    SmartDashboard.putNumber("Get Elevator PeakOutput", peakOutput);
-    SmartDashboard.putNumber("Elevator Desired Position", elevatorPID.getSetpoint());
-    SmartDashboard.putNumber("Elevator Error", elevatorPID.getError());
-
-    // if(!hallBottom.get()){
-    //   setSelectedSensorPosition(0);
-    // }
 
     Logger.recordOutput("Elevator Position", getElevatorHeight());
+    Logger.recordOutput("Elevator Desired Positon", elevatorPID.getSetpoint());
   }
 }
