@@ -11,11 +11,10 @@ import edu.wpi.first.wpilibj.RobotBase;
 import webblib.Gains;
 
 public final class Constants {
-  public static boolean disableHAL = false;
-  public static final boolean CHECK_ROBOT_TYPE = false; // Enables robot type check during builds
+  public static final boolean tuningMode = false;
+  public static final double loopPeriodSecs = 0.02;
 
-  private static RobotType robotType = RobotType.COMPBOT;
-  public static Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.REPLAY;
+  private static RobotType robotType = RobotType.SIMBOT;
 
   @SuppressWarnings("resource")
   public static RobotType getRobot() {
@@ -38,9 +37,7 @@ public final class Constants {
     };
   }
 
-  public static void setMode(Mode mode) {
-    currentMode = mode;
-  }
+  public static boolean disableHAL = false;
 
   public static enum Mode {
     REAL,

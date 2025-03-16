@@ -4,7 +4,6 @@
 package frc.robot;
 
 import com.ctre.phoenix6.Utils;
-import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -30,7 +29,6 @@ import frc.robot.constants.Constants.RobotType;
 import frc.robot.subsystems.Vision;
 import frc.robot.util.Blinkin;
 import frc.robot.util.FlipField;
-import frc.robot.util.LocalADStarAK;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -133,7 +131,6 @@ public class Robot extends LoggedRobot {
         // Running a physics simulator, log to NT
         // Logger.addDataReceiver(new RLOGServer());
         Logger.addDataReceiver(new NT4Publisher());
-        Logger.addDataReceiver(new WPILOGWriter("C:/logs"));
         break;
 
       case REPLAY:
@@ -206,8 +203,6 @@ public class Robot extends LoggedRobot {
   public void robotInit() {
 
     vision = new Vision();
-
-    Pathfinding.setPathfinder(new LocalADStarAK());
     RobotContainer.elevator.setSelectedSensorPosition(0);
     vision = new Vision();
   }
@@ -237,14 +232,40 @@ public class Robot extends LoggedRobot {
     */
 
     var visionEst = vision.getEstimatedGlobalPose();
-    visionEst.ifPresent(
-        est -> {
-          var estStdDevs = vision.getEstimationStdDevs();
-          RobotContainer.drivetrain.addVisionMeasurement(
-              est.estimatedPose.toPose2d(),
-              Utils.fpgaToCurrentTime(est.timestampSeconds),
-              estStdDevs);
-        });
+    switch (Constants.getRobot()) {
+      case DEVBOT:
+        visionEst.ifPresent(
+            est -> {
+              var estStdDevs = vision.getEstimationStdDevs();
+              RobotContainer.drivetrain.addVisionMeasurement(
+                  est.estimatedPose.toPose2d(),
+                  Utils.fpgaToCurrentTime(est.timestampSeconds),
+                  estStdDevs);
+            });
+        break;
+      case COMPBOT:
+        visionEst.ifPresent(
+            est -> {
+              var estStdDevs = vision.getEstimationStdDevs();
+              RobotContainer.drivetrain.addVisionMeasurement(
+                  est.estimatedPose.toPose2d(),
+                  Utils.fpgaToCurrentTime(est.timestampSeconds),
+                  estStdDevs);
+            });
+        break;
+      case SIMBOT:
+        break;
+      default:
+        visionEst.ifPresent(
+            est -> {
+              var estStdDevs = vision.getEstimationStdDevs();
+              RobotContainer.drivetrain.addVisionMeasurement(
+                  est.estimatedPose.toPose2d(),
+                  Utils.fpgaToCurrentTime(est.timestampSeconds),
+                  estStdDevs);
+            });
+        break;
+    }
 
     // Low battery alert
     lowBatteryCycleCount += 1;
@@ -256,6 +277,13 @@ public class Robot extends LoggedRobot {
         && lowBatteryCycleCount >= lowBatteryMinCycleCount) {
       lowBatteryAlert.set(true);
     }
+
+    // Robot container periodic methods
+    m_robotContainer.updateAlerts();
+    m_robotContainer.updateDashboardOutputs();
+
+    // Check for alerts on each robot periodic cycle
+    checkAndHandleAlerts();
 
     // Print auto duration
     if (m_autonomousCommand != null) {
@@ -270,12 +298,6 @@ public class Robot extends LoggedRobot {
         autoMessagePrinted = true;
       }
     }
-    // Robot container periodic methods
-    m_robotContainer.updateAlerts();
-    m_robotContainer.updateDashboardOutputs();
-
-    // Check for alerts on each robot periodic cycle
-    checkAndHandleAlerts();
     CommandScheduler.getInstance().run();
   }
 
@@ -283,13 +305,6 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void disabledInit() {
-    // Only run simulation-specific code for SIMBOT
-    if (Constants.getRobot() == RobotType.SIMBOT) {
-      System.out.println("Refreshing SIMBOT alliance configuration");
-      DriverStationSim.setAllianceStationId(AllianceStationID.Red1);
-      DriverStationSim.notifyNewData();
-    }
-
     RobotContainer.elevator.goToGoal(1);
     // fix later
     // m_robotContainer.rotaryPart.setGoal(Rotation2d.fromRadians(.05));
@@ -297,17 +312,6 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void disabledPeriodic() {
-    /*  m_robotContainer.drivetrain.resetPose(
-        new Pose2d(new Translation2d(7.277, 1.358), new Rotation2d(0)));
-
-    if (m_robotContainer.getAutonomousCommand() instanceof PathPlannerAuto) {
-      SmartDashboard.putNumber(
-          "Starting Pose X",
-          ((PathPlannerAuto) m_robotContainer.getAutonomousCommand()).getStartingPose().getX());
-      SmartDashboard.putNumber(
-          "Starting Pose Y",
-          ((PathPlannerAuto) m_robotContainer.getAutonomousCommand()).getStartingPose().getY());
-    }*/
     m_robotContainer.resetPID();
     CommandScheduler.getInstance().cancelAll();
   }
@@ -326,16 +330,26 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void autonomousInit() {
-    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
     autoStart = Timer.getTimestamp();
+    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+
+    System.out.println(
+        "Auto command: " + (m_autonomousCommand != null ? m_autonomousCommand.getName() : "null"));
+
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
+      System.out.println("Auto command scheduled");
     }
   }
 
   @Override
   public void autonomousPeriodic() {
     blinkin.rainbowPartyLights();
+
+    // Add this to check if command is still running
+    if (m_autonomousCommand != null) {
+      System.out.println("Auto command is scheduled: " + m_autonomousCommand.isScheduled());
+    }
   }
 
   @Override

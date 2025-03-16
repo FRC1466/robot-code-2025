@@ -8,8 +8,6 @@ import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
@@ -25,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.DriveTrajectory;
 import frc.robot.constants.Constants;
 import frc.robot.constants.PathfindConstants;
 import frc.robot.generated.TunerConstants;
@@ -33,11 +32,10 @@ import frc.robot.subsystems.Mechanisms.Elevator;
 import frc.robot.subsystems.Mechanisms.Intake;
 import frc.robot.subsystems.Mechanisms.RotaryPart;
 import frc.robot.subsystems.Vision;
-import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
+import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
+import frc.robot.subsystems.drive.trajectory.HolonomicTrajectory;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FlipField;
-import frc.robot.util.Pathfind;
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -83,7 +81,7 @@ public class RobotContainer {
   private final AprilTagFieldLayout layout =
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
-  final Pathfind m_pathfinder;
+  // final Pathfind m_pathfinder;
 
   public static boolean visionEnabled = true;
 
@@ -128,11 +126,11 @@ public class RobotContainer {
       default -> throw new IllegalArgumentException("Unexpected value: " + Constants.getRobot());
     }
 
-    try {
-      m_pathfinder = new Pathfind(this);
-    } catch (IOException | ParseException e) {
-      throw new RuntimeException("Failed to initialize Pathfind", e);
-    }
+    // try {
+    //   m_pathfinder = new Pathfind(this);
+    // } catch (IOException | ParseException e) {
+    //   throw new RuntimeException("Failed to initialize Pathfind", e);
+    // }
 
     configureBindings();
     configureTestingBindings();
@@ -189,37 +187,23 @@ public class RobotContainer {
     /*    .andThen(intake.outTake().withTimeout(.5))
     .andThen(elevator.toBottom().alongWith(rotaryPart.coralScore()))*/
 
-    // Register the named commands
-    NamedCommands.registerCommand("CoralScore", rotaryPart.coralScore());
-    NamedCommands.registerCommand("IntakeElevator", intakeHeightCommand);
-    NamedCommands.registerCommand("Intake", intakeCommand);
-    NamedCommands.registerCommand(
-        "l2Elevator", Commands.waitUntil(armRaiseReefPositionCheck).andThen(elevator.toL2()));
-    NamedCommands.registerCommand("l2Score", l2ScoreCommand);
-    NamedCommands.registerCommand("l3", l3Command);
-    NamedCommands.registerCommand("l4Raise", l4RaiseCommand);
-    NamedCommands.registerCommand("l4Score", l4ScoreCommand);
-    // autoChooser.addOption("Taxi", new PathPlannerAuto("Taxi Auto"));
-    autoChooser.addOption("Right Taxi Auto", new PathPlannerAuto("Right Taxi Auto"));
-    autoChooser.addOption("Left Taxi Auto", new PathPlannerAuto("Left Taxi Auto"));
-    autoChooser.addOption("Right 1 Piece", new PathPlannerAuto("Right One Piece"));
-    autoChooser.addOption("Left 1 Piece", new PathPlannerAuto("Left One Piece"));
-    /*  autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));
-    autoChooser.addOption("3 Piece", new PathPlannerAuto("3 Piece Auto"));
-    autoChooser.addOption("4 Piece", new PathPlannerAuto("4 Piece Auto Faster"));
-    autoChooser.addOption("5 Piece", new PathPlannerAuto("5 Piece Auto Faster"));*/
-    /*autoChooser.addOption(
-        "L4 Testing",
-        CoralScoreCommand.andThen(pathfindingAutoFactory(0, 3, true))
-            .alongWith(l4RaiseCommandFactory(0, 3))); /*
-    /  .alongWith(l4RaiseCommandFactory(0, 3))
-    .alongWith(l4ScoreCommand));*/
+    HolonomicTrajectory testTrajectory = new HolonomicTrajectory("driveStraight");
+    autoChooser.addOption(
+        "Drive Trajectory",
+        Commands.runOnce(
+                () -> drivetrain.resetPose(AllianceFlipUtil.apply(testTrajectory.getStartPose())))
+            .andThen(new DriveTrajectory(drivetrain, testTrajectory)));
+    /*  autoChooser.addOption(
+    "L4 Testing",
+    pathfindingAutoFactory(0, 3)
+        .alongWith(l4RaiseCommandFactory(0, 3))
+        .alongWith(l4ScoreCommand));*/
 
     // Publish the chooser to the dashboard
     SmartDashboard.putData("Auto Selector", autoChooser.getSendableChooser());
   }
 
-  public Command pathfindingAutoFactory(int leftRight, int tagTo, boolean L4) {
+  /*public Command pathfindingAutoFactory(int leftRight, int tagTo, boolean L4) {
     return Commands.runOnce(
         () -> {
           if (autoPathingEnabled) {
@@ -231,7 +215,7 @@ public class RobotContainer {
             reefCommand.schedule();
           }
         });
-  }
+  }*/
 
   public Command l4RaiseCommandFactory(int leftRight, int tagTo) {
     BooleanSupplier armRaisePositionCheck = () -> armFieldAutoReady(leftRight, 1, tagTo);
@@ -500,10 +484,11 @@ public class RobotContainer {
             Commands.runOnce(
                 () -> {
                   // Only schedule the command if auto pathing is enabled
-                  if (autoPathingEnabled) {
-                    stationCommand = m_pathfinder.getPathfindingCommandStation(getClosestStation());
-                    stationCommand.schedule();
-                  }
+                  // if (autoPathingEnabled) {
+                  //   stationCommand =
+                  // m_pathfinder.getPathfindingCommandStation(getClosestStation());
+                  //   stationCommand.schedule();
+                  // }
                 }))
         .onFalse(
             Commands.runOnce(
@@ -519,11 +504,11 @@ public class RobotContainer {
         .onTrue(
             Commands.runOnce(
                 () -> {
-                  if (autoPathingEnabled) {
-                    reefCommand =
-                        m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
-                    reefCommand.schedule();
-                  }
+                  // if (autoPathingEnabled) {
+                  //   reefCommand =
+                  //       m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
+                  //   reefCommand.schedule();
+                  // }
                 }))
         .onFalse(
             Commands.runOnce(
@@ -553,11 +538,11 @@ public class RobotContainer {
         .onTrue(
             Commands.runOnce(
                 () -> {
-                  if (autoPathingEnabled) {
-                    reefCommand =
-                        m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
-                    reefCommand.schedule();
-                  }
+                  // if (autoPathingEnabled) {
+                  //   reefCommand =
+                  //       m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
+                  //   reefCommand.schedule();
+                  // }
                 }))
         .onFalse(
             Commands.runOnce(
@@ -586,11 +571,11 @@ public class RobotContainer {
         .onTrue(
             Commands.runOnce(
                 () -> {
-                  if (autoPathingEnabled) {
-                    reefCommand =
-                        m_pathfinder.getPathfindingCommandReefL4(leftCoral, getClosestTag());
-                    reefCommand.schedule();
-                  }
+                  // if (autoPathingEnabled) {
+                  //   reefCommand =
+                  //       m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
+                  //   reefCommand.schedule();
+                  // }
                 }))
         .onFalse(
             Commands.runOnce(
@@ -637,10 +622,10 @@ public class RobotContainer {
     .onTrue(
         Commands.runOnce(
             () -> {
-              if (autoPathingEnabled) {
-                algaeCommand = m_pathfinder.getPathfindingCommandAlgae(getClosestTag());
-                algaeCommand.schedule();
-              }
+              // if (autoPathingEnabled) {
+              //   algaeCommand = m_pathfinder.getPathfindingCommandAlgae(getClosestTag());
+              //   algaeCommand.schedule();
+              // }
             }))
     .onFalse(
         Commands.runOnce(
@@ -669,10 +654,10 @@ public class RobotContainer {
     .onTrue(
         Commands.runOnce(
             () -> {
-              if (autoPathingEnabled) {
-                algaeCommand = m_pathfinder.getPathfindingCommandAlgae(getClosestTag());
-                algaeCommand.schedule();
-              }
+              // if (autoPathingEnabled) {
+              //   algaeCommand = m_pathfinder.getPathfindingCommandAlgae(getClosestTag());
+              //   algaeCommand.schedule();
+              // }
             }))
     .onFalse(
         Commands.runOnce(
@@ -722,11 +707,11 @@ public class RobotContainer {
          .onTrue(
             Commands.runOnce(
                 () -> {
-                  if (autoPathingEnabled) {
-                    algaeCommand =
-                        m_pathfinder.getPathfindingCommandBarge(drivetrain.getState().Pose.getY());
-                    algaeCommand.schedule();
-                  }
+                  // if (autoPathingEnabled) {
+                  //   algaeCommand =
+                  //       m_pathfinder.getPathfindingCommandBarge(drivetrain.getState().Pose.getY());
+                  //   algaeCommand.schedule();
+                  // }
                 }))
         .onFalse(
             Commands.runOnce(
@@ -778,7 +763,10 @@ public class RobotContainer {
 
   // Get autonomous command
   public Command getAutonomousCommand() {
-    return autoChooser.get();
+    Command selectedCommand = autoChooser.get();
+    System.out.println(
+        "Selected auto command: " + (selectedCommand != null ? selectedCommand.getName() : "null"));
+    return selectedCommand;
   }
 
   public Command changeMode() {
@@ -904,7 +892,7 @@ public class RobotContainer {
     Optional<Alliance> allianceOptional = DriverStation.getAlliance();
     Alliance alliance = allianceOptional.orElse(Alliance.Blue);
 
-    Pose2d targetPose = Pathfind.redAveragePoses[getClosestTag()];
+    Pose2d targetPose = null;
 
     // If blue alliance, flip the target pose
     if (alliance == Alliance.Blue) {
