@@ -201,10 +201,9 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotInit() {
+    vision = new Vision();
 
-    vision = new Vision();
     RobotContainer.elevator.setSelectedSensorPosition(0);
-    vision = new Vision();
   }
 
   @Override
@@ -233,17 +232,7 @@ public class Robot extends LoggedRobot {
 
     var visionEst = vision.getEstimatedGlobalPose();
     switch (Constants.getRobot()) {
-      case DEVBOT:
-        visionEst.ifPresent(
-            est -> {
-              var estStdDevs = vision.getEstimationStdDevs();
-              RobotContainer.drivetrain.addVisionMeasurement(
-                  est.estimatedPose.toPose2d(),
-                  Utils.fpgaToCurrentTime(est.timestampSeconds),
-                  estStdDevs);
-            });
-        break;
-      case COMPBOT:
+      case DEVBOT, COMPBOT:
         visionEst.ifPresent(
             est -> {
               var estStdDevs = vision.getEstimationStdDevs();

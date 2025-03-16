@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.RobotContainer;
 import frc.robot.commands.DriveToPose;
 import frc.robot.commands.DriveTrajectory;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
@@ -142,5 +143,24 @@ public class AutoBuilder {
    */
   public Command doNothingAuto() {
     return Commands.none();
+  }
+
+  public Command upInTheInspirationalAuto() {
+    return Commands.runOnce(
+            () ->
+                RobotContainer.drivetrain.resetPose(
+                    AllianceFlipUtil.apply(
+                        new Pose2d(
+                            RobotContainer.drivetrain.getState().Pose.getTranslation(),
+                            Rotation2d.kPi))))
+        .andThen(
+            new DriveToPose(
+                    drive,
+                    () -> RobotContainer.drivetrain.getState().Pose,
+                    () -> RobotContainer.drivetrain.getState().Pose,
+                    () ->
+                        new Translation2d((AllianceFlipUtil.shouldFlip() ? -1.0 : 1.0) * -1.0, 0.0),
+                    () -> 0.0)
+                .withTimeout(0.6));
   }
 }

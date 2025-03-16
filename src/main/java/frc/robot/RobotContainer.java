@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveTrajectory;
+import frc.robot.commands.auto.AutoBuilder;
 import frc.robot.constants.Constants;
 import frc.robot.constants.PathfindConstants;
 import frc.robot.generated.TunerConstants;
@@ -187,12 +188,23 @@ public class RobotContainer {
     /*    .andThen(intake.outTake().withTimeout(.5))
     .andThen(elevator.toBottom().alongWith(rotaryPart.coralScore()))*/
 
-    HolonomicTrajectory testTrajectory = new HolonomicTrajectory("driveStraight");
+    var autoBuilder = new AutoBuilder(drivetrain);
+    HolonomicTrajectory taxiTrajectory = new HolonomicTrajectory("driveStraight");
     autoChooser.addOption(
-        "Drive Trajectory",
+        "Taxi",
         Commands.runOnce(
-                () -> drivetrain.resetPose(AllianceFlipUtil.apply(testTrajectory.getStartPose())))
-            .andThen(new DriveTrajectory(drivetrain, testTrajectory)));
+                () -> drivetrain.resetPose(AllianceFlipUtil.apply(taxiTrajectory.getStartPose())))
+            .andThen(new DriveTrajectory(drivetrain, taxiTrajectory)));
+
+    HolonomicTrajectory exampleTrajectory = new HolonomicTrajectory("examplePath");
+    autoChooser.addOption(
+        "ExamplePath",
+        Commands.runOnce(
+                () ->
+                    drivetrain.resetPose(AllianceFlipUtil.apply(exampleTrajectory.getStartPose())))
+            .andThen(new DriveTrajectory(drivetrain, exampleTrajectory)));
+
+    autoChooser.addOption("Up In The Weeds Auto", autoBuilder.upInTheInspirationalAuto());
     /*  autoChooser.addOption(
     "L4 Testing",
     pathfindingAutoFactory(0, 3)
