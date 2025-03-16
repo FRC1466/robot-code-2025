@@ -133,7 +133,6 @@ public class Robot extends LoggedRobot {
         // Running a physics simulator, log to NT
         // Logger.addDataReceiver(new RLOGServer());
         Logger.addDataReceiver(new NT4Publisher());
-        Logger.addDataReceiver(new WPILOGWriter("C:/logs"));
         break;
 
       case REPLAY:
@@ -214,6 +213,10 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotPeriodic() {
+    double elevatorHeight = RobotContainer.elevator.getElevatorHeight();
+    double armAngle = RobotContainer.rotaryPart.getPosition().getRadians();
+    m_robotContainer.mechanismViz.update(elevatorHeight, armAngle);
+
     Logger.recordOutput("Beam Break", beamBreak.get());
     if (!lastBoolean && beamBreak.get()) {
       RobotContainer.elevator.setSelectedSensorPosition(1.75);
@@ -446,6 +449,24 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void simulationPeriodic() {
+    // Stepped visualization for elevator height
+    double currentHeight = RobotContainer.elevator.getElevatorHeight();
+    double visualHeight;
+
+    // Step the visualization based on elevator setpoints
+    if (currentHeight >= 62) {
+      visualHeight = 1.89;
+    } else if (currentHeight >= 29) {
+      visualHeight = 1.3;
+    } else if (currentHeight >= 13) {
+      visualHeight = 0.9;
+    } else {
+      visualHeight = currentHeight;
+    }
+
+    // Update the mechanism visualization with the stepped height
+    m_robotContainer.mechanismViz.update(
+        visualHeight, RobotContainer.rotaryPart.getPosition().getRadians());
     vision.simulationPeriodic(RobotContainer.drivetrain.getState().Pose);
 
     var debugField = vision.getSimDebugField();

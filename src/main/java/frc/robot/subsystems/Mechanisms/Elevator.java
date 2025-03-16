@@ -3,8 +3,6 @@
  
 package frc.robot.subsystems.Mechanisms;
 
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -16,21 +14,23 @@ import org.littletonrobotics.junction.Logger;
 
 public class Elevator extends SubsystemBase {
 
-  private final TalonFX masterMotor, leftSlaveFX;
+  // IO management
+  private final ElevatorIO io;
+  private final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
 
-  @SuppressWarnings("unused")
-  private static Elevator instance;
-
-  private PIDController elevatorPID;
+  // Control objects
+  public final PIDController elevatorPID;
   private double localSetpoint = 0;
   private DoubleSupplier overrideFeedforward = () -> 0;
-
   private double peakOutput;
 
-  public Elevator() {
-    masterMotor = new TalonFX(Constants.ElevatorConstants.masterID);
-
-    leftSlaveFX = new TalonFX(Constants.ElevatorConstants.slaveID);
+  /**
+   * Creates a new Elevator subsystem.
+   *
+   * @param io The IO interface implementation to use (real or simulation)
+   */
+  public Elevator(ElevatorIO io) {
+    this.io = io;
 
     peakOutput = Constants.ElevatorConstants.elevatorPosition.peakOutput;
     elevatorPID =
@@ -39,20 +39,18 @@ public class Elevator extends SubsystemBase {
             Constants.ElevatorConstants.elevatorPosition.I,
             Constants.ElevatorConstants.elevatorPosition.D);
     elevatorPID.setTolerance(.1);
+
     setGoal(1);
-    masterMotor.setVoltage(0);
-    leftSlaveFX.setVoltage(0);
-    setNeutralMode(NeutralModeValue.Brake);
+    io.setVoltage(0);
+    setNeutralMode(true); // Set to brake mode
   }
 
-  private void setNeutralMode(NeutralModeValue neutralMode) {
-    masterMotor.setNeutralMode(neutralMode);
-    leftSlaveFX.setNeutralMode(neutralMode);
+  private void setNeutralMode(boolean isBrake) {
+    io.setNeutralMode(isBrake);
   }
 
   public void setSelectedSensorPosition(double position) {
-    masterMotor.setPosition(position);
-    leftSlaveFX.setPosition(position);
+    io.setPosition(position);
   }
 
   public void setP(double p) {
@@ -64,8 +62,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public double getElevatorHeight() {
-    double height = masterMotor.getPosition().getValueAsDouble();
-    return height;
+    return inputs.position;
   }
 
   public void goToGoal(double goal) {
@@ -74,9 +71,8 @@ public class Elevator extends SubsystemBase {
     SmartDashboard.putNumber("Elevator PID Setpoint", goal);
   }
 
-  public void setMotor(double percent) {
-    masterMotor.set(percent);
-    leftSlaveFX.set(-percent);
+  public void setVoltage(double volts) {
+    io.setVoltage(volts);
   }
 
   public Command setGoal(double goal) {
@@ -127,9 +123,9 @@ public class Elevator extends SubsystemBase {
   public void setArmHold() {
     var motorOutput =
         MathUtil.clamp(
-            elevatorPID.calculate(getElevatorHeight(), localSetpoint), -peakOutput, peakOutput);
-    var feedforward = getElevatorHeight() * Constants.ElevatorConstants.elevatorPosition.F;
-    setMotor(motorOutput + feedforward + overrideFeedforward.getAsDouble());
+            elevatorPID.calculate(inputs.position, localSetpoint), -peakOutput, peakOutput);
+    var feedforward = inputs.position * Constants.ElevatorConstants.elevatorPosition.F;
+    setVoltage(motorOutput + feedforward + overrideFeedforward.getAsDouble());
     SmartDashboard.putNumber("Elevator PID Output", motorOutput);
     SmartDashboard.putNumber("Arm Feedforward", feedforward);
     SmartDashboard.putNumber("Elevator Feedforward Override", overrideFeedforward.getAsDouble());
@@ -140,8 +136,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public void setMotorVoltage(double volts) {
-    masterMotor.setVoltage(volts);
-    leftSlaveFX.setVoltage(-volts);
+    io.setVoltage(volts);
   }
 
   public Command setElevatorVoltage(double volts) {
@@ -154,9 +149,20 @@ public class Elevator extends SubsystemBase {
 
   @Override
   public void periodic() {
+    // Update IO inputs and log them
+    io.updateInputs(inputs);
+    Logger.processInputs("Elevator", inputs);
+
+    // Apply control logic
     setArmHold();
 
-    Logger.recordOutput("Elevator Position", getElevatorHeight());
-    Logger.recordOutput("Elevator Desired Positon", elevatorPID.getSetpoint());
+    // Log additional data
+    Logger.recordOutput("Elevator/Position", getElevatorHeight());
+    Logger.recordOutput("Elevator/DesiredPosition", elevatorPID.getSetpoint());
+    Logger.recordOutput("Elevator/Velocity", inputs.velocity);
+    Logger.recordOutput("Elevator/AppliedVolts", inputs.appliedVolts);
+    Logger.recordOutput("Elevator/CurrentAmpsMaster", inputs.currentAmpsMaster);
+    Logger.recordOutput("Elevator/CurrentAmpsSlave", inputs.currentAmpsSlave);
+    Logger.recordOutput("Elevator/TemperatureCelsius", inputs.tempCelsius);
   }
 }

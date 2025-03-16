@@ -10,6 +10,7 @@ public class Gains {
   public double F;
   public double integralZone;
   public double peakOutput;
+  public double gearRatio;
 
   public Gains(double P, double I, double D, double F, double integralZone, double peakOutput) {
     this.P = P;
@@ -18,5 +19,6 @@ public class Gains {
     this.F = F;
     this.integralZone = integralZone;
     this.peakOutput = peakOutput;
+    this.gearRatio = 1.0;
   }
 }

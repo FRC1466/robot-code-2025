@@ -31,7 +31,10 @@ import frc.robot.constants.PathfindConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsTester;
 import frc.robot.subsystems.Mechanisms.Elevator;
+import frc.robot.subsystems.Mechanisms.ElevatorIOReal;
+import frc.robot.subsystems.Mechanisms.ElevatorIOSim;
 import frc.robot.subsystems.Mechanisms.Intake;
+import frc.robot.subsystems.Mechanisms.MechanismVisualization;
 import frc.robot.subsystems.Mechanisms.RotaryPart;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
@@ -49,6 +52,8 @@ public class RobotContainer {
   private Command reefCommand = null;
   private Command algaeCommand = null;
   private Command stationCommand = null;
+
+  final MechanismVisualization mechanismViz = new MechanismVisualization();
 
   // Warnings
   private final Alert driverDisconnected =
@@ -77,7 +82,7 @@ public class RobotContainer {
   private final Intake intake = new Intake();
   public static final RotaryPart rotaryPart = new RotaryPart();
   public static final Vision photonCamera = new Vision();
-  public static final Elevator elevator = new Elevator();
+  public static Elevator elevator;
 
   private final AprilTagFieldLayout layout =
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
@@ -108,14 +113,17 @@ public class RobotContainer {
     switch (Constants.getRobot()) {
       case COMPBOT -> {
         drivetrain = TunerConstants.createDrivetrain();
+        elevator = new Elevator(new ElevatorIOReal());
         Logger.recordOutput("Constant File", "Using TunerConstants for Compbot");
       }
       case DEVBOT -> {
         drivetrain = TunerConstantsTester.createDrivetrain();
+        elevator = null;
         Logger.recordOutput("Constant File", "Using TunerConstantsTester for Devbot");
       }
       case SIMBOT -> {
         drivetrain = TunerConstants.createDrivetrain();
+        elevator = new Elevator(new ElevatorIOSim());
         Logger.recordOutput("Constant File", "Using TunerConstants for simulation");
       }
       default -> throw new IllegalArgumentException("Unexpected value: " + Constants.getRobot());
