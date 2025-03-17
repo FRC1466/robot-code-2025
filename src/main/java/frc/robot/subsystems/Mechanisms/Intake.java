@@ -26,6 +26,7 @@ public class Intake extends SubsystemBase {
   }
 
   public void setIntakeVoltage(double outputVoltage) {
+    Logger.recordOutput("Intake Voltage", outputVoltage);
     intakeMotor.setVoltage(outputVoltage);
   }
 
@@ -44,7 +45,7 @@ public class Intake extends SubsystemBase {
   public Command reverseIntake() {
     return runOnce(
         () -> {
-          setIntakeVoltage(1);
+          setIntakeVoltage(3);
           setFunnelVoltage(0);
         });
   }
@@ -52,7 +53,7 @@ public class Intake extends SubsystemBase {
   public Command algaeHold() {
     return runOnce(
         () -> {
-          setIntakeVoltage(.4);
+          setIntakeVoltage(.5);
           setFunnelVoltage(0);
         });
   }
@@ -60,7 +61,7 @@ public class Intake extends SubsystemBase {
   public Command coralHold() {
     return runOnce(
         () -> {
-          setIntakeVoltage(.3);
+          setIntakeVoltage(.2);
           setFunnelVoltage(0);
         });
   }
@@ -68,8 +69,8 @@ public class Intake extends SubsystemBase {
   public Command intake() {
     return runOnce(
         () -> {
-          setIntakeVoltage(-2);
-          setFunnelVoltage(-3);
+          setIntakeVoltage(-1.75);
+          setFunnelVoltage(-5);
         });
   }
 
@@ -99,6 +100,7 @@ public class Intake extends SubsystemBase {
   }
 
   public void periodic() {
+
     Logger.recordOutput("ColorSensed boolean", (m_colorSensor.getProximity() <= 120));
     Logger.recordOutput("Intake Motor Current", intakeMotor.getTorqueCurrent().getValueAsDouble());
     Logger.recordOutput("Intake Motor High Current", highCurrentBool);

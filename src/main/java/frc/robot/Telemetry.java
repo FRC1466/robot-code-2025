@@ -17,8 +17,10 @@ import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
+import org.littletonrobotics.junction.Logger;
 
 public class Telemetry {
   private final double MaxSpeed;
@@ -30,7 +32,6 @@ public class Telemetry {
    */
   public Telemetry(double maxSpeed) {
     MaxSpeed = maxSpeed;
-    // SignalLogger.start();
   }
 
   /* What to publish over networktables for telemetry */
@@ -122,10 +123,10 @@ public class Telemetry {
       m_moduleTargetsArray[i * 2 + 1] = state.ModuleTargets[i].speedMetersPerSecond;
     }
 
-    // SignalLogger.writeDoubleArray("DriveState/Pose", m_poseArray);
-    // SignalLogger.writeDoubleArray("DriveState/ModuleStates", m_moduleStatesArray);
-    // SignalLogger.writeDoubleArray("DriveState/ModuleTargets", m_moduleTargetsArray);
-    // SignalLogger.writeDouble("DriveState/OdometryPeriod", state.OdometryPeriod, "seconds");
+    Logger.recordOutput("DriveState/Pose", m_poseArray);
+    Logger.recordOutput("DriveState/ModuleTargets", m_moduleTargetsArray);
+    Logger.recordOutput("DriveState/OdometryPeriod", state.OdometryPeriod);
+    Logger.recordOutput("DriveState/ModuleStates", m_moduleStatesArray);
 
     /* Telemeterize the pose to a Field2d */
     fieldTypePub.set("Field2d");
@@ -137,7 +138,7 @@ public class Telemetry {
       m_moduleDirections[i].setAngle(state.ModuleStates[i].angle);
       m_moduleSpeeds[i].setLength(state.ModuleStates[i].speedMetersPerSecond / (2 * MaxSpeed));
 
-      // SmartDashboard.putData("Module " + i, m_moduleMechanisms[i]);
+      SmartDashboard.putData("Module " + i, m_moduleMechanisms[i]);
     }
   }
 }

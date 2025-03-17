@@ -11,7 +11,6 @@ import edu.wpi.first.wpilibj.RobotBase;
 import webblib.Gains;
 
 public final class Constants {
-  public static double MAX_ROBOT_SPEED = 5;
   public static boolean disableHAL = false;
   public static final boolean CHECK_ROBOT_TYPE = false; // Enables robot type check during builds
 
@@ -76,7 +75,7 @@ public final class Constants {
     public static final double restRadians = .0,
         coralPosRadians = .505,
         l4coralPosRadians = 1,
-        algaePosition = 3;
+        algaePosition = Math.PI;
 
     public static final double maxRadians = Math.PI;
     public static final double gravityFF = 0.014;
@@ -102,6 +101,6 @@ public final class Constants {
     public static final int masterID = 17;
     public static final int slaveID = 16;
 
-    public static final Gains elevatorPosition = new Gains(.13, 0.00, 0.004, .0, 0, .6);
+    public static final Gains elevatorPosition = new Gains(.15, 0.00, 0.004, .0, 0, .5);
   }
 }
