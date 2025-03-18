@@ -6,6 +6,7 @@ package frc.robot.util;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -112,7 +113,6 @@ public class Pathfind {
         AutoBuilder.pathfindToPose(
             PathfindConstants.redTargetPoseStation[currentClosestStation], constraints, 0.0);
 
-    // Use FlipField.flipPose() to create blue alliance pose from red alliance pose
     bluePathfindingCommand =
         AutoBuilder.pathfindToPose(
             FlipField.FieldFlip(PathfindConstants.redTargetPoseStation[currentClosestStation]),
@@ -140,6 +140,13 @@ public class Pathfind {
   }
 
   public Command getPathfindingCommandBarge(double yBarge) {
+    // Flip how barge pose is clamped over the middle of field (The field is 8.052 M)
+    Optional<Alliance> currentAlliance = DriverStation.getAlliance();
+    if (currentAlliance.isPresent() && currentAlliance.get() == Alliance.Red) {
+      yBarge = MathUtil.clamp(yBarge, 0.5, 3.5);
+    } else {
+      yBarge = MathUtil.clamp(yBarge, 4.552, 7.552);
+    }
     redPathfindingCommand =
         AutoBuilder.pathfindToPose(
             new Pose2d(
@@ -190,5 +197,20 @@ public class Pathfind {
     }
 
     return averageBluePoses;
+  }
+
+  public Command getPathfindingCommandProcessor() {
+    redPathfindingCommand =
+        AutoBuilder.pathfindToPose(PathfindConstants.redTargetPoseProcessor, constraints, 0.0);
+    bluePathfindingCommand =
+        AutoBuilder.pathfindToPose(
+            FlipField.FieldFlip(MirrorUtil.apply(PathfindConstants.redTargetPoseProcessor)),
+            constraints,
+            0.0);
+
+    Optional<Alliance> allianceOptional = DriverStation.getAlliance();
+    Alliance alliance =
+        allianceOptional.orElse(Alliance.Blue); // choose default alliance if not present
+    return alliance == Alliance.Red ? redPathfindingCommand : bluePathfindingCommand;
   }
 }

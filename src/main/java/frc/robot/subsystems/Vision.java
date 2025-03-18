@@ -35,11 +35,7 @@ import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 public class Vision {
-  public static final String kCameraName = "Camera_FrontLeft";
   public static final String kCameraNames[] = {"Camera_FrontLeft", "Camera_FrontRight"};
-  // Cam mounted facing forward, half a meter forward of center, half a meter up from center.
-  public static final Transform3d kRobotToCam =
-      new Transform3d(new Translation3d(.267, .292, .2), new Rotation3d(0, 0, 0));
   public static final Transform3d kRobotToCams[] = {
     new Transform3d(new Translation3d(.267, .292, .2), new Rotation3d(0, 0, 0)),
     new Transform3d(new Translation3d(.267, -.292, .2), new Rotation3d(0, 0, 0))

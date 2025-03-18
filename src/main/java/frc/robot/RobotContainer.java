@@ -34,6 +34,7 @@ import frc.robot.subsystems.Mechanisms.Intake;
 import frc.robot.subsystems.Mechanisms.RotaryPart;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
+import frc.robot.util.*;
 import frc.robot.util.FlipField;
 import frc.robot.util.Pathfind;
 import java.io.IOException;
@@ -157,7 +158,6 @@ public class RobotContainer {
     Command l2HeightCommand = elevator.toL2();
 
     Command l2ScoreCommand =
-
         elevator
             .toL2()
             .andThen(intake.outTake())
@@ -612,6 +612,23 @@ public class RobotContainer {
     // Processor - Button 1
     safeButton1
         .and(algaeMode)
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  if (autoPathingEnabled) {
+                    algaeCommand = m_pathfinder.getPathfindingCommandProcessor();
+                    algaeCommand.schedule();
+                  }
+                }))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  if (algaeCommand != null) {
+                    algaeCommand.cancel();
+                  }
+                }));
+    safeButton1
+        .and(algaeMode)
         .onTrue(elevator.toProcessor())
         .onFalse(
             intake
@@ -624,65 +641,65 @@ public class RobotContainer {
                         .alongWith(intake.stop())));
 
     // L2 Algae - Button 3
-    /*  safeButton3
-    .and(algaeMode)
-    .onTrue(
-        Commands.runOnce(
-            () -> {
-              if (autoPathingEnabled) {
-                algaeCommand = m_pathfinder.getPathfindingCommandAlgae(getClosestTag());
-                algaeCommand.schedule();
-              }
-            }))
-    .onFalse(
-        Commands.runOnce(
-            () -> {
-              if (algaeCommand != null) {
-                algaeCommand.cancel();
-              }
-            }));*/
+    safeButton3
+        .and(algaeMode)
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  if (autoPathingEnabled) {
+                    algaeCommand = m_pathfinder.getPathfindingCommandAlgae(getClosestTag());
+                    algaeCommand.schedule();
+                  }
+                }))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  if (algaeCommand != null) {
+                    algaeCommand.cancel();
+                  }
+                }));
 
     safeButton3
         .and(algaeMode)
-        // .and(conditionalArmAlgaeReady) // Use conditional trigger
+        .and(conditionalArmAlgaeReady)
         .and(algaeHeightReady)
         .onTrue(rotaryPart.algaeGrab().alongWith(intake.reverseIntake()));
 
     safeButton3
         .and(algaeMode)
-        // .and(conditionalArmRaiseAlgaeReady) // Use conditional trigger
+        .and(conditionalArmRaiseAlgaeReady)
         .onTrue(rotaryPart.coralScore().alongWith(elevator.toL2Algae()));
 
     safeButton3.and(algaeMode).onFalse((intake.algaeHold()));
 
     // L3 Algae - Button 4
-    /*safeButton4
-    .and(algaeMode)
-    .onTrue(
-        Commands.runOnce(
-            () -> {
-              if (autoPathingEnabled) {
-                algaeCommand = m_pathfinder.getPathfindingCommandAlgae(getClosestTag());
-                algaeCommand.schedule();
-              }
-            }))
-    .onFalse(
-        Commands.runOnce(
-            () -> {
-              if (algaeCommand != null) {
-                algaeCommand.cancel();
-              }
-            }));*/
+    safeButton4
+        .and(algaeMode)
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  if (autoPathingEnabled) {
+                    algaeCommand = m_pathfinder.getPathfindingCommandAlgae(getClosestTag());
+                    algaeCommand.schedule();
+                  }
+                }))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  if (algaeCommand != null) {
+                    algaeCommand.cancel();
+                  }
+                }));
 
     safeButton4
         .and(algaeMode)
-        // .and(conditionalArmAlgaeReady) // Use conditional trigger
+        .and(conditionalArmAlgaeReady)
         .and(algaeHeightReady)
         .onTrue(rotaryPart.algaeGrab().alongWith(intake.reverseIntake()));
 
     safeButton4
         .and(algaeMode)
-        // .and(conditionalArmRaiseAlgaeReady) // Use conditional trigger
+        .and(conditionalArmRaiseAlgaeReady)
         .onTrue(rotaryPart.coralScore().alongWith(elevator.toL3Algae()));
 
     safeButton4.and(algaeMode).onFalse((intake.algaeHold()));
@@ -703,31 +720,30 @@ public class RobotContainer {
         .onTrue(runOnce(() -> pathfindingOverride = true));
     // Barge - Button 9
     safeButton9
-        // .and(conditionalArmBargeReady) // Use conditional trigger
+        .and(conditionalArmBargeReady)
         .and(algaeMode)
         .onTrue(elevator.toL4Algae())
         .onFalse(
             rotaryPart.coralScore().alongWith(Commands.waitSeconds(.01)).andThen(intake.outTake()));
 
-    /*safeButton9
-    .and(algaeMode)
-     .onTrue(
-        Commands.runOnce(
-            () -> {
-              if (autoPathingEnabled) {
-                algaeCommand =
-                    m_pathfinder.getPathfindingCommandBarge(drivetrain.getState().Pose.getY());
-                algaeCommand.schedule();
-              }
-            }))
-    .onFalse(
-        Commands.runOnce(
-            () -> {
-              if (algaeCommand != null) {
-                algaeCommand.cancel();
-              }
-            }
-             )); */
+    safeButton9
+        .and(algaeMode)
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  if (autoPathingEnabled) {
+                    algaeCommand =
+                        m_pathfinder.getPathfindingCommandBarge(drivetrain.getState().Pose.getY());
+                    algaeCommand.schedule();
+                  }
+                }))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  if (algaeCommand != null) {
+                    algaeCommand.cancel();
+                  }
+                }));
 
     // Slider control - Button
     // joystick.button(9).onTrue(switchState(true)).onFalse(switchState(false));
@@ -882,6 +898,7 @@ public class RobotContainer {
     // If blue alliance, flip the target pose
     if (alliance == Alliance.Blue) {
       targetPose = FlipField.FieldFlip(targetPose);
+      targetPose = MirrorUtil.apply(targetPose);
     }
 
     double distAway =

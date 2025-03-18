@@ -150,7 +150,7 @@ public class Robot extends LoggedRobot {
 
     // Configure DriverStation for sim
     if (Constants.getRobot() == RobotType.SIMBOT) {
-      DriverStationSim.setAllianceStationId(AllianceStationID.Red1);
+      DriverStationSim.setAllianceStationId(AllianceStationID.Blue3);
       DriverStationSim.notifyNewData();
     }
 
@@ -292,13 +292,6 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void disabledInit() {
-    // Only run simulation-specific code for SIMBOT
-    if (Constants.getRobot() == RobotType.SIMBOT) {
-      System.out.println("Refreshing SIMBOT alliance configuration");
-      DriverStationSim.setAllianceStationId(AllianceStationID.Red1);
-      DriverStationSim.notifyNewData();
-    }
-
     RobotContainer.elevator.goToGoal(1);
     // fix later
     // m_robotContainer.rotaryPart.setGoal(Rotation2d.fromRadians(.05));
