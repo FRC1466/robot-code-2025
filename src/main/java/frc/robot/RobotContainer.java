@@ -189,13 +189,6 @@ public class RobotContainer {
     .alongWith(intake.coralHold());*/
     /*    .andThen(intake.outTake().withTimeout(.5))
     .andThen(elevator.toBottom().alongWith(rotaryPart.coralScore()))*/
-    Command driveTo12 = Commands.runOnce(
-      () -> {
-        // Only schedule the command if auto pathing is enabled
-        
-          stationCommand = m_pathfinder.getPathfindingCommandReef(0,5);
-          stationCommand.schedule();
-      });
     // Register the named commands
     NamedCommands.registerCommand("CoralScore", rotaryPart.coralScore());
     NamedCommands.registerCommand("IntakeElevator", intakeHeightCommand);
