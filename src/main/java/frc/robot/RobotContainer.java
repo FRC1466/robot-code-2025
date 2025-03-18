@@ -332,13 +332,6 @@ public class RobotContainer {
                 }));
   }
 
-  // Configure joystick bindings
-  // Declare triggers as class members
-  public Trigger intakeProximityTrigger;
-  public Trigger algaeHeightReady;
-  public Trigger currentIntakeSwitch;
-  public Trigger falseIntakeProximityTrigger;
-
   @SuppressWarnings("unused")
   private void configureBindings() {
     // Create safe versions of all joystick trigger inputs that respect the ignoreJoystickInput flag
@@ -391,8 +384,7 @@ public class RobotContainer {
     safeButton2.onTrue(changeMode());
 
     // Basic triggers (not position-dependent)
-    Trigger intakeProximityTrigger = new Trigger(() -> intake.getIntakeDistanceBool());
-    Trigger falseIntakeProximityTrigger = new Trigger(() -> !intake.getIntakeDistanceBool());
+    Trigger intakeColorSensorTrigger = new Trigger(() -> intake.getIntakeDistanceBool());
     Trigger algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 20);
     Trigger processorReady = new Trigger(() -> elevator.getElevatorHeight() > 4);
     Trigger currentIntakeSwitch = new Trigger(() -> intake.getHighCurrent());
@@ -480,21 +472,21 @@ public class RobotContainer {
                             * MaxAngularRate)));
 
     // Intake stop on coral leaving
-    intakeProximityTrigger
+    intakeColorSensorTrigger
         .and(coralMode)
         .onTrue(elevator.toBottom().alongWith(rotaryPart.coralScore()).andThen(intake.stop()));
 
     // Coral intake - Button 3
     safeButton3
         .and(coralMode)
-        .and(intakeProximityTrigger)
+        .and(intakeColorSensorTrigger)
         // .and(conditionalCoralIntakeReady) // Use conditional trigger
         .whileTrue(intake.intake().alongWith(rotaryPart.store()).alongWith(elevator.toBottom()))
         .onFalse((rotaryPart.coralScore()).alongWith(intake.stop()));
 
     // Coral station pathfinding - Button 3
     safeButton3
-        .and(coralIntakePositionCheck)
+        // .and(coralIntakePositionCheck)
         .and(coralMode)
         .onTrue(
             Commands.runOnce(
@@ -710,32 +702,32 @@ public class RobotContainer {
         .or(safeButton16)
         .onTrue(runOnce(() -> pathfindingOverride = true));
     // Barge - Button 9
-    /*safeButton9
-        .and(conditionalArmBargeReady) // Use conditional triggerau
+    safeButton9
+        // .and(conditionalArmBargeReady) // Use conditional trigger
         .and(algaeMode)
         .onTrue(elevator.toL4Algae())
         .onFalse(
             rotaryPart.coralScore().alongWith(Commands.waitSeconds(.01)).andThen(intake.outTake()));
 
     /*safeButton9
-        .and(algaeMode)
-         .onTrue(
-            Commands.runOnce(
-                () -> {
-                  if (autoPathingEnabled) {
-                    algaeCommand =
-                        m_pathfinder.getPathfindingCommandBarge(drivetrain.getState().Pose.getY());
-                    algaeCommand.schedule();
-                  }
-                }))
-        .onFalse(
-            Commands.runOnce(
-                () -> {
-                  if (algaeCommand != null) {
-                    algaeCommand.cancel();
-                  }
-                }
-                 )); */
+    .and(algaeMode)
+     .onTrue(
+        Commands.runOnce(
+            () -> {
+              if (autoPathingEnabled) {
+                algaeCommand =
+                    m_pathfinder.getPathfindingCommandBarge(drivetrain.getState().Pose.getY());
+                algaeCommand.schedule();
+              }
+            }))
+    .onFalse(
+        Commands.runOnce(
+            () -> {
+              if (algaeCommand != null) {
+                algaeCommand.cancel();
+              }
+            }
+             )); */
 
     // Slider control - Button
     // joystick.button(9).onTrue(switchState(true)).onFalse(switchState(false));

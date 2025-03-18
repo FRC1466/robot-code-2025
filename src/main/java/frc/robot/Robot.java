@@ -6,9 +6,6 @@ package frc.robot;
 import com.ctre.phoenix6.Utils;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.hal.AllianceStationID;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -41,6 +38,7 @@ import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
+import org.littletonrobotics.junction.rlog.RLOGServer;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
@@ -79,10 +77,6 @@ public class Robot extends LoggedRobot {
   private boolean ignoreJoystickInput = false;
 
   boolean allInputsNeutral = true;
-
-  @SuppressWarnings("unused")
-  private final StructPublisher<Pose2d> posePublisher =
-      NetworkTableInstance.getDefault().getStructTopic("Test", Pose2d.struct).publish();
 
   private final Alert lowBatteryAlert =
       new Alert(
@@ -132,8 +126,7 @@ public class Robot extends LoggedRobot {
       case SIM:
         // Running a physics simulator, log to NT
         // Logger.addDataReceiver(new RLOGServer());
-        Logger.addDataReceiver(new NT4Publisher());
-        Logger.addDataReceiver(new WPILOGWriter("C:/logs"));
+        Logger.addDataReceiver(new RLOGServer());
         break;
 
       case REPLAY:
@@ -212,6 +205,8 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotPeriodic() {
+    Logger.recordOutput("Robot Pose", RobotContainer.drivetrain.getState().Pose);
+    RobotContainer.elevator.updateMechanism();
     Logger.recordOutput("Beam Break", beamBreak.get());
     /*if (!lastBoolean && beamBreak.get()) {
       RobotContainer.elevator.setSelectedSensorPosition(.5);
