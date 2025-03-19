@@ -26,17 +26,17 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.Constants;
+import frc.robot.constants.Constants.RobotType;
 import frc.robot.constants.PathfindConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsTester;
 import frc.robot.subsystems.Mechanisms.Elevator;
 import frc.robot.subsystems.Mechanisms.Intake;
 import frc.robot.subsystems.Mechanisms.RotaryPart;
+import frc.robot.subsystems.Mechanisms.RotaryPartSim;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
 import frc.robot.util.*;
-import frc.robot.util.FlipField;
-import frc.robot.util.Pathfind;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Optional;
@@ -78,6 +78,7 @@ public class RobotContainer {
   // Subsystems
   private final Intake intake = new Intake();
   public static final RotaryPart rotaryPart = new RotaryPart();
+  public static final RotaryPartSim rotaryPartSim = new RotaryPartSim();
   public static final Vision photonCamera = new Vision();
   public static final Elevator elevator = new Elevator();
 
@@ -408,10 +409,10 @@ public class RobotContainer {
     Trigger conditionalArmRaiseReefReady = new Trigger(armRaiseReefPositionCheck);
 
     // For algae position
-    BooleanSupplier armAlgaePositionCheck = () -> !autoPathingEnabled || armAlgaeReady(.1);
+    BooleanSupplier armAlgaePositionCheck = () -> !autoPathingEnabled || armAlgaeReady(1);
     Trigger conditionalArmAlgaeReady = new Trigger(armAlgaePositionCheck);
 
-    BooleanSupplier armRaiseAlgaePositionCheck = () -> !autoPathingEnabled || armAlgaeReady(1);
+    BooleanSupplier armRaiseAlgaePositionCheck = () -> !autoPathingEnabled || armAlgaeReady(1.75);
     Trigger conditionalArmRaiseAlgaeReady = new Trigger(armRaiseAlgaePositionCheck);
 
     // For barge position
@@ -697,10 +698,19 @@ public class RobotContainer {
         .and(algaeHeightReady)
         .onTrue(rotaryPart.algaeGrab().alongWith(intake.reverseIntake()));
 
+    // Only on real robot (not SIMBOT), move to coral score position
     safeButton4
         .and(algaeMode)
         .and(conditionalArmRaiseAlgaeReady)
+        .and(() -> Constants.getRobot() != RobotType.SIMBOT) // Only on real robot
         .onTrue(rotaryPart.coralScore().alongWith(elevator.toL3Algae()));
+
+    // For simulation, just move elevator without changing rotary part
+    safeButton4
+        .and(algaeMode)
+        .and(conditionalArmRaiseAlgaeReady)
+        .and(() -> Constants.getRobot() == RobotType.SIMBOT) // Only in simulation
+        .onTrue(elevator.toL3Algae());
 
     safeButton4.and(algaeMode).onFalse((intake.algaeHold()));
 
@@ -917,7 +927,7 @@ public class RobotContainer {
 
     // If blue alliance, flip the target pose
     if (alliance == Alliance.Blue) {
-      targetPose = FlipField.FieldFlip(targetPose);
+      targetPose = Pathfind.blueAveragePoses[getClosestTag()];
     }
 
     double distAway =

@@ -26,8 +26,9 @@ import frc.robot.constants.Constants;
 import frc.robot.constants.Constants.RobotType;
 import frc.robot.subsystems.Vision;
 import frc.robot.util.Blinkin;
-import frc.robot.util.FlipField;
 import frc.robot.util.LocalADStarAK;
+import frc.robot.util.MechanismVisualizer;
+import frc.robot.util.rlog.RLOGServer;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -38,7 +39,6 @@ import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
-import org.littletonrobotics.junction.rlog.RLOGServer;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
@@ -60,6 +60,9 @@ public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
   private Vision vision;
   private final RobotContainer m_robotContainer;
+
+  // Combined mechanism visualizer for elevator and rotary part
+  private MechanismVisualizer m_mechanismVisualizer;
 
   @SuppressWarnings("unused")
   private Timer algaeIntakeTimer = new Timer();
@@ -124,9 +127,9 @@ public class Robot extends LoggedRobot {
         new PowerDistribution(1, ModuleType.kRev); // Enables power distribution logging
 
       case SIM:
-        // Running a physics simulator, log to NT
-        // Logger.addDataReceiver(new RLOGServer());
+        // Running a physics simulator, log to NT4 and RLOG
         Logger.addDataReceiver(new RLOGServer());
+        Logger.addDataReceiver(new NT4Publisher());
         break;
 
       case REPLAY:
@@ -201,11 +204,17 @@ public class Robot extends LoggedRobot {
     Pathfinding.setPathfinder(new LocalADStarAK());
     RobotContainer.elevator.setSelectedSensorPosition(0);
     vision = new Vision();
+
+    // Initialize the combined mechanism visualizer if in simulation mode
+    if (Constants.getRobot() == RobotType.SIMBOT) {
+      m_mechanismVisualizer =
+          new MechanismVisualizer(RobotContainer.elevator, RobotContainer.rotaryPartSim);
+    }
   }
 
   @Override
   public void robotPeriodic() {
-    Logger.recordOutput("Robot Pose", RobotContainer.drivetrain.getState().Pose);
+    Logger.recordOutput("AlgaeHeightReady?", RobotContainer.elevator.getElevatorHeight() > 20);
     RobotContainer.elevator.updateMechanism();
     Logger.recordOutput("Beam Break", beamBreak.get());
     /*if (!lastBoolean && beamBreak.get()) {
@@ -216,8 +225,6 @@ public class Robot extends LoggedRobot {
       RobotContainer.elevator.setSelectedSensorPosition(.25);
     }
     lastBoolean = beamBreak.get();
-    Logger.recordOutput(
-        "Flipped Position", FlipField.flipPose(RobotContainer.drivetrain.getState().Pose));
     // Color detectedColor = m_colorSensor.getColor();
 
     /*
@@ -242,6 +249,10 @@ public class Robot extends LoggedRobot {
             });
         break;
       case SIMBOT:
+        // Update the mechanism visualizer in simulation mode
+        if (m_mechanismVisualizer != null) {
+          m_mechanismVisualizer.periodic();
+        }
         break;
       default:
         visionEst.ifPresent(
@@ -460,6 +471,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void simulationPeriodic() {
+    RobotContainer.elevator.simulationPeriodicElevator();
     vision.simulationPeriodic(RobotContainer.drivetrain.getState().Pose);
 
     var debugField = vision.getSimDebugField();

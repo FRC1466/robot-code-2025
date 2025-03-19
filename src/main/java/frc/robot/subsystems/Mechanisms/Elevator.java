@@ -55,21 +55,21 @@ public class Elevator extends SubsystemBase {
 
   // LoggedTunableNumbers for elevator position visualization thresholds
   private final LoggedTunableNumber restingVisualizationMeters =
-      new LoggedTunableNumber("Elevator/Visualization/RestingMeters", Units.inchesToMeters(1.0));
+      new LoggedTunableNumber("Elevator/Visualization/RestingMeters", .025);
   private final LoggedTunableNumber intakeVisualizationMeters =
-      new LoggedTunableNumber("Elevator/Visualization/IntakeMeters", Units.inchesToMeters(10.0));
+      new LoggedTunableNumber("Elevator/Visualization/IntakeMeters", .025);
   private final LoggedTunableNumber l2VisualizationMeters =
-      new LoggedTunableNumber("Elevator/Visualization/L2Meters", Units.inchesToMeters(14.0));
+      new LoggedTunableNumber("Elevator/Visualization/L2Meters", 1.05);
   private final LoggedTunableNumber l2AlgaeVisualizationMeters =
-      new LoggedTunableNumber("Elevator/Visualization/L2AlgaeMeters", Units.inchesToMeters(24.0));
+      new LoggedTunableNumber("Elevator/Visualization/L2AlgaeMeters", 1.2);
   private final LoggedTunableNumber l3VisualizationMeters =
-      new LoggedTunableNumber("Elevator/Visualization/L3Meters", Units.inchesToMeters(30.0));
+      new LoggedTunableNumber("Elevator/Visualization/L3Meters", 1.35);
   private final LoggedTunableNumber l3AlgaeVisualizationMeters =
-      new LoggedTunableNumber("Elevator/Visualization/L3AlgaeMeters", Units.inchesToMeters(42.0));
+      new LoggedTunableNumber("Elevator/Visualization/L3AlgaeMeters", 1.55);
   private final LoggedTunableNumber l4VisualizationMeters =
-      new LoggedTunableNumber("Elevator/Visualization/L4Meters", Units.inchesToMeters(63.0));
+      new LoggedTunableNumber("Elevator/Visualization/L4Meters", 2);
   private final LoggedTunableNumber bargeVisualizationMeters =
-      new LoggedTunableNumber("Elevator/Visualization/BargeMeters", Units.inchesToMeters(66.0));
+      new LoggedTunableNumber("Elevator/Visualization/BargeMeters", 2.4);
 
   // Threshold values for determining which visualization to use
   private final double RESTING_THRESHOLD = 2.0; // 0-2 inches
@@ -79,6 +79,7 @@ public class Elevator extends SubsystemBase {
   private final double L3_THRESHOLD = 36.0; // 29-36 inches
   private final double L3_ALGAE_THRESHOLD = 50.0; // 37-50 inches
   private final double L4_THRESHOLD = 64.0; // 51-64 inches
+  public double visualizationMeters = 0.0;
 
   // 65+ is barge
 
@@ -184,8 +185,7 @@ public class Elevator extends SubsystemBase {
         break;
       case SIMBOT:
         // Get current setpoint to determine visualization position
-        double currentSetpoint = elevatorPID.getSetpoint();
-        double visualizationMeters = 0.0;
+        double currentSetpoint = masterMotor.getPosition().getValueAsDouble();
 
         // Determine which visualization height to use based on setpoint thresholds
         if (currentSetpoint <= RESTING_THRESHOLD) {
@@ -371,7 +371,7 @@ public class Elevator extends SubsystemBase {
     }
   }
 
-  public void simulationPeriodic() {
+  public void simulationPeriodicElevator() {
     if (Constants.getRobot() == RobotType.SIMBOT) {
       // Update the simulation with standard loop time
       m_elevatorSim.update(0.020);

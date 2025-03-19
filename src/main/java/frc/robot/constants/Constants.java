@@ -8,8 +8,6 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import webblib.Gains;
 
 public final class Constants {
@@ -17,17 +15,6 @@ public final class Constants {
   public static final boolean CHECK_ROBOT_TYPE = false; // Enables robot type check during builds
 
   public static final boolean tuningMode = true; // Allows changing of LoggedTunableNumbers
-  public static final SendableChooser<Boolean> tuningModeChooser = new SendableChooser<>();
-
-  static {
-    tuningModeChooser.setDefaultOption("Disabled", false);
-    tuningModeChooser.addOption("Enabled", true);
-    SmartDashboard.putData("Tuning Mode", tuningModeChooser);
-  }
-
-  public static boolean isTuningMode() {
-    return tuningModeChooser.getSelected() != null ? tuningModeChooser.getSelected() : tuningMode;
-  }
 
   private static RobotType robotType = RobotType.SIMBOT;
   public static Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.REPLAY;
