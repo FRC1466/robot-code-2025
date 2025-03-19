@@ -1,7 +1,7 @@
 {
   "name": "2025Beta2",
   "rotations": [{"axis": "x", "degrees": 90},{"axis": "z", "degrees": 90}],
-  "position": [0.329, 0.354, 0.025],
+  "position": [0, 0, -0.005],
   "cameras": [
     {
       "name": "camera_FrontLeft",
@@ -43,9 +43,7 @@
         }
       ],
       "zeroedPosition": [
-        0.329,
-        0.354,
-        0.025
+        0, 0, -0.005
       ]
     },
     {
@@ -60,9 +58,7 @@
         }
       ],
       "zeroedPosition": [
-        0,
-        0.015,
-        0.034
+        0, 0, -0.005
       ]
     },
     {
@@ -73,13 +69,11 @@
         },
         {
           "axis": "y",
-          "degrees": 65
+          "degrees": 90
         }
       ],
       "zeroedPosition": [
-        0.27,
-        0.015,
-        0.35
+        -0.28, -0.006, -0.37
       ]
     }
   ]
