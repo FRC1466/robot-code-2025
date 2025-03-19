@@ -25,13 +25,24 @@
     },
     "types": {
       "/AdvantageKit/RealOutputs/Alerts": "Alerts",
+      "/AdvantageKit/RealOutputs/Elevator Mech": "Mechanism2d",
+      "/AdvantageKit/RealOutputs/Module/0": "Mechanism2d",
+      "/AdvantageKit/RealOutputs/Module/1": "Mechanism2d",
+      "/AdvantageKit/RealOutputs/Module/2": "Mechanism2d",
+      "/AdvantageKit/RealOutputs/Module/3": "Mechanism2d",
+      "/AdvantageKit/RealOutputs/PathPlanner": "Alerts",
       "/FMSInfo": "FMSInfo",
       "/Pose": "Field2d",
       "/SmartDashboard/Alerts": "Alerts",
+      "/SmartDashboard/Arm Sim": "Mechanism2d",
+      "/SmartDashboard/Auto Selector": "String Chooser",
+      "/SmartDashboard/Debug Mode": "String Chooser",
       "/SmartDashboard/Module 0": "Mechanism2d",
       "/SmartDashboard/Module 1": "Mechanism2d",
       "/SmartDashboard/Module 2": "Mechanism2d",
-      "/SmartDashboard/Module 3": "Mechanism2d"
+      "/SmartDashboard/Module 3": "Mechanism2d",
+      "/SmartDashboard/PathPlanner": "Alerts",
+      "/SmartDashboard/Pathing Control": "String Chooser"
     }
   },
   "NetworkTables Info": {
@@ -41,14 +52,13 @@
     "Server": {
       "open": true
     },
+    "photonvision@2": {
+      "open": true
+    },
     "photonvision@4": {
-      "Publishers": {
-        "open": true
-      },
-      "Subscribers": {
-        "open": true
-      }
-    }
+      "open": true
+    },
+    "visible": true
   },
   "NetworkTables Settings": {
     "mode": "Client (NT4)",

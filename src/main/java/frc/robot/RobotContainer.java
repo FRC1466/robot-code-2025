@@ -66,8 +66,8 @@ public class RobotContainer {
   // Swerve drive platform control
   private final SwerveRequest.FieldCentric drive =
       new SwerveRequest.FieldCentric()
-          .withDeadband(.1)
-          .withRotationalDeadband(.1) // Add a 10% deadband
+          .withDeadband(0)
+          .withRotationalDeadband(0) // Add a 10% deadband
           .withDriveRequestType(
               DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
@@ -394,6 +394,11 @@ public class RobotContainer {
     Trigger l3Ready = new Trigger(() -> elevator.getElevatorHeight() > 29);
     Trigger l4ArmReady = new Trigger(() -> elevator.getElevatorHeight() > 58);
     Trigger l4ScoreReady = new Trigger(() -> elevator.getElevatorHeight() > 61);
+    Trigger armBargeReady =
+        new Trigger(
+            () ->
+                rotaryPart.getPosition().getRadians() < 2.1
+                    && rotaryPart.getPosition().getRadians() > 0);
     Trigger coralMode = new Trigger(() -> !getModeMethod());
     Trigger normalMode = new Trigger(() -> !testingBoolean);
     // Change later! -
@@ -446,7 +451,7 @@ public class RobotContainer {
                                     - Math.sin(gyroMultiplier)
                                         * -getAdjustedJoystickAxis(
                                             0, Robot.getInstance().shouldIgnoreJoystickInput())*/ ,
-                                    .05)),
+                                    .075)),
                                 3)
                             * MaxSpeed)
                     .withVelocityY(
@@ -460,7 +465,7 @@ public class RobotContainer {
                                     + Math.cos(gyroMultiplier)
                                         * -getAdjustedJoystickAxis(
                                             0, Robot.getInstance().shouldIgnoreJoystickInput())*/ ,
-                                    .05)),
+                                    .075)),
                                 3)
                             * MaxSpeed)
                     .withRotationalRate(
@@ -730,12 +735,18 @@ public class RobotContainer {
         .onTrue(runOnce(() -> pathfindingOverride = true));
     // Barge - Button 9
     safeButton9
-        .and(conditionalArmBargeReady)
+        // .and(conditionalArmBargeReady)
         .and(algaeMode)
         .onTrue(elevator.toL4Algae())
         .onFalse(
-            rotaryPart.coralScore().alongWith(Commands.waitSeconds(.01)).andThen(intake.outTake()));
+            rotaryPart
+                .setPeakOutput(Constants.ElevatorConstants.elevatorPosition.peakOutput * .7)
+                .andThen(rotaryPart.coralScore()));
 
+    safeButton9
+        // .and(conditionalArmBargeReady)
+        .and(algaeMode)
+        .onFalse(Commands.waitUntil(armBargeReady).andThen(intake.algaeOuttake()));
     safeButton9
         .and(algaeMode)
         .onTrue(

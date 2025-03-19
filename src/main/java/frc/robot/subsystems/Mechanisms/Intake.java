@@ -53,7 +53,7 @@ public class Intake extends SubsystemBase {
   public Command algaeHold() {
     return runOnce(
         () -> {
-          setIntakeVoltage(.5);
+          setIntakeVoltage(.4);
           setFunnelVoltage(0);
         });
   }
@@ -78,6 +78,14 @@ public class Intake extends SubsystemBase {
     return runOnce(
         () -> {
           setIntakeVoltage(-6);
+          setFunnelVoltage(0);
+        });
+  }
+
+  public Command algaeOuttake() {
+    return runOnce(
+        () -> {
+          setIntakeVoltage(-2.5);
           setFunnelVoltage(0);
         });
   }

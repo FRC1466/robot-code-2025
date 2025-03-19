@@ -4,6 +4,9 @@
 package frc.robot;
 
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import org.littletonrobotics.junction.Logger;
@@ -75,6 +78,11 @@ public class Telemetry {
   public void telemeterize(SwerveDriveState state) {
     /* Record the pose */
     Logger.recordOutput("DriveState/Pose", state.Pose);
+    Logger.recordOutput(
+        "DriveState/CameraPose",
+        new Pose3d(
+            new Translation3d(state.Pose.getX() + .267, state.Pose.getY() + .292, .2),
+            new Rotation3d(state.Pose.getRotation().getRadians(), -Math.PI / 3, Math.PI * 3 / 4)));
 
     /* Record the speeds */
     Logger.recordOutput("DriveState/Speeds", state.Speeds);

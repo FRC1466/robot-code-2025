@@ -6,6 +6,7 @@ package frc.robot;
 import com.ctre.phoenix6.Utils;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.hal.AllianceStationID;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -344,6 +345,8 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
+    RobotContainer.rotaryPart.setGoal(
+        Rotation2d.fromRadians(Constants.RotationConstants.coralPosRadians));
   }
 
   @Override
@@ -405,7 +408,8 @@ public class Robot extends LoggedRobot {
       flightstickNotCenteredAlert.set(false);
     }
 
-    RobotContainer.rotaryPart.coralScore();
+    RobotContainer.rotaryPart.setGoal(
+        Rotation2d.fromRadians(Constants.RotationConstants.coralPosRadians));
   }
 
   @Override
