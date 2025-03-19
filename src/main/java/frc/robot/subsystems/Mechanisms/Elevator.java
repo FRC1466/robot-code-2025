@@ -11,7 +11,6 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.RobotController;
@@ -24,7 +23,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.Constants;
 import frc.robot.constants.Constants.RobotType;
-import frc.robot.util.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
@@ -52,24 +50,6 @@ public class Elevator extends SubsystemBase {
   private final LoggedMechanismRoot2d m_ElevatorSimMechRoot2d =
       m_Mechanism2d.getRoot("Elevator Root", 10, 0);
   private LoggedMechanismLigament2d m_elevatorMech2d;
-
-  // LoggedTunableNumbers for elevator position visualization thresholds
-  private final LoggedTunableNumber restingVisualizationMeters =
-      new LoggedTunableNumber("Elevator/Visualization/RestingMeters", .025);
-  private final LoggedTunableNumber intakeVisualizationMeters =
-      new LoggedTunableNumber("Elevator/Visualization/IntakeMeters", .025);
-  private final LoggedTunableNumber l2VisualizationMeters =
-      new LoggedTunableNumber("Elevator/Visualization/L2Meters", 1.05);
-  private final LoggedTunableNumber l2AlgaeVisualizationMeters =
-      new LoggedTunableNumber("Elevator/Visualization/L2AlgaeMeters", 1.2);
-  private final LoggedTunableNumber l3VisualizationMeters =
-      new LoggedTunableNumber("Elevator/Visualization/L3Meters", 1.35);
-  private final LoggedTunableNumber l3AlgaeVisualizationMeters =
-      new LoggedTunableNumber("Elevator/Visualization/L3AlgaeMeters", 1.55);
-  private final LoggedTunableNumber l4VisualizationMeters =
-      new LoggedTunableNumber("Elevator/Visualization/L4Meters", 2);
-  private final LoggedTunableNumber bargeVisualizationMeters =
-      new LoggedTunableNumber("Elevator/Visualization/BargeMeters", 2.4);
 
   // Threshold values for determining which visualization to use
   private final double RESTING_THRESHOLD = 2.0; // 0-2 inches
@@ -114,14 +94,6 @@ public class Elevator extends SubsystemBase {
     // Create NetworkTable entry for the Pose2d (for visualization)
     final NetworkTableInstance ntInstance = NetworkTableInstance.getDefault();
     final NetworkTable table = ntInstance.getTable("Elevator");
-    final NetworkTableEntry poseEntry = table.getEntry("RobotPose");
-
-    // Initialize Pose2d with (0,0,0) and publish it
-    var initialPose = new edu.wpi.first.math.geometry.Pose2d();
-    poseEntry.setDoubleArray(
-        new double[] {
-          initialPose.getX(), initialPose.getY(), initialPose.getRotation().getDegrees()
-        });
 
     switch (Constants.getRobot()) {
       case COMPBOT:
@@ -133,14 +105,12 @@ public class Elevator extends SubsystemBase {
             new ElevatorSim(
                 m_elevatorGearboxSim,
                 10, // gearing
-                5, // carriage mass (kg)
+                2, // carriage mass (kg)
                 Units.inchesToMeters(2), // drum radius
                 0.0, // min height
                 5, // max height
                 true, // simulate gravity
-                0, // initial position
-                0.01, // moment of inertia
-                0.0); // initial velocity
+                0); // initial position
         break;
       default:
         break;
@@ -184,37 +154,32 @@ public class Elevator extends SubsystemBase {
         // TODO: This assumes bradys are inches
         break;
       case SIMBOT:
-        // Get current setpoint to determine visualization position
+        // Get current setpoint
         double currentSetpoint = masterMotor.getPosition().getValueAsDouble();
 
-        // Determine which visualization height to use based on setpoint thresholds
+        // Use a direct multiplier instead of threshold-based visualization
+        visualizationMeters = currentSetpoint * 0.02205522;
+
+        // Still log position type for debugging purposes
         if (currentSetpoint <= RESTING_THRESHOLD) {
-          visualizationMeters = restingVisualizationMeters.get();
           Logger.recordOutput("Elevator/VisualizedPosition", "Resting");
         } else if (currentSetpoint <= INTAKE_THRESHOLD) {
-          visualizationMeters = intakeVisualizationMeters.get();
           Logger.recordOutput("Elevator/VisualizedPosition", "Intake/L1");
         } else if (currentSetpoint <= L2_THRESHOLD) {
-          visualizationMeters = l2VisualizationMeters.get();
           Logger.recordOutput("Elevator/VisualizedPosition", "L2");
         } else if (currentSetpoint <= L2_ALGAE_THRESHOLD) {
-          visualizationMeters = l2AlgaeVisualizationMeters.get();
           Logger.recordOutput("Elevator/VisualizedPosition", "L2 Algae");
         } else if (currentSetpoint <= L3_THRESHOLD) {
-          visualizationMeters = l3VisualizationMeters.get();
           Logger.recordOutput("Elevator/VisualizedPosition", "L3");
         } else if (currentSetpoint <= L3_ALGAE_THRESHOLD) {
-          visualizationMeters = l3AlgaeVisualizationMeters.get();
           Logger.recordOutput("Elevator/VisualizedPosition", "L3 Algae");
         } else if (currentSetpoint <= L4_THRESHOLD) {
-          visualizationMeters = l4VisualizationMeters.get();
           Logger.recordOutput("Elevator/VisualizedPosition", "L4");
         } else {
-          visualizationMeters = bargeVisualizationMeters.get();
           Logger.recordOutput("Elevator/VisualizedPosition", "Barge/L4 Algae");
         }
 
-        // Set the ligament length to the visualization position
+        // Set the ligament length to the direct calculation
         m_elevatorMech2d.setLength(visualizationMeters);
 
         // Log both the real setpoint and visualization position for debugging

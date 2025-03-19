@@ -46,7 +46,7 @@ public class RotaryPartSim extends SubsystemBase {
       new SingleJointedArmSim(
           m_armGearbox,
           200,
-          SingleJointedArmSim.estimateMOI(.25, 2),
+          SingleJointedArmSim.estimateMOI(.25, 1.5),
           .25,
           Units.degreesToRadians(-360),
           Units.degreesToRadians(360),

@@ -34,15 +34,12 @@ public class MechanismVisualizer extends SubsystemBase {
       new LoggedTunableNumber(
           "Comp2HeightMultiplier", 0.5); // Adjust to represent the upper portion
 
-  private LoggedTunableNumber comp3XRotOffset = new LoggedTunableNumber("Comp3XRotOffset", 0);
-  private LoggedTunableNumber comp3ZRotOffset = new LoggedTunableNumber("Comp3ZRotOffset", 0);
-  private LoggedTunableNumber comp3YRotOffset = new LoggedTunableNumber("Comp3YRotOffset", 0);
-  private LoggedTunableNumber comp3ArmAngleMultiplier =
-      new LoggedTunableNumber("Comp3ArmAngleMultiplier", 1.0);
-
-  // Arm angle parameters
-  private LoggedTunableNumber armAngleOffset = new LoggedTunableNumber("ArmAngleOffset", 0);
-  private LoggedTunableNumber armAngleMultiplier = new LoggedTunableNumber("ArmAngleMultiplier", 0);
+  private LoggedTunableNumber comp3XOffset = new LoggedTunableNumber("Comp3XOffset", 0.28);
+  private LoggedTunableNumber comp3ZOffset = new LoggedTunableNumber("Comp3ZOffset", 0.365);
+  private LoggedTunableNumber comp3YOffset = new LoggedTunableNumber("Comp3YOffset", 0);
+  private LoggedTunableNumber comp3YRotOffset = new LoggedTunableNumber("Comp3YRotOffset", -30);
+  private LoggedTunableNumber armAngleMultiplier =
+      new LoggedTunableNumber("ArmAngleMultiplier", -1);
 
   /**
    * Creates a new MechanismVisualizer.
@@ -103,12 +100,15 @@ public class MechanismVisualizer extends SubsystemBase {
 
       Pose3d component3Pose =
           new Pose3d(
-              new Translation3d(0, 0, comp2Height),
+              new Translation3d(
+                  comp3XOffset.getAsDouble(),
+                  comp3YOffset.getAsDouble(),
+                  comp2Height + comp3ZOffset.getAsDouble()),
               new Rotation3d(
-                  Units.degreesToRadians(comp3XRotOffset.getAsDouble()),
+                  0,
                   Units.degreesToRadians(armAngleDegrees)
                       + Units.degreesToRadians(comp3YRotOffset.getAsDouble()),
-                  Units.degreesToRadians(comp3ZRotOffset.getAsDouble())));
+                  0));
 
       // Prepare arrays once - do all calculations before logging
       Pose3d[] componentPoses = new Pose3d[] {component1Pose, component2Pose, component3Pose};
