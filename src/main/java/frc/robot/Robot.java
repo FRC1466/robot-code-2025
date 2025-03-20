@@ -207,10 +207,9 @@ public class Robot extends LoggedRobot {
     vision = new Vision();
 
     // Initialize the combined mechanism visualizer if in simulation mode
-    if (Constants.getRobot() == RobotType.SIMBOT) {
-      m_mechanismVisualizer =
-          new MechanismVisualizer(RobotContainer.elevator, RobotContainer.rotaryPartSim);
-    }
+
+    m_mechanismVisualizer =
+        new MechanismVisualizer(RobotContainer.elevator, RobotContainer.rotaryPartSim);
   }
 
   @Override

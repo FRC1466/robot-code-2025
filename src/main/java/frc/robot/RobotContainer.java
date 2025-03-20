@@ -386,7 +386,7 @@ public class RobotContainer {
 
     // Basic triggers (not position-dependent)
     Trigger intakeColorSensorTrigger = new Trigger(() -> intake.getIntakeDistanceBool());
-    Trigger algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 20);
+    Trigger algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 5);
     Trigger processorReady = new Trigger(() -> elevator.getElevatorHeight() > 4);
     Trigger currentIntakeSwitch = new Trigger(() -> intake.getHighCurrent());
     Trigger algaeMode = new Trigger(() -> getModeMethod());
@@ -414,7 +414,7 @@ public class RobotContainer {
     Trigger conditionalArmRaiseReefReady = new Trigger(armRaiseReefPositionCheck);
 
     // For algae position
-    BooleanSupplier armAlgaePositionCheck = () -> !autoPathingEnabled || armAlgaeReady(1);
+    BooleanSupplier armAlgaePositionCheck = () -> !autoPathingEnabled || armAlgaeReady(1.75);
     Trigger conditionalArmAlgaeReady = new Trigger(armAlgaePositionCheck);
 
     BooleanSupplier armRaiseAlgaePositionCheck = () -> !autoPathingEnabled || armAlgaeReady(1.75);
