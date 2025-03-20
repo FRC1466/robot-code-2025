@@ -32,13 +32,12 @@ import frc.robot.util.GamePieceTracker;
 import frc.robot.util.LocalADStarAK;
 import frc.robot.util.MechanismVisualizer;
 import frc.robot.util.rlog.RLOGServer;
-import java.io.File;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.stream.Stream;
 import org.littletonrobotics.junction.AutoLogOutputManager;
+import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
@@ -140,21 +139,10 @@ public class Robot extends LoggedRobot {
         break;
 
       case REPLAY:
-        setUseTiming(false);
-        File logsDir = new File("D:/logs");
-        File[] logFiles = logsDir.listFiles();
-        if (logFiles == null) {
-          throw new RuntimeException("Logs directory D:/logs does not exist or is not accessible");
-        }
-        File latestLog =
-            Stream.of(logFiles)
-                .filter(file -> file.getName().endsWith(".wpilog"))
-                .max((f1, f2) -> Long.compare(f1.lastModified(), f2.lastModified()))
-                .orElseThrow(() -> new RuntimeException("No .wpilog files found in D:/logs"));
-
-        String logPath = latestLog.getAbsolutePath();
+        String logPath = LogFileUtil.findReplayLog();
         Logger.setReplaySource(new WPILOGReader(logPath));
-        Logger.addDataReceiver(new WPILOGWriter(logPath.replace(".wpilog", "_sim.wpilog")));
+        Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
+        setUseTiming(false);
         break;
     }
 
