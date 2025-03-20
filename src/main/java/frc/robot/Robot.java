@@ -21,11 +21,14 @@ import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.FieldConstants.ReefLevel;
 import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
 import frc.robot.constants.Constants.RobotType;
 import frc.robot.subsystems.Vision;
 import frc.robot.util.Blinkin;
+import frc.robot.util.FlipField;
+import frc.robot.util.GamePieceTracker;
 import frc.robot.util.LocalADStarAK;
 import frc.robot.util.MechanismVisualizer;
 import frc.robot.util.rlog.RLOGServer;
@@ -63,6 +66,9 @@ public class Robot extends LoggedRobot {
 
   // Combined mechanism visualizer for elevator and rotary part
   private MechanismVisualizer m_mechanismVisualizer;
+
+  // Game piece tracker for coral and algae visualization
+  private GamePieceTracker m_gamePieceTracker;
 
   @SuppressWarnings("unused")
   private Timer algaeIntakeTimer = new Timer();
@@ -205,6 +211,9 @@ public class Robot extends LoggedRobot {
     RobotContainer.elevator.setSelectedSensorPosition(0);
     vision = new Vision();
 
+    // Initialize the game piece tracker
+    m_gamePieceTracker = GamePieceTracker.getInstance();
+
     // Initialize the combined mechanism visualizer if in simulation mode
     if (Constants.getRobot() == RobotType.SIMBOT) {
       m_mechanismVisualizer =
@@ -225,6 +234,8 @@ public class Robot extends LoggedRobot {
       RobotContainer.elevator.setSelectedSensorPosition(.25);
     }
     lastBoolean = beamBreak.get();
+    Logger.recordOutput(
+        "Flipped Position", FlipField.flipPose(RobotContainer.drivetrain.getState().Pose));
     // Color detectedColor = m_colorSensor.getColor();
 
     /*
@@ -235,6 +246,11 @@ public class Robot extends LoggedRobot {
        limitSwitchCounter = m_robotContainer.limitSwitch.get();
      }
     */
+
+    // Update game piece tracking and visualization
+    if (m_gamePieceTracker != null) {
+      m_gamePieceTracker.periodic();
+    }
 
     var visionEst = vision.getEstimatedGlobalPose();
     switch (Constants.getRobot()) {
@@ -337,8 +353,23 @@ public class Robot extends LoggedRobot {
     return instance;
   }
 
+  /**
+   * Get the RobotContainer instance.
+   *
+   * @return The RobotContainer instance.
+   */
+  public RobotContainer getRobotContainer() {
+    return m_robotContainer;
+  }
+
   @Override
   public void autonomousInit() {
+    // Reset game piece tracking at the start of autonomous
+    if (m_gamePieceTracker != null) {
+      m_gamePieceTracker.clearGamePieces();
+      m_gamePieceTracker.hasCoral = true;
+    }
+
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
     autoStart = Timer.getTimestamp();
     if (m_autonomousCommand != null) {
@@ -352,7 +383,11 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void autonomousExit() {}
+  public void autonomousExit() {
+    if (m_gamePieceTracker != null) {
+      m_gamePieceTracker.scoreCoral(m_robotContainer.getClosestTag(), ReefLevel.L2);
+    }
+  }
 
   @Override
   public void teleopInit() {

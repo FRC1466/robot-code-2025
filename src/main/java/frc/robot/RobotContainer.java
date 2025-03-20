@@ -76,7 +76,7 @@ public class RobotContainer {
       new LoggedDashboardChooser<>("Auto Routine");
 
   // Subsystems
-  private final Intake intake = new Intake();
+  public static final Intake intake = new Intake();
   public static final RotaryPart rotaryPart = new RotaryPart();
   public static final RotaryPartSim rotaryPartSim = new RotaryPartSim();
   public static final Vision photonCamera = new Vision();
@@ -954,6 +954,7 @@ public class RobotContainer {
     return distAway < displacement;
   }
 
+  @AutoLogOutput
   public boolean coralIntakeReady() {
     Optional<Alliance> allianceOptional = DriverStation.getAlliance();
     Alliance alliance = allianceOptional.orElse(Alliance.Blue);

@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation3d;
 
 /**
  * Utility class for transforming field coordinates between red and blue alliances. Supports both 2D
@@ -128,5 +129,55 @@ public class FlipField {
       return flipPose(pose);
     }
     return pose;
+  }
+
+  /**
+   * Determines if a Pose3d should be flipped based on current alliance color. If alliance is blue,
+   * the pose is returned unchanged. If alliance is red, the pose is flipped.
+   *
+   * @param pose The original pose (always stored in blue alliance frame)
+   * @return The pose, potentially flipped if on red alliance
+   */
+  public static Pose3d flipIfRed(Pose3d pose) {
+    var alliance = edu.wpi.first.wpilibj.DriverStation.getAlliance();
+    if (alliance.isPresent()
+        && alliance.get() == edu.wpi.first.wpilibj.DriverStation.Alliance.Red) {
+      return flipPose(pose);
+    }
+    return pose;
+  }
+
+  /**
+   * Determines if a Pose2d should be flipped based on current alliance color. If alliance is blue,
+   * the pose is returned unchanged. If alliance is red, the pose is flipped.
+   *
+   * @param pose The original pose (always stored in blue alliance frame)
+   * @return The pose, potentially flipped if on red alliance
+   */
+  public static Pose2d flipIfRed(Pose2d pose) {
+    var alliance = edu.wpi.first.wpilibj.DriverStation.getAlliance();
+    if (alliance.isPresent()
+        && alliance.get() == edu.wpi.first.wpilibj.DriverStation.Alliance.Red) {
+      return flipPose(pose);
+    }
+    return pose;
+  }
+
+  /**
+   * Determines if a Translation3d should be flipped based on current alliance color. If alliance is
+   * blue, the translation is returned unchanged. If alliance is red, the translation is flipped.
+   *
+   * @param translation The original translation (always stored in blue alliance frame)
+   * @return The translation, potentially flipped if on red alliance
+   */
+  public static Translation3d flipIfRed(Translation3d translation) {
+    var alliance = edu.wpi.first.wpilibj.DriverStation.getAlliance();
+    if (alliance.isPresent()
+        && alliance.get() == edu.wpi.first.wpilibj.DriverStation.Alliance.Red) {
+      // Calculate the mirrored X position (flip across vertical center line)
+      double flippedX = FIELD_LENGTH_METERS - translation.getX();
+      return new Translation3d(flippedX, translation.getY(), translation.getZ());
+    }
+    return translation;
   }
 }
