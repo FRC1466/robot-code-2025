@@ -81,8 +81,9 @@ public class Telemetry {
     Logger.recordOutput(
         "DriveState/CameraPose",
         new Pose3d(
-            new Translation3d(state.Pose.getX() + .267, state.Pose.getY() + .292, .2),
-            new Rotation3d(state.Pose.getRotation().getRadians(), -Math.PI / 3, Math.PI * 3 / 4)));
+            new Translation3d(state.Pose.getX() - .267, state.Pose.getY() + .278, .2),
+            new Rotation3d(
+                0, -Math.PI / 6, state.Pose.getRotation().getRadians() + Math.PI * 3 / 4)));
 
     /* Record the speeds */
     Logger.recordOutput("DriveState/Speeds", state.Speeds);
