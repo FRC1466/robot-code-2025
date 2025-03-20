@@ -189,3 +189,7 @@ compile_commands.json
 # Version file
 
 src/main/java/frc/robot/constants/BuildConstants.java
+
+simLogs/
+
+.wpilog

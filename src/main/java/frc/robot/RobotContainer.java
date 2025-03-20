@@ -869,7 +869,8 @@ public class RobotContainer {
 
     // If blue alliance, flip the target pose
     if (alliance == Alliance.Blue) {
-      targetPose = FlipField.FieldFlip(targetPose);
+      targetPose =
+          FlipField.FieldFlip(PathfindConstants.redTargetPoseReef[getClosestTag()][goingLeft]);
     }
 
     double distAway =

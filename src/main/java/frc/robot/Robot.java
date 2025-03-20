@@ -136,6 +136,7 @@ public class Robot extends LoggedRobot {
         // Running a physics simulator, log to NT4 and RLOG
         Logger.addDataReceiver(new RLOGServer());
         Logger.addDataReceiver(new NT4Publisher());
+        Logger.addDataReceiver(new WPILOGWriter("simLogs"));
         break;
 
       case REPLAY:
@@ -198,6 +199,10 @@ public class Robot extends LoggedRobot {
       watchdog.setTimeout(loopOverrunWarningTimeout);
     } catch (Exception e) {
       DriverStation.reportWarning("Failed to disable loop overrun warnings.", false);
+    }
+
+    if (m_gamePieceTracker != null) {
+      m_gamePieceTracker.clearGamePieces();
     }
 
     // Switch thread to high priority to improve loop timing
@@ -384,7 +389,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void autonomousExit() {
-    if (m_gamePieceTracker != null) {
+    if (m_gamePieceTracker != null && m_robotContainer.armFieldReady(0, .5)) {
       m_gamePieceTracker.scoreCoral(m_robotContainer.getClosestTag(), ReefLevel.L2);
     }
   }

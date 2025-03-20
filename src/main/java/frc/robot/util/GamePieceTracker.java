@@ -37,10 +37,14 @@ public class GamePieceTracker extends SubsystemBase {
 
   // Current state tracking
   private boolean hasAlgae = false;
+  private boolean hasL2Algae = false; // Specifically for L2 algae
+  private boolean hasL3Algae = false; // Specifically for L3 algae
   public boolean hasCoral = false;
   private boolean lastIntakeProximity = false;
   private boolean justScored = false;
   private int scoreCooldown = 0;
+  private boolean justIntaked = false; // New flag for intake cooldown
+  private int intakeCooldown = 0; // New cooldown for intake actions
 
   // Reference to the RobotContainer instance
   private final RobotContainer m_robotContainer;
@@ -97,6 +101,57 @@ public class GamePieceTracker extends SubsystemBase {
     m_joystick = m_robotContainer.joystick;
     m_elevator = RobotContainer.elevator; // This is already static
     m_rotaryPartSim = RobotContainer.rotaryPartSim; // This is already static
+
+    // Initialize field with algae in alternating heights
+    initializeFieldWithAlgae();
+  }
+
+  /**
+   * Initializes the field with algae at alternating heights. This places algae at L2 and L3
+   * positions alternating around the reef.
+   */
+  private void initializeFieldWithAlgae() {
+    // Create algae at all 6 positions around the reef, exactly matching the FRC 6328 implementation
+    for (int i = 0; i < 6; i++) {
+      var firstBranchPose = FieldConstants.Reef.branchPositions.get(i * 2).get(ReefLevel.L2);
+      var secondBranchPose = FieldConstants.Reef.branchPositions.get(i * 2 + 1).get(ReefLevel.L3);
+
+      Translation3d algaePosition = new Translation3d();
+      algaePosition =
+          AllianceFlipUtil.apply(
+              firstBranchPose
+                  .getTranslation()
+                  .interpolate(secondBranchPose.getTranslation(), 0.5)
+                  .plus(
+                      new Translation3d(
+                          -FieldConstants.algaeDiameter / 3.0,
+                          new Rotation3d(
+                              0.0, -35.0 / 180.0 * Math.PI, firstBranchPose.getRotation().getZ())))
+                  .plus(
+                      new Translation3d(
+                          0.0,
+                          0.0,
+                          (i % 2 == 0) ? secondBranchPose.getZ() - firstBranchPose.getZ() : 0.0)));
+
+      // Create a new Pose3d for each algae with a unique object reference
+      Pose3d algaePose = new Pose3d(algaePosition, new Rotation3d());
+
+      // Generate unique ID for tracking
+      boolean isL3 = (i % 2 == 0); // Even positions are L3, odd are L2
+      String pieceId =
+          "initial_algae_"
+              + i
+              + "_"
+              + (isL3 ? "L3" : "L2")
+              + "_"
+              + UUID.randomUUID().toString().substring(0, 4);
+
+      // Add to the map first, then to the set
+      gamePieceMap.put(pieceId, algaePose);
+      scoredAlgaePoses.add(algaePose);
+
+      Logger.recordOutput("GamePieces/InitializedPiece", pieceId);
+    }
   }
 
   @Override
@@ -125,6 +180,16 @@ public class GamePieceTracker extends SubsystemBase {
     if (justScored && scoreCooldown == 0) {
       justScored = false;
     }
+
+    // Decrement intake cooldown if active
+    if (intakeCooldown > 0) {
+      intakeCooldown--;
+    }
+
+    // Reset the justIntaked flag after a short delay
+    if (justIntaked && intakeCooldown == 0) {
+      justIntaked = false;
+    }
   }
 
   /** Updates the state of the game pieces based on sensors and command state. */
@@ -136,16 +201,41 @@ public class GamePieceTracker extends SubsystemBase {
       // Check for coral using the intake proximity sensor
       boolean currentIntakeProximity = m_intake.getIntakeDistanceBool();
 
-      // Detect rising edge (object entering the intake)
-      if (currentIntakeProximity && !lastIntakeProximity) {
-        if (!hasAlgae && m_robotContainer.getModeMethod()) {
-          // In algae mode, it's an algae piece
+      // Detect rising edge (object entering the intake) and make sure we're not in cooldown
+      if (currentIntakeProximity && !lastIntakeProximity && !justIntaked) {
+        if (!hasL2Algae
+            && !hasL3Algae
+            && m_robotContainer.getModeMethod()
+            && m_joystick.button(3).getAsBoolean()) {
+          // Button 3 in algae mode is for L2 algae
+          hasL2Algae = true;
+          hasL3Algae = false;
           hasAlgae = true;
           hasCoral = false;
+
+          // Remove the L2 algae from field at the closest position
+          removeAlgaeFromField(true); // true = L2 algae
+          setJustIntaked(); // Prevent multiple intakes in quick succession
+        } else if (!hasL2Algae
+            && !hasL3Algae
+            && m_robotContainer.getModeMethod()
+            && m_joystick.button(4).getAsBoolean()) {
+          // Button 4 in algae mode is for L3 algae
+          hasL3Algae = true;
+          hasL2Algae = false;
+          hasAlgae = true;
+          hasCoral = false;
+
+          // Remove the L3 algae from field at the closest position
+          removeAlgaeFromField(false); // false = L3 algae
+          setJustIntaked(); // Prevent multiple intakes in quick succession
         } else if (!hasCoral && !m_robotContainer.getModeMethod()) {
           // In coral mode, it's a coral piece
           hasCoral = true;
           hasAlgae = false;
+          hasL2Algae = false;
+          hasL3Algae = false;
+          setJustIntaked(); // Prevent multiple intakes in quick succession
         }
       }
 
@@ -153,20 +243,46 @@ public class GamePieceTracker extends SubsystemBase {
 
     } else {
       // In simulation, track button presses for creating game pieces
-      // Button 3 in coral mode creates coral
+      // Button 3 in coral mode creates coral - but only if not in cooldown
       if (m_joystick.button(3).getAsBoolean()
           && !m_robotContainer.getModeMethod()
-          && m_robotContainer.coralIntakeReady()) {
+          && m_robotContainer.coralIntakeReady()
+          && !justIntaked) {
         hasCoral = true;
         hasAlgae = false;
+        hasL2Algae = false;
+        hasL3Algae = false;
+        setJustIntaked(); // Set cooldown
       }
 
-      // Button 3 and 4 in algae mode creates algae
-      if ((m_joystick.button(3).getAsBoolean() || m_joystick.button(4).getAsBoolean())
+      // Button 3 in algae mode creates L2 algae - but only if not in cooldown
+      if (m_joystick.button(3).getAsBoolean()
           && m_robotContainer.getModeMethod()
-          && m_robotContainer.armAlgaeReady(.5)) {
+          && m_robotContainer.armAlgaeReady(.5)
+          && !justIntaked) {
+        hasL2Algae = true;
+        hasL3Algae = false;
         hasAlgae = true;
         hasCoral = false;
+
+        // Remove the L2 algae from field at the closest position
+        removeAlgaeFromField(true); // true = L2 algae
+        setJustIntaked(); // Set cooldown
+      }
+
+      // Button 4 in algae mode creates L3 algae - but only if not in cooldown
+      if (m_joystick.button(4).getAsBoolean()
+          && m_robotContainer.getModeMethod()
+          && m_robotContainer.armAlgaeReady(.5)
+          && !justIntaked) {
+        hasL3Algae = true;
+        hasL2Algae = false;
+        hasAlgae = true;
+        hasCoral = false;
+
+        // Remove the L3 algae from field at the closest position
+        removeAlgaeFromField(false); // false = L3 algae
+        setJustIntaked(); // Set cooldown
       }
     }
 
@@ -232,10 +348,224 @@ public class GamePieceTracker extends SubsystemBase {
     }
   }
 
+  /**
+   * Removes the closest algae from the field based on the type (L2 or L3)
+   *
+   * @param isL2 true for L2 algae, false for L3 algae
+   */
+  private void removeAlgaeFromField(boolean isL2) {
+    try {
+      // Instead of finding the closest algae directly, use the closest tag
+      int closestTag = m_robotContainer.getClosestTag();
+      Logger.recordOutput("GamePieces/ClosestTag", closestTag);
+
+      // Debug the tag to section mapping
+      int rawSection = (closestTag - 1) % 6;
+
+      // Fix for 2025 reef numbering - translate the April tag IDs properly
+      // The mapping may need to be adjusted based on your field's actual tag layout
+      int reefSection;
+
+      // Map tags to sections - you may need to adjust this based on your specific field setup
+      switch (closestTag) {
+        case 1:
+          reefSection = 0;
+          break;
+        case 2:
+          reefSection = 1;
+          break;
+        case 3:
+          reefSection = 2;
+          break;
+        case 4:
+          reefSection = 3;
+          break;
+        case 5:
+          reefSection = 4;
+          break;
+        case 6:
+          reefSection = 5;
+          break;
+        case 7:
+          reefSection = 0;
+          break;
+        case 8:
+          reefSection = 1;
+          break;
+        case 9:
+          reefSection = 2;
+          break;
+        case 10:
+          reefSection = 3;
+          break;
+        case 11:
+          reefSection = 4;
+          break;
+        case 12:
+          reefSection = 5;
+          break;
+        default:
+          reefSection = 0;
+          break; // Default to section 0
+      }
+
+      Logger.recordOutput("GamePieces/RawSection", rawSection);
+      Logger.recordOutput("GamePieces/TargetReefSection", reefSection);
+
+      // For debugging, print the list of all algae by section
+      StringBuilder bySection = new StringBuilder();
+      for (int i = 0; i < 6; i++) {
+        bySection.append("Section ").append(i).append(": ");
+        int l2Count = 0, l3Count = 0;
+        for (String id : gamePieceMap.keySet()) {
+          if (!id.startsWith("initial_algae_")) continue;
+          try {
+            int sectionNum =
+                Integer.parseInt(
+                    id.substring(
+                        "initial_algae_".length(), id.indexOf('_', "initial_algae_".length())));
+            if (sectionNum == i) {
+              if (id.contains("_L2_")) l2Count++;
+              if (id.contains("_L3_")) l3Count++;
+            }
+          } catch (Exception e) {
+            continue;
+          }
+        }
+        bySection.append("L2=").append(l2Count).append(", L3=").append(l3Count).append(" | ");
+      }
+      Logger.recordOutput("GamePieces/AlgaeBySection", bySection.toString());
+
+      // Find the algae on this section that matches our type
+      String targetAlgaeId = null;
+      Pose3d targetAlgaePose = null;
+
+      // Look for algae in that section and of the right type
+      for (String pieceId : gamePieceMap.keySet()) {
+        if (!pieceId.startsWith("initial_algae_")) continue;
+
+        try {
+          int underscoreIndex = pieceId.indexOf('_', "initial_algae_".length());
+          String sectionStr = pieceId.substring("initial_algae_".length(), underscoreIndex);
+          int algaeSection = Integer.parseInt(sectionStr);
+
+          // Specifically check for L2 or L3 properly
+          boolean isL2Algae = pieceId.contains("_L2_");
+          boolean isL3Algae = pieceId.contains("_L3_");
+
+          Logger.recordOutput(
+              "GamePieces/CheckingAlgae",
+              pieceId
+                  + ", section="
+                  + algaeSection
+                  + ", reefSection="
+                  + reefSection
+                  + ", isL2="
+                  + isL2Algae
+                  + ", isL3="
+                  + isL3Algae
+                  + ", wantL2="
+                  + isL2);
+
+          // Make sure it's the right section and right type
+          if (algaeSection == reefSection && ((isL2 && isL2Algae) || (!isL2 && isL3Algae))) {
+            targetAlgaeId = pieceId;
+            targetAlgaePose = gamePieceMap.get(pieceId);
+            break;
+          }
+        } catch (Exception e) {
+          // In case of parsing error, skip this piece
+          continue;
+        }
+      }
+
+      // If no algae found in exact section, try looking in adjacent sections
+      if (targetAlgaeId == null) {
+        int[] adjacentSections = {
+          (reefSection + 5) % 6, // left section
+          (reefSection + 1) % 6 // right section
+        };
+
+        Logger.recordOutput(
+            "GamePieces/CheckingAdjacentSections",
+            "Left=" + adjacentSections[0] + ", Right=" + adjacentSections[1]);
+
+        for (int adjSection : adjacentSections) {
+          for (String pieceId : gamePieceMap.keySet()) {
+            if (!pieceId.startsWith("initial_algae_")) continue;
+
+            try {
+              int underscoreIndex = pieceId.indexOf('_', "initial_algae_".length());
+              String sectionStr = pieceId.substring("initial_algae_".length(), underscoreIndex);
+              int algaeSection = Integer.parseInt(sectionStr);
+
+              boolean isL2Algae = pieceId.contains("_L2_");
+              boolean isL3Algae = pieceId.contains("_L3_");
+
+              if (algaeSection == adjSection && ((isL2 && isL2Algae) || (!isL2 && isL3Algae))) {
+                targetAlgaeId = pieceId;
+                targetAlgaePose = gamePieceMap.get(pieceId);
+                Logger.recordOutput(
+                    "GamePieces/FoundInAdjacent", "Found in adjacent section " + adjSection);
+                break;
+              }
+            } catch (Exception e) {
+              continue;
+            }
+          }
+          if (targetAlgaeId != null) break; // Stop if we found one in an adjacent section
+        }
+      }
+
+      // Remove the target algae if found
+      if (targetAlgaeId != null && targetAlgaePose != null) {
+        scoredAlgaePoses.remove(targetAlgaePose);
+        gamePieceMap.remove(targetAlgaeId);
+        Logger.recordOutput(
+            "GamePieces/RemovedAlgae",
+            "Removed " + (isL2 ? "L2" : "L3") + " Algae: " + targetAlgaeId);
+      } else {
+        // If still not found, search for any algae of the right type regardless of section
+        Logger.recordOutput(
+            "GamePieces/RemovedAlgae",
+            "Could not find "
+                + (isL2 ? "L2" : "L3")
+                + " algae in section "
+                + reefSection
+                + " or adjacent sections. Searching globally...");
+
+        for (String pieceId : gamePieceMap.keySet()) {
+          if (!pieceId.startsWith("initial_algae_")) continue;
+
+          boolean matchesType = isL2 ? pieceId.contains("_L2_") : pieceId.contains("_L3_");
+          if (matchesType) {
+            Pose3d algaePose = gamePieceMap.get(pieceId);
+            scoredAlgaePoses.remove(algaePose);
+            gamePieceMap.remove(pieceId);
+            Logger.recordOutput(
+                "GamePieces/RemovedAlgae",
+                "Removed " + (isL2 ? "L2" : "L3") + " Algae: " + pieceId + " (global search)");
+            break;
+          }
+        }
+      }
+    } catch (Exception e) {
+      System.err.println("Error removing algae from field: " + e.getMessage());
+      e.printStackTrace();
+    }
+  }
+
   /** Sets the just scored flag and initializes the cooldown to prevent multiple scores. */
   private void setJustScored() {
     justScored = true;
     scoreCooldown = 20; // About 0.4 seconds at 50Hz
+  }
+
+  /** Sets the just intaked flag and initializes the cooldown to prevent multiple intakes. */
+  private void setJustIntaked() {
+    justIntaked = true;
+    intakeCooldown = 250; // About 5 seconds at 50Hz
+    Logger.recordOutput("GamePieces/IntakeCooldown", "Started");
   }
 
   /** Updates the 3D visualization of all game pieces. */
@@ -400,6 +730,8 @@ public class GamePieceTracker extends SubsystemBase {
 
       // Reset the held state
       hasAlgae = false;
+      hasL2Algae = false;
+      hasL3Algae = false;
 
       Logger.recordOutput("GamePieces/ScoredAlgae", scoredAlgaePoses.size());
     }
@@ -427,12 +759,36 @@ public class GamePieceTracker extends SubsystemBase {
    * Manually sets whether the robot has algae.
    *
    * @param hasAlgae Whether the robot should have algae
+   * @param isL2 Whether it's L2 algae (true) or L3 algae (false)
    */
-  public void setHasAlgae(boolean hasAlgae) {
+  public void setHasAlgae(boolean hasAlgae, boolean isL2) {
     this.hasAlgae = hasAlgae;
     if (hasAlgae) {
+      this.hasL2Algae = isL2;
+      this.hasL3Algae = !isL2;
       this.hasCoral = false; // Can't have both at once
+    } else {
+      this.hasL2Algae = false;
+      this.hasL3Algae = false;
     }
+  }
+
+  /**
+   * Gets whether the robot is holding L2 algae specifically.
+   *
+   * @return True if the robot has L2 algae
+   */
+  public boolean hasL2Algae() {
+    return hasL2Algae;
+  }
+
+  /**
+   * Gets whether the robot is holding L3 algae specifically.
+   *
+   * @return True if the robot has L3 algae
+   */
+  public boolean hasL3Algae() {
+    return hasL3Algae;
   }
 
   /**
@@ -506,38 +862,7 @@ public class GamePieceTracker extends SubsystemBase {
    * @return A Translation3d for visualization
    */
   private Pose3d calculateAlgaePosition(int section) {
-    // Get current alliance
-    Optional<Alliance> allianceOptional = DriverStation.getAlliance();
-    Alliance alliance = allianceOptional.orElse(Alliance.Blue);
-
-    // Get the branch positions for this section
-    section = Math.min(Math.max(section, 0), 5); // Clamp to valid range
-
-    var firstBranchPose = FieldConstants.Reef.branchPositions.get(section * 2).get(ReefLevel.L2);
-    var secondBranchPose =
-        FieldConstants.Reef.branchPositions.get(section * 2 + 1).get(ReefLevel.L3);
-
-    // Calculate the position for algae (interpolate between two branches)
-    Pose3d algaePosition =
-        new Pose3d(
-            firstBranchPose
-                .getTranslation()
-                .interpolate(secondBranchPose.getTranslation(), 0.5)
-                .plus(
-                    new Translation3d(
-                        -FieldConstants.algaeDiameter / 3.0,
-                        0.0,
-                        (section % 2 == 0)
-                            ? secondBranchPose.getZ() - firstBranchPose.getZ()
-                            : 0.0)),
-            new Rotation3d(0.0, -35.0 / 180.0 * Math.PI, firstBranchPose.getRotation().getZ()));
-
-    // Only flip if on red alliance
-    if (alliance == Alliance.Red) {
-      algaePosition = FlipField.flipIfRed(algaePosition);
-    }
-
-    return algaePosition;
+    return new Pose3d();
   }
 
   /** Clears all tracked game pieces. */
@@ -546,8 +871,30 @@ public class GamePieceTracker extends SubsystemBase {
     scoredAlgaePoses.clear();
     gamePieceMap.clear();
     hasAlgae = false;
+    hasL2Algae = false;
+    hasL3Algae = false;
     hasCoral = false;
     justScored = false;
     scoreCooldown = 0;
+    justIntaked = false;
+    intakeCooldown = 0;
+
+    // Re-initialize the field with algae in alternating heights
+    initializeFieldWithAlgae();
+  }
+
+  /**
+   * Resets the game piece state but keeps the initial algae on the field. Used when transitioning
+   * between modes without clearing the field.
+   */
+  public void resetGamePieceState() {
+    hasAlgae = false;
+    hasL2Algae = false;
+    hasL3Algae = false;
+    hasCoral = false;
+    justScored = false;
+    scoreCooldown = 0;
+    justIntaked = false;
+    intakeCooldown = 0;
   }
 }
