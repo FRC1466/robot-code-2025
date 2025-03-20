@@ -102,8 +102,10 @@ public class GamePieceTracker extends SubsystemBase {
     m_elevator = RobotContainer.elevator; // This is already static
     m_rotaryPartSim = RobotContainer.rotaryPartSim; // This is already static
 
-    // Initialize field with algae in alternating heights
-    initializeFieldWithAlgae();
+    // Only initialize field with algae in simulation
+    if (Constants.getRobot() == Constants.RobotType.SIMBOT) {
+      initializeFieldWithAlgae();
+    }
   }
 
   /**
@@ -165,7 +167,10 @@ public class GamePieceTracker extends SubsystemBase {
     }
 
     try {
-      updateVisualization();
+      // Only update visualization in simulation mode
+      if (Constants.getRobot() == Constants.RobotType.SIMBOT) {
+        updateVisualization();
+      }
     } catch (Exception e) {
       e.printStackTrace();
       System.err.println("Error in updateVisualization: " + e.getMessage());
@@ -213,8 +218,7 @@ public class GamePieceTracker extends SubsystemBase {
           hasAlgae = true;
           hasCoral = false;
 
-          // Remove the L2 algae from field at the closest position
-          removeAlgaeFromField(true); // true = L2 algae
+          // No algae removal in real robot mode
           setJustIntaked(); // Prevent multiple intakes in quick succession
         } else if (!hasL2Algae
             && !hasL3Algae
@@ -226,8 +230,7 @@ public class GamePieceTracker extends SubsystemBase {
           hasAlgae = true;
           hasCoral = false;
 
-          // Remove the L3 algae from field at the closest position
-          removeAlgaeFromField(false); // false = L3 algae
+          // No algae removal in real robot mode
           setJustIntaked(); // Prevent multiple intakes in quick succession
         } else if (!hasCoral && !m_robotContainer.getModeMethod()) {
           // In coral mode, it's a coral piece
@@ -241,8 +244,40 @@ public class GamePieceTracker extends SubsystemBase {
 
       lastIntakeProximity = currentIntakeProximity;
 
+      // Check for scoring actions in real robot mode - just reset the flags, no tracking
+      if (hasAlgae && !justScored) {
+        if (!m_joystick.button(1).getAsBoolean()
+            && m_robotContainer.getModeMethod()
+            && m_robotContainer.armProcessorReady(0.25)) {
+          // Reset the held state
+          hasAlgae = false;
+          hasL2Algae = false;
+          hasL3Algae = false;
+          setJustScored();
+        } else if (!m_joystick.button(9).getAsBoolean()
+            && m_robotContainer.getModeMethod()
+            && m_robotContainer.armBargeReady(0.25)) {
+          // Reset the held state
+          hasAlgae = false;
+          hasL2Algae = false;
+          hasL3Algae = false;
+          setJustScored();
+        }
+      }
+
+      if (hasCoral && !justScored) {
+        if ((m_joystick.button(5).getAsBoolean()
+                || m_joystick.button(6).getAsBoolean()
+                || m_joystick.button(7).getAsBoolean())
+            && !m_robotContainer.getModeMethod()
+            && m_robotContainer.armFieldReady(RobotContainer.leftCoral, 0.25)) {
+          // Reset the held state
+          hasCoral = false;
+          setJustScored();
+        }
+      }
     } else {
-      // In simulation, track button presses for creating game pieces
+      // SIMULATION MODE - Follow original logic for tracking game pieces
       // Button 3 in coral mode creates coral - but only if not in cooldown
       if (m_joystick.button(3).getAsBoolean()
           && !m_robotContainer.getModeMethod()
@@ -284,52 +319,51 @@ public class GamePieceTracker extends SubsystemBase {
         removeAlgaeFromField(false); // false = L3 algae
         setJustIntaked(); // Set cooldown
       }
-    }
 
-    // Check for scoring actions - buttons 5, 6, 7 in coral mode with coral position ready
-    if (hasCoral && !justScored) {
-      if (m_joystick.button(5).getAsBoolean()
-          && !m_robotContainer.getModeMethod()
-          && m_robotContainer.armFieldReady(RobotContainer.leftCoral, 0.25)
-          && m_elevator.getElevatorHeight() > 58) { // Check if elevator is high enough for L4
-        // L4 Reef scoring
-        scoreCoral(m_robotContainer.getClosestTag(), ReefLevel.L4);
-        setJustScored();
-      } else if (m_joystick.button(6).getAsBoolean()
-          && !m_robotContainer.getModeMethod()
-          && m_robotContainer.armFieldReady(RobotContainer.leftCoral, 0.25)
-          && m_elevator.getElevatorHeight() > 29) { // Check if elevator is high enough for L3
-        // L3 Reef scoring
-        scoreCoral(m_robotContainer.getClosestTag(), ReefLevel.L3);
-        setJustScored();
-      } else if (m_joystick.button(7).getAsBoolean()
-          && !m_robotContainer.getModeMethod()
-          && m_robotContainer.armFieldReady(RobotContainer.leftCoral, 0.25)
-          && m_elevator.getElevatorHeight() > 13) { // Check if elevator is high enough for L2
-        // L2 Reef scoring
-        scoreCoral(m_robotContainer.getClosestTag(), ReefLevel.L2);
-        setJustScored();
+      // Check for scoring actions in simulation - track scored positions
+      if (hasCoral && !justScored) {
+        if (m_joystick.button(5).getAsBoolean()
+            && !m_robotContainer.getModeMethod()
+            && m_robotContainer.armFieldReady(RobotContainer.leftCoral, 0.25)
+            && m_elevator.getElevatorHeight() > 58) { // Check if elevator is high enough for L4
+          // L4 Reef scoring
+          scoreCoral(m_robotContainer.getClosestTag(), ReefLevel.L4);
+          setJustScored();
+        } else if (m_joystick.button(6).getAsBoolean()
+            && !m_robotContainer.getModeMethod()
+            && m_robotContainer.armFieldReady(RobotContainer.leftCoral, 0.25)
+            && m_elevator.getElevatorHeight() > 29) { // Check if elevator is high enough for L3
+          // L3 Reef scoring
+          scoreCoral(m_robotContainer.getClosestTag(), ReefLevel.L3);
+          setJustScored();
+        } else if (m_joystick.button(7).getAsBoolean()
+            && !m_robotContainer.getModeMethod()
+            && m_robotContainer.armFieldReady(RobotContainer.leftCoral, 0.25)
+            && m_elevator.getElevatorHeight() > 13) { // Check if elevator is high enough for L2
+          // L2 Reef scoring
+          scoreCoral(m_robotContainer.getClosestTag(), ReefLevel.L2);
+          setJustScored();
+        }
+      }
+
+      // Check for algae scoring actions in simulation
+      if (hasAlgae && !justScored) {
+        if (!m_joystick.button(1).getAsBoolean()
+            && m_robotContainer.getModeMethod()
+            && m_robotContainer.armProcessorReady(0.25)) {
+          // Processor scoring
+          scoreAlgae(0); // Position 0 for processor
+        } else if (!m_joystick.button(9).getAsBoolean()
+            && m_robotContainer.getModeMethod()
+            && m_robotContainer.armBargeReady(0.25)) {
+          // Barge scoring
+          scoreAlgae(0);
+        }
       }
     }
 
-    // Check for algae scoring actions - buttons 1, 9 in algae mode with position ready
-    if (hasAlgae && !justScored) {
-      if (!m_joystick.button(1).getAsBoolean()
-          && m_robotContainer.getModeMethod()
-          && m_robotContainer.armProcessorReady(0.25)) {
-        // Processor scoring
-        scoreAlgae(0); // Position 0 for processor
-      } else if (!m_joystick.button(9).getAsBoolean()
-          && m_robotContainer.getModeMethod()
-          && m_robotContainer.armBargeReady(0.25)) {
-        // Barge scoring
-        scoreAlgae(0);
-      }
-    }
-
-    // Detect if the outTake button (5 for L4, 6 for L3, 7 for L2) is released in coral mode
-    // This helps ensure we detect when the coral is actually ejected from the robot
-    if (hasCoral) {
+    // Detect if the outTake button is released in coral mode, but only in simulation mode
+    if (hasCoral && isSimulation) {
       boolean outTakeButton = false;
       if (!m_robotContainer.getModeMethod()) { // Coral mode
         outTakeButton =
@@ -570,6 +604,7 @@ public class GamePieceTracker extends SubsystemBase {
 
   /** Updates the 3D visualization of all game pieces. */
   private void updateVisualization() {
+    // Skip visualization on real robot
     if (Constants.getRobot() != Constants.RobotType.SIMBOT) {
       return;
     }
@@ -679,6 +714,11 @@ public class GamePieceTracker extends SubsystemBase {
 
   /** Visualizes all scored game pieces on the field. */
   private void visualizeScoredGamePieces() {
+    // Skip visualization on real robot
+    if (Constants.getRobot() != Constants.RobotType.SIMBOT) {
+      return;
+    }
+
     // Record coral positions as an array of Pose3d objects
     if (!scoredCoralPoses.isEmpty()) {
       Logger.recordOutput("ObjectiveTracker/3DView/Coral", scoredCoralPoses.toArray(Pose3d[]::new));
@@ -879,8 +919,10 @@ public class GamePieceTracker extends SubsystemBase {
     justIntaked = false;
     intakeCooldown = 0;
 
-    // Re-initialize the field with algae in alternating heights
-    initializeFieldWithAlgae();
+    // Re-initialize the field with algae in alternating heights only in simulation mode
+    if (Constants.getRobot() == Constants.RobotType.SIMBOT) {
+      initializeFieldWithAlgae();
+    }
   }
 
   /**
