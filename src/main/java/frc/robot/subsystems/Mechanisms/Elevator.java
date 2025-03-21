@@ -149,9 +149,9 @@ public class Elevator extends SubsystemBase {
   public void updateMechanism() {
     switch (Constants.getRobot()) {
       case COMPBOT:
-        m_elevatorMech2d.setLength(
-            Units.inchesToMeters(masterMotor.getPosition().getValueAsDouble()));
-        // TODO: This assumes bradys are inches
+        // Multiplying from bradys to meters
+        m_elevatorMech2d.setLength((masterMotor.getPosition().getValueAsDouble()) * 0.02205522);
+
         break;
       case SIMBOT:
         // Get current setpoint
