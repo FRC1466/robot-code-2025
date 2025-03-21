@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 
 public class PathfindConstants {
+  // TODO: the pose for index 2 is the same for both
   // Red Target Poses for Reef
   // 6-11 as 0-5 , First is Left and Second is Right
   public static final Pose2d[][] redTargetPoseReef = {
