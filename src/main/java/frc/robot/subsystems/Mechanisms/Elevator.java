@@ -232,6 +232,10 @@ public class Elevator extends SubsystemBase {
     }
   }
 
+  public boolean atSetpoint() {
+    return elevatorPID.atSetpoint();
+  }
+
   public Command setGoal(double goal) {
     return runOnce(() -> goToGoal(goal));
   }

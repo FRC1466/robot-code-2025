@@ -1,14 +1,4 @@
 {
-  "Keyboard 0 Settings": {
-    "window": {
-      "visible": true
-    }
-  },
-  "System Joysticks": {
-    "window": {
-      "enabled": false
-    }
-  },
   "keyboardJoysticks": [
     {
       "axisConfig": [
@@ -107,7 +97,7 @@
   ],
   "robotJoysticks": [
     {
-      "guid": "030000006d04000015c2000000000000"
+      "guid": "Keyboard0"
     }
   ]
 }

@@ -4,17 +4,18 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
-import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -46,6 +47,290 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
+  public Command createL4AutoPathingCommand() {
+    // Define specific reef target locations to visit
+    int[] targetTags = {5, 0, 0}; // Three specific reef tags
+    int targetSide = 0; // Left side (0)
+
+    // Custom constraints optimized for a 115 pound robot
+    PathConstraints fastConstraints =
+        new PathConstraints(
+            6.5, // Increased max velocity (m/s)
+            3.0, // Keep same acceleration (m/s²)
+            Units.degreesToRadians(540), // Angular velocity (rad/s)
+            Units.degreesToRadians(720)); // Angular acceleration (rad/s²)
+
+    return Commands.sequence(
+        // First target
+        Commands.runOnce(
+            () -> {
+              Logger.recordOutput(
+                  "AutoStatus", "Starting pathfinding to first target (Tag " + targetTags[0] + ")");
+              if (autoPathingEnabled) {
+                reefCommand =
+                    m_pathfinder.getPathfindingCommandReefL4(
+                        targetSide, targetTags[0], fastConstraints);
+                reefCommand.schedule();
+              }
+            }),
+        // Start preparatory movements during approach
+        rotaryPart.l4coralScore().withTimeout(.2),
+        Commands.sequence(
+            Commands.waitUntil(
+                () -> {
+                  boolean approaching = armApproachingTarget(targetSide, targetTags[0], 1.5);
+                  if (approaching) {
+                    Logger.recordOutput("AutoStatus", "Starting elevator early for third target");
+                  }
+                  return approaching;
+                }),
+            elevator.toL4()),
+        // Final positioning check
+        Commands.waitUntil(
+            () -> {
+              boolean ready = armFieldReady(targetSide, 1);
+              boolean stopped = isDrivetrainStopped(0.05);
+              Logger.recordOutput(
+                  "AutoStatus",
+                  "Waiting for first target position: "
+                      + (ready && stopped ? "Ready" : "Not Ready"));
+              return ready && stopped;
+            }),
+        // Start elevator while finalizing position
+        Commands.parallel(
+            Commands.runOnce(
+                () -> {
+                  Logger.recordOutput("AutoStatus", "Raising elevator to L4 for first target");
+                  intake.coralHold();
+                })),
+        Commands.waitUntil(() -> elevator.getElevatorHeight() > 61),
+        Commands.sequence(
+            Commands.runOnce(
+                () -> Logger.recordOutput("AutoStatus", "Outtaking coral at first target")),
+            intake.outTake(),
+            Commands.waitSeconds(0.5),
+            Commands.runOnce(
+                () -> Logger.recordOutput("AutoStatus", "Stopping intake after first score"))),
+        // Begin returning to storage configuration and path to station simultaneously
+        Commands.parallel(
+            Commands.sequence(
+                Commands.runOnce(() -> intake.stop()),
+                elevator.toBottom(),
+                Commands.waitUntil(() -> elevator.getElevatorHeight() < 10),
+                rotaryPart.store().withTimeout(.2)),
+            Commands.sequence(
+                Commands.runOnce(
+                    () -> {
+                      Logger.recordOutput(
+                          "AutoStatus", "Pathfinding to station " + getClosestStation());
+                      if (autoPathingEnabled) {
+                        stationCommand =
+                            m_pathfinder.getPathfindingCommandStation(
+                                getClosestStation(), fastConstraints);
+                        stationCommand.schedule();
+                      }
+                    }))),
+        // Wait for position at station
+        Commands.waitUntil(
+            () -> {
+              boolean ready = coralIntakeReady();
+              boolean stopped = isDrivetrainStopped(0.05);
+              return ready && stopped;
+            }),
+        // Intake sequence
+        Commands.sequence(
+            Commands.runOnce(
+                () -> {
+                  Logger.recordOutput("AutoStatus", "Starting intake at station");
+                  intake.intake();
+                }),
+            Commands.waitSeconds(0.6),
+            Commands.runOnce(
+                () -> {
+                  Logger.recordOutput("AutoStatus", "Stopping intake after collection");
+                  intake.stop();
+                })),
+
+        // Second target - start pathfinding immediately after intake
+        Commands.runOnce(
+            () -> {
+              Logger.recordOutput(
+                  "AutoStatus",
+                  "Starting pathfinding to second target (Tag " + targetTags[1] + ")");
+              if (autoPathingEnabled) {
+                reefCommand =
+                    m_pathfinder.getPathfindingCommandReefL4(
+                        targetSide, targetTags[1], fastConstraints);
+                reefCommand.schedule();
+              }
+            }),
+        // Start preparatory movements during approach
+        rotaryPart.l4coralScore().withTimeout(.2),
+        Commands.sequence(
+            Commands.waitUntil(
+                () -> {
+                  boolean approaching = armApproachingTarget(targetSide, targetTags[1], 1.5);
+                  if (approaching) {
+                    Logger.recordOutput("AutoStatus", "Starting elevator early for third target");
+                  }
+                  return approaching;
+                }),
+            elevator.toL4()),
+        // Final positioning check
+        Commands.waitUntil(
+            () -> {
+              boolean ready = armFieldReady(targetSide, 1);
+              boolean stopped = isDrivetrainStopped(0.05);
+              Logger.recordOutput(
+                  "AutoStatus",
+                  "Waiting for second target position: "
+                      + (ready && stopped ? "Ready" : "Not Ready"));
+              return ready && stopped;
+            }),
+        // Start elevator while finalizing position
+        Commands.parallel(
+            Commands.runOnce(
+                () -> {
+                  Logger.recordOutput("AutoStatus", "Raising elevator to L4 for second target");
+                  intake.coralHold();
+                })),
+        Commands.waitUntil(() -> elevator.getElevatorHeight() > 61),
+        Commands.sequence(
+            Commands.runOnce(
+                () -> Logger.recordOutput("AutoStatus", "Outtaking coral at second target")),
+            intake.outTake(),
+            Commands.waitSeconds(0.5),
+            Commands.runOnce(
+                () -> Logger.recordOutput("AutoStatus", "Stopping intake after second score"))),
+        // Begin returning to storage configuration and path to station simultaneously
+        Commands.parallel(
+            Commands.sequence(
+                Commands.runOnce(() -> intake.stop()),
+                elevator.toBottom(),
+                Commands.waitUntil(() -> elevator.getElevatorHeight() < 10),
+                rotaryPart.store().withTimeout(.2)),
+            Commands.sequence(
+                Commands.runOnce(
+                    () -> {
+                      Logger.recordOutput(
+                          "AutoStatus",
+                          "Pathfinding to station " + getClosestStation() + " (second visit)");
+                      if (autoPathingEnabled) {
+                        stationCommand =
+                            m_pathfinder.getPathfindingCommandStation(
+                                getClosestStation(), fastConstraints);
+                        stationCommand.schedule();
+                      }
+                    }))),
+        // Wait for position at station
+        Commands.waitUntil(
+            () -> {
+              boolean ready = coralIntakeReady();
+              boolean stopped = isDrivetrainStopped(0.05);
+              return ready && stopped;
+            }),
+        // Intake sequence
+        Commands.sequence(
+            Commands.runOnce(
+                () -> {
+                  Logger.recordOutput("AutoStatus", "Starting intake at station (second visit)");
+                  intake.intake();
+                }),
+            Commands.waitSeconds(0.6),
+            Commands.runOnce(
+                () -> {
+                  Logger.recordOutput("AutoStatus", "Stopping intake after second collection");
+                  intake.stop();
+                })),
+
+        // Third target - start pathfinding immediately after intake
+        Commands.runOnce(
+            () -> {
+              Logger.recordOutput(
+                  "AutoStatus", "Starting pathfinding to third target (Tag " + targetTags[2] + ")");
+              if (autoPathingEnabled) {
+                // Uses hardcoded position index of 2 instead of the variable 1 that was used before
+                reefCommand =
+                    m_pathfinder.getPathfindingCommandReefL4(
+                        targetSide, targetTags[2], fastConstraints);
+                reefCommand.schedule();
+              }
+            }),
+        rotaryPart.l4coralScore().withTimeout(.2),
+        Commands.sequence(
+            Commands.waitUntil(
+                () -> {
+                  boolean approaching = armApproachingTarget(targetSide, targetTags[2], 1.5);
+                  if (approaching) {
+                    Logger.recordOutput("AutoStatus", "Starting elevator early for third target");
+                  }
+                  return approaching;
+                }),
+            elevator.toL4()),
+
+        // Start elevator while finalizing position
+        Commands.parallel(
+            Commands.runOnce(
+                () -> {
+                  Logger.recordOutput("AutoStatus", "Raising elevator to L4 for third target");
+                  intake.coralHold();
+                })),
+        Commands.waitUntil(() -> elevator.getElevatorHeight() > 60),
+        Commands.sequence(
+            Commands.runOnce(
+                () -> Logger.recordOutput("AutoStatus", "Outtaking coral at third target")),
+            intake.outTake(),
+            Commands.waitSeconds(0.5),
+            Commands.runOnce(
+                () -> Logger.recordOutput("AutoStatus", "Stopping intake after third score"))),
+        Commands.runOnce(() -> Logger.recordOutput("AutoStatus", "Triple L4 Auto Complete")));
+  }
+
+  /**
+   * Checks if the robot is approaching the target position (not yet fully positioned)
+   *
+   * @param targetSide Left (0) or Right (1) side of the reef
+   * @param positionIndex Position index within the side
+   * @param proximityThreshold Threshold distance to consider "approaching" (higher values = earlier
+   *     preparation)
+   * @return true if robot is approaching target position
+   */
+  private boolean armApproachingTarget(
+      int targetSide, int positionIndex, double proximityThreshold) {
+    // Get current pose and target pose
+    Pose2d currentPose = drivetrain.getState().Pose;
+    Pose2d targetPose;
+
+    Optional<Alliance> allianceOptional = DriverStation.getAlliance();
+    Alliance alliance = allianceOptional.orElse(Alliance.Blue);
+
+    if (alliance == Alliance.Red) {
+      targetPose = PathfindConstants.redTargetPoseReef[positionIndex][targetSide];
+    } else {
+      targetPose =
+          FlipField.FieldFlip(PathfindConstants.redTargetPoseReef[positionIndex][targetSide]);
+    }
+
+    // Calculate distance to target
+    double distance = currentPose.getTranslation().getDistance(targetPose.getTranslation());
+
+    // Return true if we're getting close but not yet at final position
+    return distance < proximityThreshold && distance > 0.2;
+  }
+
+  /**
+   * Checks if the drivetrain has stopped moving (within a small threshold)
+   *
+   * @param threshold Maximum speed in m/s to consider "stopped"
+   * @return true if the drivetrain is considered stopped
+   */
+  private boolean isDrivetrainStopped(double threshold) {
+    var speeds = drivetrain.getState().Speeds;
+    return Math.abs(speeds.vxMetersPerSecond) < threshold
+        && Math.abs(speeds.vyMetersPerSecond) < threshold
+        && Math.abs(speeds.omegaRadiansPerSecond) < threshold;
+  }
+
   private Command reefCommand = null;
   private Command algaeCommand = null;
   private Command stationCommand = null;
@@ -146,17 +431,14 @@ public class RobotContainer {
 
   // Initialize autonomous chooser with options
   public void initializeChooser() {
-    BooleanSupplier armRaiseReefPositionCheck =
-        () -> !autoPathingEnabled || armFieldReady(leftCoral, 1);
+    BooleanSupplier armRaiseReefPositionCheck = () -> armFieldReady(leftCoral, 1);
     Trigger conditionalArmRaiseReefReady = new Trigger(armRaiseReefPositionCheck);
+    BooleanSupplier armScoreReefPositionCheck = () -> armFieldReady(leftCoral, 1);
+    Trigger conditionalArmScoreReefReady = new Trigger(armScoreReefPositionCheck);
     // Create the Intake command that runs for exactly 2 seconds
     Command intakeHeightCommand = elevator.toBottom().alongWith(rotaryPart.store());
     Command intakeCommand =
         intake.intake().withTimeout(3).andThen(rotaryPart.coralScore().alongWith(intake.stop()));
-
-    // L2 command - go to position, outtake, hold for 2 seconds, then return to bottom
-    Command CoralScoreCommand = rotaryPart.coralScore();
-    Command l2HeightCommand = elevator.toL2();
 
     Command l2ScoreCommand =
         elevator
@@ -205,7 +487,9 @@ public class RobotContainer {
     autoChooser.addOption("Left Taxi Auto", new PathPlannerAuto("Left Taxi Auto"));
     autoChooser.addOption("Right 1 Piece", new PathPlannerAuto("Right One Piece"));
     autoChooser.addOption("Left 1 Piece", new PathPlannerAuto("Left One Piece"));
-    /*  autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));
+    autoChooser.addOption("L4 Triple Score Auto", createL4AutoPathingCommand());
+
+    /*  autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));\
     autoChooser.addOption("3 Piece", new PathPlannerAuto("3 Piece Auto"));
     autoChooser.addOption("4 Piece", new PathPlannerAuto("4 Piece Auto Faster"));
     autoChooser.addOption("5 Piece", new PathPlannerAuto("5 Piece Auto Faster"));*/
@@ -723,16 +1007,16 @@ public class RobotContainer {
         .or(safeButton11)
         .or(safeButton12)
         .onTrue(
-            runOnce(() -> CommandScheduler.getInstance().cancelAll())
+            Commands.runOnce(() -> CommandScheduler.getInstance().cancelAll())
                 .alongWith(elevator.setElevatorVoltage(0))
-                .alongWith(runOnce(() -> rotaryPart.setMotor(0)))
+                .alongWith(Commands.runOnce(() -> rotaryPart.setMotor(0)))
                 .alongWith(intake.stop())
-                .alongWith(runOnce(() -> TeleopPaused.set(true))));
+                .alongWith(Commands.runOnce(() -> TeleopPaused.set(true))));
 
     safeButton14
         .or(safeButton15)
         .or(safeButton16)
-        .onTrue(runOnce(() -> pathfindingOverride = true));
+        .onTrue(Commands.runOnce(() -> pathfindingOverride = true));
     // Barge - Button 9
     safeButton9
         // .and(conditionalArmBargeReady)
@@ -797,7 +1081,7 @@ public class RobotContainer {
 
   // Switch state command
   public Command switchState(boolean bool) {
-    return runOnce(() -> changeState(bool));
+    return Commands.runOnce(() -> changeState(bool));
   }
 
   // Change state method
@@ -827,7 +1111,7 @@ public class RobotContainer {
   }
 
   public Command resetGyroCommand(double radians) {
-    return runOnce(() -> resetGyro(radians));
+    return Commands.runOnce(() -> resetGyro(radians));
   }
 
   public void changeCoralDirection(int i) {
@@ -845,7 +1129,7 @@ public class RobotContainer {
   }
 
   public Command switchCoralDirection(int i) {
-    return runOnce(() -> changeCoralDirection(i));
+    return Commands.runOnce(() -> changeCoralDirection(i));
   }
 
   // Reset PID controllers
