@@ -154,7 +154,7 @@ public class Robot extends LoggedRobot {
 
     // Configure DriverStation for sim
     if (Constants.getRobot() == RobotType.SIMBOT) {
-      DriverStationSim.setAllianceStationId(AllianceStationID.Blue3);
+      DriverStationSim.setAllianceStationId(AllianceStationID.Red1);
       DriverStationSim.notifyNewData();
     }
 

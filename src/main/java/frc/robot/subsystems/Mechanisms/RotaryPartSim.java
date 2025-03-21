@@ -48,8 +48,8 @@ public class RotaryPartSim extends SubsystemBase {
           200,
           SingleJointedArmSim.estimateMOI(.25, 1.5),
           .25,
-          Units.degreesToRadians(-360),
           Units.degreesToRadians(360),
+          Units.degreesToRadians(-360),
           true,
           Constants.RotationConstants.restRadians,
           2.0 * Math.PI / 4096,
@@ -74,7 +74,7 @@ public class RotaryPartSim extends SubsystemBase {
   /** Subsystem constructor. */
   public RotaryPartSim() {
     m_encoder.setDistancePerPulse(2.0 * Math.PI / 4096);
-
+    m_encoder.setReverseDirection(false);
     // Put Mechanism 2d to SmartDashboard
     SmartDashboard.putData("Arm Sim", m_mech2d);
     m_armTower.setColor(new Color8Bit(Color.kBlue));
@@ -88,6 +88,7 @@ public class RotaryPartSim extends SubsystemBase {
   @Override
   /** Update the simulation model. */
   public void simulationPeriodic() {
+    Logger.recordOutput("Arm Sim Encoder", m_armSim.getAngleRads());
     // In this method, we update our simulation of what our arm is doing
     // First, we set our "inputs" (voltages)
     m_armSim.setInput(m_motor.get() * RobotController.getBatteryVoltage());

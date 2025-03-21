@@ -16,7 +16,7 @@ public final class Constants {
 
   public static final boolean tuningMode = false; // Allows changing of LoggedTunableNumbers
 
-  private static RobotType robotType = RobotType.COMPBOT;
+  private static RobotType robotType = RobotType.SIMBOT;
   public static Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.REPLAY;
 
   @SuppressWarnings("resource")
@@ -77,7 +77,8 @@ public final class Constants {
     public static final double restRadians = .0,
         coralPosRadians = .505,
         l4coralPosRadians = 1.15,
-        algaePosition = Math.PI;
+        algaePosition = Math.PI,
+        freakyAlgaePosition = -3;
 
     public static final double maxRadians = Math.PI;
     public static final double gravityFF = 0.014;

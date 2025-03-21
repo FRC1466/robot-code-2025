@@ -10,6 +10,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.util.FileVersionException;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
@@ -487,6 +488,7 @@ public class RobotContainer {
     autoChooser.addOption("Left Taxi Auto", new PathPlannerAuto("Left Taxi Auto"));
     autoChooser.addOption("Right 1 Piece", new PathPlannerAuto("Right One Piece"));
     autoChooser.addOption("Left 1 Piece", new PathPlannerAuto("Left One Piece"));
+    autoChooser.addOption("1 to Algae", new PathPlannerAuto("1 to Algae"));
     autoChooser.addOption("L4 Triple Score Auto", createL4AutoPathingCommand());
 
     /*  autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));\
@@ -701,7 +703,13 @@ public class RobotContainer {
     BooleanSupplier armAlgaePositionCheck = () -> !autoPathingEnabled || armAlgaeReady(1.75);
     Trigger conditionalArmAlgaeReady = new Trigger(armAlgaePositionCheck);
 
-    BooleanSupplier armRaiseAlgaePositionCheck = () -> !autoPathingEnabled || armAlgaeReady(1.75);
+    BooleanSupplier armL4AlgaePositionCheck = () -> !autoPathingEnabled || armAlgaeReady(.1);
+    Trigger conditionalL4AlgaeReady = new Trigger(armAlgaePositionCheck);
+
+    BooleanSupplier armRetractSafeCheck = () -> !autoPathingEnabled || armAlgaeReady(.1);
+    Trigger conditionalArmRetractSafe = new Trigger(armAlgaePositionCheck);
+
+    BooleanSupplier armRaiseAlgaePositionCheck = () -> !autoPathingEnabled || !armAlgaeReady(.3);
     Trigger conditionalArmRaiseAlgaeReady = new Trigger(armRaiseAlgaePositionCheck);
 
     // For barge position
@@ -898,6 +906,45 @@ public class RobotContainer {
         .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .and(l4ScoreReady)
         .onFalse(intake.outTake());
+
+    safeButton10
+        .and(coralMode)
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  if (autoPathingEnabled && new PathPlannerAuto("1 to Algae") != null) {
+                    try {
+                      new PathPlannerAuto("1 to Algae").schedule();
+
+                    } catch (FileVersionException e) {
+                      // TODO Auto-generated catch block
+                      e.printStackTrace();
+                    }
+                  } else {
+                    Logger.recordOutput("AutoStatus", "PathPlannerAuto is null");
+                  }
+                }))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  if (new PathPlannerAuto("1 to Algae") != null) {
+                    new PathPlannerAuto("1 to Algae").cancel();
+                  }
+                }));
+    safeButton10
+        .and(coralMode)
+        .and(conditionalL4AlgaeReady)
+        .onTrue(
+            rotaryPart
+                .freakyAlgaeGrab()
+                // TODO change back to realrotartyPart encoder or make a switch case for sim vs no
+                .alongWith(elevator.toL3FreakyAlgae())
+                .alongWith(intake.intake()))
+        .onFalse(
+            intake
+                .algaeHold()
+                .alongWith(Commands.waitUntil(conditionalArmRetractSafe))
+                .andThen(rotaryPart.algaeGrab()));
 
     // Processor - Button 1
     safeButton1

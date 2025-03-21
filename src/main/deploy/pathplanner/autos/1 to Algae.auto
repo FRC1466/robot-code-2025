@@ -1,0 +1,19 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "1 to Algae"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Algae Paths",
+  "choreoAuto": false
+}

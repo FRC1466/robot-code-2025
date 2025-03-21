@@ -1,4 +1,14 @@
 {
+  "Keyboard 0 Settings": {
+    "window": {
+      "visible": true
+    }
+  },
+  "System Joysticks": {
+    "window": {
+      "enabled": false
+    }
+  },
   "keyboardJoysticks": [
     {
       "axisConfig": [
@@ -27,7 +37,7 @@
         50,
         -1,
         57,
-        -1,
+        48,
         -1,
         -1
       ],

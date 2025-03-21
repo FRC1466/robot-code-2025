@@ -181,6 +181,11 @@ public class RotaryPart extends SubsystemBase {
         .andThen(holdUntilSetpoint());
   }
 
+  public Command freakyAlgaeGrab() {
+    return runOnce(() -> setGoal(Rotation2d.fromRadians(RotationConstants.freakyAlgaePosition)))
+        .andThen(holdUntilSetpoint());
+  }
+
   public void setStoreSetpoint() {
     if (storedInPerimeter) {
       storedPosRad = Rotation2d.fromRadians(RotationConstants.restRadians);
