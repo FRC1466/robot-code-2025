@@ -84,6 +84,9 @@ public class PathfindingCommandParser {
 
     // Split by delimiter "--" (tokens can be arbitrarily many)
     String[] tokens = commandString.split("--");
+    for (int i = 0; i < tokens.length; i++) {
+      tokens[i] = tokens[i].toUpperCase();
+    }
     Command sequentialCommands = Commands.none();
     Coordinate currentCoord = null;
 
