@@ -120,8 +120,7 @@ public class PathfindingCommandParser {
                   + level);
 
           switch (level) {
-            case 2:
-            case 3:
+            case 2, 3:
               final Coordinate coord23 = currentCoord;
               sequentialCommands =
                   sequentialCommands.andThen(
@@ -136,7 +135,6 @@ public class PathfindingCommandParser {
                                     "AutoStatus", "Executing score (L2/L3) at " + coord23);
                               })
                           .andThen(scoreCoral(coord23)));
-              break;
             case 4:
               final Coordinate coordL4 = currentCoord;
               sequentialCommands =
@@ -152,11 +150,9 @@ public class PathfindingCommandParser {
                                     "AutoStatus", "Executing score (L4) at " + coordL4);
                               })
                           .andThen(scoreCoralL4(coordL4)));
-              break;
             default:
               Logger.recordOutput(
                   "PathfindingConsole", timestamp + " - Level not supported: " + level);
-              break;
           }
         } catch (NumberFormatException e) {
           Logger.recordOutput(
@@ -206,40 +202,36 @@ public class PathfindingCommandParser {
                               Logger.recordOutput("AutoStatus", "Executing station intake");
                             })
                         .andThen(intakeStation()));
-            break;
-          case "P":
-            Logger.recordOutput(
-                "PathfindingConsole", timestamp + " - Will perform processor score");
-            sequentialCommands =
-                sequentialCommands.andThen(
-                    Commands.runOnce(
-                            () -> {
-                              String execTimestamp =
-                                  String.format("%.2f", Timer.getFPGATimestamp());
-                              Logger.recordOutput(
-                                  "PathfindingConsole",
-                                  execTimestamp + " - EXECUTING processor score");
-                              Logger.recordOutput("AutoStatus", "Executing processor score");
-                            })
-                        .andThen(scoreProcessor()));
-            break;
-          case "B":
-            Logger.recordOutput("PathfindingConsole", timestamp + " - Will perform barge score");
-            sequentialCommands =
-                sequentialCommands.andThen(
-                    Commands.runOnce(
-                            () -> {
-                              String execTimestamp =
-                                  String.format("%.2f", Timer.getFPGATimestamp());
-                              Logger.recordOutput(
-                                  "PathfindingConsole", execTimestamp + " - EXECUTING barge score");
-                              Logger.recordOutput("AutoStatus", "Executing barge score");
-                            })
-                        .andThen(scoreBarge()));
-            break;
+            /*case "P":
+              Logger.recordOutput(
+                  "PathfindingConsole", timestamp + " - Will perform processor score");
+              sequentialCommands =
+                  sequentialCommands.andThen(
+                      Commands.runOnce(
+                              () -> {
+                                String execTimestamp =
+                                    String.format("%.2f", Timer.getFPGATimestamp());
+                                Logger.recordOutput(
+                                    "PathfindingConsole",
+                                    execTimestamp + " - EXECUTING processor score");
+                                Logger.recordOutput("AutoStatus", "Executing processor score");
+                              })
+                          .andThen(scoreProcessor()));
+            case "B":
+              Logger.recordOutput("PathfindingConsole", timestamp + " - Will perform barge score");
+              sequentialCommands =
+                  sequentialCommands.andThen(
+                      Commands.runOnce(
+                              () -> {
+                                String execTimestamp =
+                                    String.format("%.2f", Timer.getFPGATimestamp());
+                                Logger.recordOutput(
+                                    "PathfindingConsole", execTimestamp + " - EXECUTING barge score");
+                                Logger.recordOutput("AutoStatus", "Executing barge score");
+                              })
+                          .andThen(scoreBarge()));*/
           default:
             Logger.recordOutput("PathfindingConsole", timestamp + " - Unknown token: " + token);
-            break;
         }
       }
     }

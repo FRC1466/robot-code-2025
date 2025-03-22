@@ -459,7 +459,7 @@ public class RobotContainer {
     Trigger armBargeReady =
         new Trigger(
             () ->
-                rotaryPart.getPosition().getRadians() < 2.1
+                rotaryPart.getPosition().getRadians() < 2.5
                     && rotaryPart.getPosition().getRadians() > 0);
     Trigger coralMode = new Trigger(() -> !getModeMethod());
     Trigger normalMode = new Trigger(() -> !testingBoolean);

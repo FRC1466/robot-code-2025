@@ -332,8 +332,6 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
-    RobotContainer.rotaryPart.setGoal(
-        Rotation2d.fromRadians(Constants.RotationConstants.coralPosRadians));
   }
 
   @Override
@@ -342,7 +340,9 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void autonomousExit() {}
+  public void autonomousExit() {
+    CommandScheduler.getInstance().cancelAll();
+  }
 
   @Override
   public void teleopInit() {

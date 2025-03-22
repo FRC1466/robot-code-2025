@@ -3,9 +3,12 @@
  
 package frc.robot.util;
 
+import static edu.wpi.first.wpilibj2.command.Commands.waitSeconds;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotContainer;
+import frc.robot.constants.Constants;
 import frc.robot.subsystems.Mechanisms.Elevator;
 import frc.robot.subsystems.Mechanisms.Intake;
 import org.littletonrobotics.junction.Logger;
@@ -35,7 +38,7 @@ public class PathfindingAutoCommands {
               }
             }),
         // Start preparatory movements during approach
-        RobotContainer.rotaryPart.l4coralScore().withTimeout(.2),
+        RobotContainer.rotaryPart.coralScore().withTimeout(.2),
         Commands.sequence(
             Commands.waitUntil(
                 () -> {
@@ -66,14 +69,20 @@ public class PathfindingAutoCommands {
                   intake.coralHold();
                 })),
         Commands.waitUntil(() -> elevator.getElevatorHeight() > 61),
+        RobotContainer.rotaryPart.l4coralScore().withTimeout(.2),
         Commands.sequence(
             Commands.runOnce(
                 () -> Logger.recordOutput("AutoStatus", "Outtaking coral at first target")),
             intake.outTake(),
-            Commands.waitSeconds(0.5),
+            switch (Constants.getRobot()) {
+              case SIMBOT -> Commands.waitSeconds(0.5);
+              case COMPBOT -> Commands.waitUntil(() -> intake.getIntakeDistanceBool());
+              default -> Commands.waitSeconds(0.5);
+            },
             Commands.runOnce(
                 () -> Logger.recordOutput("AutoStatus", "Stopping intake after first score")),
-            intake.stop()));
+            intake.stop()),
+        RobotContainer.rotaryPart.coralScore().withTimeout(.2));
   }
 
   public Command l321AutoFreaktory(int targetTag, int targetSide, int height) {
@@ -122,13 +131,15 @@ public class PathfindingAutoCommands {
           case 3 -> Commands.waitUntil(() -> elevator.getElevatorHeight() > 28);
           default -> Commands.waitUntil(() -> elevator.getElevatorHeight() > 12);
         },
+        RobotContainer.rotaryPart.coralScore().withTimeout(.2),
         Commands.sequence(
-            Commands.runOnce(() -> Logger.recordOutput("AutoStatus", "Outtaking coral at target")),
-            intake.outTake(),
-            Commands.waitSeconds(0.5),
+            Commands.runOnce(
+                () -> Logger.recordOutput("AutoStatus", "Outtaking coral at first target")),
+            intake.outTake().withTimeout(0.2),
+            Commands.waitSeconds(0.2),
             Commands.runOnce(
                 () -> Logger.recordOutput("AutoStatus", "Stopping intake after first score")),
-            intake.stop()));
+            intake.stop().withTimeout(0.2)));
   }
 
   public Command stationAutoFreaktory() {
@@ -142,31 +153,37 @@ public class PathfindingAutoCommands {
                     .schedule();
               }
             }),
+        waitSeconds(.2),
         elevator.toBottom(),
+        Commands.waitUntil(() -> elevator.getElevatorHeight() < 2),
         RobotContainer.rotaryPart.store().withTimeout(.2),
         // Wait for position at station
         Commands.waitUntil(
             () -> {
-              boolean ready = robotContainer.coralIntakeReady();
               boolean stopped = robotContainer.isDrivetrainStopped(0.05);
               Logger.recordOutput(
                   "AutoStatus",
-                  "Waiting for station position: " + (ready && stopped ? "Ready" : "Not Ready"));
-              return ready && stopped;
+                  "Waiting for station position: " + (stopped ? "Ready" : "Not Ready"));
+              return stopped;
             }),
         // Intake sequence
         Commands.sequence(
             Commands.runOnce(
                 () -> {
                   Logger.recordOutput("AutoStatus", "Starting intake at station");
-                  intake.intake();
                 }),
-            Commands.waitSeconds(0.6),
+            intake.intake(),
+            switch (Constants.getRobot()) {
+              case SIMBOT -> Commands.waitSeconds(0);
+              case COMPBOT -> Commands.waitUntil(() -> !intake.getIntakeDistanceBool());
+              default -> Commands.waitSeconds(0);
+            },
             Commands.runOnce(
                 () -> {
                   Logger.recordOutput("AutoStatus", "Stopping intake after collection");
-                  intake.stop();
-                })));
+                }),
+            intake.stop(),
+            RobotContainer.rotaryPart.coralScore().withTimeout(.2)));
   }
 
   public Command algaeAutoFreaktory(int targetTag) {
@@ -211,13 +228,7 @@ public class PathfindingAutoCommands {
                 })));
   }
 
-  public void processorAutoFreaktory() {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'processorAutoFreaktory'");
-  }
+  public void processorAutoFreaktory() {}
 
-  public void bargeAutoFreaktory() {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'bargeAutoFreaktory'");
-  }
+  public void bargeAutoFreaktory() {}
 }
