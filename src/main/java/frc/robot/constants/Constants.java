@@ -78,7 +78,7 @@ public final class Constants {
         coralPosRadians = .505,
         l4coralPosRadians = 1.15,
         algaePosition = Math.PI,
-        freakyAlgaePosition = -3;
+        freakyAlgaePosition = -2.5;
 
     public static final double maxRadians = Math.PI;
     public static final double gravityFF = 0.014;
