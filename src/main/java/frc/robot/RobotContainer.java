@@ -94,6 +94,7 @@ public class RobotContainer {
   Command reefCommand = null;
   private Command algaeCommand = null;
   private Command stationCommand = null;
+  private Command autoCommand = null;
 
   // Warnings
   private final Alert driverDisconnected =
@@ -252,8 +253,16 @@ public class RobotContainer {
     // autoChooser.addOption("Taxi", new PathPlannerAuto("Taxi Auto"));
     autoChooser.addOption("Right Taxi Auto", new PathPlannerAuto("Right Taxi Auto"));
     autoChooser.addOption("Left Taxi Auto", new PathPlannerAuto("Left Taxi Auto"));
-    autoChooser.addOption("Right 1 Piece", new PathPlannerAuto("Right One Piece"));
-    autoChooser.addOption("Left 1 Piece", new PathPlannerAuto("Left One Piece"));
+    autoChooser.addOption(
+        "Triple l4 blue3",
+        PathfindingCommandParser.parseCommandString("5-1-4--S--0-1-4--S--1-0-4"));
+    autoChooser.addOption(
+        "Triple l4 red3", PathfindingCommandParser.parseCommandString("3-1-4--S--2-1-4--S--1-0-4"));
+    autoChooser.addOption(
+        "2.5 Piece l4 blue3", PathfindingCommandParser.parseCommandString("0-0-4--S--0-1-4--S"));
+    autoChooser.addOption(
+        "2.5 Piece l4 red3", PathfindingCommandParser.parseCommandString("2-0-4--S--2-1-4--S"));
+    autoChooser.addOption("1 Piece l4", PathfindingCommandParser.parseCommandString("4-1-4"));
     autoChooser.addOption(
         "Use AutoPathing",
         Commands.runOnce(
@@ -262,7 +271,8 @@ public class RobotContainer {
               Logger.recordOutput(
                   "AutoStatus", "Using auto pathing with input: " + currentPathingTarget);
               if (!currentPathingTarget.isEmpty()) {
-                PathfindingCommandParser.parseCommandString(currentPathingTarget);
+                autoCommand = PathfindingCommandParser.parseCommandString(currentPathingTarget);
+                autoCommand.schedule();
               } else {
                 Logger.recordOutput("AutoStatus", "ERROR: Empty pathing target in chooser");
               }

@@ -31,39 +31,6 @@ public class PathfindingCommandParser {
     }
   }
 
-  public static Command scoreCoral(Coordinate coord) {
-    Logger.recordOutput("PathfindingParser", "Score Coral");
-    Logger.recordOutput("PathfindingParser", coord.toString());
-    return pathfindingAutoCommands.l321AutoFreaktory(coord.tag, coord.side, coord.level);
-  }
-
-  public static Command scoreCoralL4(Coordinate coord) {
-    Logger.recordOutput("PathfindingParser", "Score Coral L4");
-    Logger.recordOutput("PathfindingParser", coord.toString());
-    return pathfindingAutoCommands.l4AutoFreaktory(coord.tag, coord.side);
-  }
-
-  public static Command intakeStation() {
-    Logger.recordOutput("PathfindingParser", "Station Intake");
-    return pathfindingAutoCommands.stationAutoFreaktory();
-  }
-
-  public static Command intakeAlgae(int tag) {
-    Logger.recordOutput("PathfindingParser", "Algae Intake");
-    Logger.recordOutput("PathfindingParser", "Tag: " + tag);
-    return pathfindingAutoCommands.algaeAutoFreaktory(tag);
-  }
-
-  public static Command scoreProcessor() {
-    Logger.recordOutput("PathfindingParser", "Processor Score");
-    return Commands.runOnce(() -> pathfindingAutoCommands.processorAutoFreaktory());
-  }
-
-  public static Command scoreBarge() {
-    Logger.recordOutput("PathfindingParser", "Barge Score");
-    return Commands.runOnce(() -> pathfindingAutoCommands.bargeAutoFreaktory());
-  }
-
   /**
    * Parses the given command string and schedules a single sequential command that executes through
    * all tokens once.
@@ -77,16 +44,13 @@ public class PathfindingCommandParser {
    *
    * @param commandString the full command string (e.g., "5-0-4--S--5-1-3--4-A")
    */
-  public static void parseCommandString(String commandString) {
-    String timestamp = String.format("%.2f", Timer.getFPGATimestamp());
+  public static Command parseCommandString(String commandString) {
     Logger.recordOutput("AutoStatus", "Starting command: " + commandString);
-    Logger.recordOutput("PathfindingConsole", timestamp + " - Starting command: " + commandString);
+    Logger.recordOutput("PathfindingConsole", "Starting command: " + commandString);
 
     // Split by delimiter "--" (tokens can be arbitrarily many)
     String[] tokens = commandString.split("--");
-    for (int i = 0; i < tokens.length; i++) {
-      tokens[i] = tokens[i].toUpperCase();
-    }
+    Logger.recordOutput("tokens", "Tokens: " + String.join(", ", tokens));
     Command sequentialCommands = Commands.none();
     Coordinate currentCoord = null;
 
@@ -96,9 +60,7 @@ public class PathfindingCommandParser {
       Logger.recordOutput(
           "PathfindingConsole", "Token received: '" + token + "' (length=" + token.length() + ")");
       if (token.isEmpty()) continue;
-
-      timestamp = String.format("%.2f", Timer.getFPGATimestamp());
-      Logger.recordOutput("PathfindingConsole", timestamp + " - Processing token: " + token);
+      Logger.recordOutput("PathfindingConsole", "Processing token: " + token);
 
       // Fix: Use independent if blocks rather than else-if chains
       // Coordinate token: should match three numbers separated by dashes.
@@ -111,17 +73,11 @@ public class PathfindingCommandParser {
           currentCoord = new Coordinate(reef, side, level);
           Logger.recordOutput(
               "PathfindingConsole",
-              timestamp
-                  + " - Parsed coordinate: Reef="
-                  + reef
-                  + ", Side="
-                  + side
-                  + ", Level="
-                  + level);
+              "Parsed coordinate: Reef=" + reef + ", Side=" + side + ", Level=" + level);
 
           switch (level) {
-            case 2, 3:
-              final Coordinate coord23 = currentCoord;
+            case 2:
+              final Coordinate coordL2 = currentCoord;
               sequentialCommands =
                   sequentialCommands.andThen(
                       Commands.runOnce(
@@ -130,11 +86,26 @@ public class PathfindingCommandParser {
                                     String.format("%.2f", Timer.getFPGATimestamp());
                                 Logger.recordOutput(
                                     "PathfindingConsole",
-                                    execTimestamp + " - EXECUTING score (L2/L3) at " + coord23);
-                                Logger.recordOutput(
-                                    "AutoStatus", "Executing score (L2/L3) at " + coord23);
+                                    execTimestamp + " - EXECUTING score at " + coordL2);
+                                Logger.recordOutput("AutoStatus", "Executing score at " + coordL2);
                               })
-                          .andThen(scoreCoral(coord23)));
+                          .andThen(pathfindingAutoCommands.l321AutoFreaktory(reef, side, level)));
+              continue;
+            case 3:
+              final Coordinate coordL3 = currentCoord;
+              sequentialCommands =
+                  sequentialCommands.andThen(
+                      Commands.runOnce(
+                              () -> {
+                                String execTimestamp =
+                                    String.format("%.2f", Timer.getFPGATimestamp());
+                                Logger.recordOutput(
+                                    "PathfindingConsole",
+                                    execTimestamp + " - EXECUTING score at " + coordL3);
+                                Logger.recordOutput("AutoStatus", "Executing score at " + coordL3);
+                              })
+                          .andThen(pathfindingAutoCommands.l321AutoFreaktory(reef, side, level)));
+              continue;
             case 4:
               final Coordinate coordL4 = currentCoord;
               sequentialCommands =
@@ -149,14 +120,15 @@ public class PathfindingCommandParser {
                                 Logger.recordOutput(
                                     "AutoStatus", "Executing score (L4) at " + coordL4);
                               })
-                          .andThen(scoreCoralL4(coordL4)));
+                          .andThen(pathfindingAutoCommands.l4AutoFreaktory(reef, side)));
+              continue;
             default:
-              Logger.recordOutput(
-                  "PathfindingConsole", timestamp + " - Level not supported: " + level);
+              Logger.recordOutput("PathfindingConsole", "Level not supported: " + level);
+              continue;
           }
         } catch (NumberFormatException e) {
-          Logger.recordOutput(
-              "PathfindingConsole", timestamp + " - Invalid coordinate token: " + token);
+          Logger.recordOutput("PathfindingConsole", "Invalid coordinate token: " + token);
+          continue;
         }
       }
 
@@ -165,8 +137,7 @@ public class PathfindingCommandParser {
         String[] parts = token.split("\\s*-\\s*");
         try {
           int tag = Integer.parseInt(parts[0]);
-          Logger.recordOutput(
-              "PathfindingConsole", timestamp + " - Will perform algae intake at tag " + tag);
+          Logger.recordOutput("PathfindingConsole", "Will perform algae intake at tag " + tag);
           sequentialCommands =
               sequentialCommands.andThen(
                   Commands.runOnce(
@@ -178,9 +149,11 @@ public class PathfindingCommandParser {
                             Logger.recordOutput(
                                 "AutoStatus", "Executing algae intake at tag " + tag);
                           })
-                      .andThen(intakeAlgae(tag)));
+                      .andThen(pathfindingAutoCommands.algaeAutoFreaktory(tag)));
+          continue;
         } catch (NumberFormatException e) {
-          Logger.recordOutput("PathfindingConsole", timestamp + " - Invalid algae token: " + token);
+          Logger.recordOutput("PathfindingConsole", "Invalid algae token: " + token);
+          continue;
         }
       }
 
@@ -189,7 +162,7 @@ public class PathfindingCommandParser {
         String action = token.toUpperCase();
         switch (action) {
           case "S":
-            Logger.recordOutput("PathfindingConsole", timestamp + " - Will perform station intake");
+            Logger.recordOutput("PathfindingConsole", "Will perform station intake");
             sequentialCommands =
                 sequentialCommands.andThen(
                     Commands.runOnce(
@@ -201,7 +174,8 @@ public class PathfindingCommandParser {
                                   execTimestamp + " - EXECUTING station intake");
                               Logger.recordOutput("AutoStatus", "Executing station intake");
                             })
-                        .andThen(intakeStation()));
+                        .andThen(pathfindingAutoCommands.stationAutoFreaktory()));
+            continue;
             /*case "P":
               Logger.recordOutput(
                   "PathfindingConsole", timestamp + " - Will perform processor score");
@@ -231,16 +205,23 @@ public class PathfindingCommandParser {
                               })
                           .andThen(scoreBarge()));*/
           default:
-            Logger.recordOutput("PathfindingConsole", timestamp + " - Unknown token: " + token);
+            Logger.recordOutput("PathfindingConsole", "Unknown token: " + token);
+            continue;
         }
       }
     }
-
-    timestamp = String.format("%.2f", Timer.getFPGATimestamp());
-    Logger.recordOutput(
-        "PathfindingConsole", timestamp + " - Command parsing complete, scheduling execution");
+    Logger.recordOutput("PathfindingConsole", "Command parsing complete, scheduling execution");
     Logger.recordOutput("AutoStatus", "Command parsing complete, scheduling execution");
 
-    sequentialCommands.schedule();
+    sequentialCommands =
+        sequentialCommands.andThen(
+            RobotContainer.elevator
+                .toBottom()
+                .alongWith(
+                    RobotContainer.rotaryPart
+                        .coralScore()
+                        .withTimeout(0.2)
+                        .alongWith(RobotContainer.intake.stop())));
+    return sequentialCommands;
   }
 }

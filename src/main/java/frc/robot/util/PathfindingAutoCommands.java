@@ -53,12 +53,11 @@ public class PathfindingAutoCommands {
         // Final positioning check
         Commands.waitUntil(
             () -> {
-              boolean ready = robotContainer.armFieldReady(targetSide, 1);
               boolean stopped = robotContainer.isDrivetrainStopped(0.05);
               Logger.recordOutput(
                   "AutoStatus",
-                  "Waiting for target position: " + (ready && stopped ? "Ready" : "Not Ready"));
-              return ready && stopped;
+                  "Waiting for target position: " + (stopped ? "Ready" : "Not Ready"));
+              return stopped;
             }),
         // Start elevator while finalizing position
         Commands.parallel(
@@ -105,16 +104,19 @@ public class PathfindingAutoCommands {
                   }
                   return approaching;
                 }),
-            (height == 2 ? elevator.toL2() : elevator.toL3())),
+            switch (height) {
+              case 2 -> elevator.toL2();
+              case 3 -> elevator.toL3();
+              default -> elevator.toL2();
+            }),
         // Final positioning check
         Commands.waitUntil(
             () -> {
-              boolean ready = robotContainer.armFieldReady(targetSide, 1);
               boolean stopped = robotContainer.isDrivetrainStopped(0.05);
               Logger.recordOutput(
                   "AutoStatus",
-                  "Waiting for target position: " + (ready && stopped ? "Ready" : "Not Ready"));
-              return ready && stopped;
+                  "Waiting for target position: " + (stopped ? "Ready" : "Not Ready"));
+              return stopped;
             }),
         // Start elevator while finalizing position
         Commands.parallel(
@@ -122,6 +124,7 @@ public class PathfindingAutoCommands {
                 () -> {
                   Logger.recordOutput(
                       "AutoStatus", "Raising elevator to L" + height + " for target");
+                  intake.coralHold();
                 })),
         switch (height) {
           case 2 -> Commands.waitUntil(() -> elevator.getElevatorHeight() > 12);
