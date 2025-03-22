@@ -32,7 +32,7 @@ public class PathfindingAutoCommands {
         Commands.runOnce(
             () -> {
               Logger.recordOutput(
-                  "AutoStatus", "Starting pathfinding to first target (Tag " + targetTag + ")");
+                  "AutoStatus", "Starting pathfinding to target (Tag " + targetTag + ")");
               if (RobotContainer.autoPathingEnabled) {
                 m_pathfinder.getPathfindingCommandReefL4(targetSide, targetTag).schedule();
               }
@@ -45,7 +45,7 @@ public class PathfindingAutoCommands {
                   boolean approaching =
                       robotContainer.armApproachingTarget(targetSide, targetTag, 2.5);
                   if (approaching) {
-                    Logger.recordOutput("AutoStatus", "Starting elevator early for third target");
+                    Logger.recordOutput("AutoStatus", "Starting elevator early for target");
                   }
                   return approaching;
                 }),
@@ -57,22 +57,20 @@ public class PathfindingAutoCommands {
               boolean stopped = robotContainer.isDrivetrainStopped(0.05);
               Logger.recordOutput(
                   "AutoStatus",
-                  "Waiting for first target position: "
-                      + (ready && stopped ? "Ready" : "Not Ready"));
+                  "Waiting for target position: " + (ready && stopped ? "Ready" : "Not Ready"));
               return ready && stopped;
             }),
         // Start elevator while finalizing position
         Commands.parallel(
             Commands.runOnce(
                 () -> {
-                  Logger.recordOutput("AutoStatus", "Raising elevator to L4 for first target");
+                  Logger.recordOutput("AutoStatus", "Raising elevator to L4 for target");
                   intake.coralHold();
                 })),
         Commands.waitUntil(() -> elevator.getElevatorHeight() > 61),
         RobotContainer.rotaryPart.l4coralScore().withTimeout(.2),
         Commands.sequence(
-            Commands.runOnce(
-                () -> Logger.recordOutput("AutoStatus", "Outtaking coral at first target")),
+            Commands.runOnce(() -> Logger.recordOutput("AutoStatus", "Outtaking coral at target")),
             intake.outTake(),
             switch (Constants.getRobot()) {
               case SIMBOT -> Commands.waitSeconds(0.5);
@@ -80,7 +78,7 @@ public class PathfindingAutoCommands {
               default -> Commands.waitSeconds(0.5);
             },
             Commands.runOnce(
-                () -> Logger.recordOutput("AutoStatus", "Stopping intake after first score")),
+                () -> Logger.recordOutput("AutoStatus", "Stopping intake after score")),
             intake.stop()),
         RobotContainer.rotaryPart.coralScore().withTimeout(.2));
   }
@@ -90,7 +88,7 @@ public class PathfindingAutoCommands {
         Commands.runOnce(
             () -> {
               Logger.recordOutput(
-                  "AutoStatus", "Starting pathfinding to first target (Tag " + targetTag + ")");
+                  "AutoStatus", "Starting pathfinding to target (Tag " + targetTag + ")");
               if (RobotContainer.autoPathingEnabled) {
                 m_pathfinder.getPathfindingCommandReef(targetSide, targetTag).schedule();
               }
@@ -103,7 +101,7 @@ public class PathfindingAutoCommands {
                   boolean approaching =
                       robotContainer.armApproachingTarget(targetSide, targetTag, 2.5);
                   if (approaching) {
-                    Logger.recordOutput("AutoStatus", "Starting elevator early for third target");
+                    Logger.recordOutput("AutoStatus", "Starting elevator early for target");
                   }
                   return approaching;
                 }),
@@ -115,8 +113,7 @@ public class PathfindingAutoCommands {
               boolean stopped = robotContainer.isDrivetrainStopped(0.05);
               Logger.recordOutput(
                   "AutoStatus",
-                  "Waiting for first target position: "
-                      + (ready && stopped ? "Ready" : "Not Ready"));
+                  "Waiting for target position: " + (ready && stopped ? "Ready" : "Not Ready"));
               return ready && stopped;
             }),
         // Start elevator while finalizing position
@@ -133,13 +130,17 @@ public class PathfindingAutoCommands {
         },
         RobotContainer.rotaryPart.coralScore().withTimeout(.2),
         Commands.sequence(
+            Commands.runOnce(() -> Logger.recordOutput("AutoStatus", "Outtaking coral at target")),
+            intake.outTake(),
+            switch (Constants.getRobot()) {
+              case SIMBOT -> Commands.waitSeconds(0.5);
+              case COMPBOT -> Commands.waitUntil(() -> intake.getIntakeDistanceBool());
+              default -> Commands.waitSeconds(0.5);
+            },
             Commands.runOnce(
-                () -> Logger.recordOutput("AutoStatus", "Outtaking coral at first target")),
-            intake.outTake().withTimeout(0.2),
-            Commands.waitSeconds(0.2),
-            Commands.runOnce(
-                () -> Logger.recordOutput("AutoStatus", "Stopping intake after first score")),
-            intake.stop().withTimeout(0.2)));
+                () -> Logger.recordOutput("AutoStatus", "Stopping intake after score")),
+            intake.stop()),
+        RobotContainer.rotaryPart.coralScore().withTimeout(.2));
   }
 
   public Command stationAutoFreaktory() {
