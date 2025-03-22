@@ -40,7 +40,7 @@ public class PathfindingAutoCommands {
             Commands.waitUntil(
                 () -> {
                   boolean approaching =
-                      robotContainer.armApproachingTarget(targetSide, targetTag, 1.5);
+                      robotContainer.armApproachingTarget(targetSide, targetTag, 2.5);
                   if (approaching) {
                     Logger.recordOutput("AutoStatus", "Starting elevator early for third target");
                   }
@@ -72,7 +72,8 @@ public class PathfindingAutoCommands {
             intake.outTake(),
             Commands.waitSeconds(0.5),
             Commands.runOnce(
-                () -> Logger.recordOutput("AutoStatus", "Stopping intake after first score"))));
+                () -> Logger.recordOutput("AutoStatus", "Stopping intake after first score")),
+            intake.stop()));
   }
 
   public Command l321AutoFreaktory(int targetTag, int targetSide, int height) {
@@ -91,19 +92,13 @@ public class PathfindingAutoCommands {
             Commands.waitUntil(
                 () -> {
                   boolean approaching =
-                      robotContainer.armApproachingTarget(targetSide, targetTag, 1.5);
+                      robotContainer.armApproachingTarget(targetSide, targetTag, 2.5);
                   if (approaching) {
-                    Logger.recordOutput(
-                        "AutoStatus",
-                        "Starting elevator early for target, going to level " + height);
+                    Logger.recordOutput("AutoStatus", "Starting elevator early for third target");
                   }
                   return approaching;
                 }),
-            switch (height) {
-              case 2 -> RobotContainer.elevator.toL2();
-              case 3 -> RobotContainer.elevator.toL3();
-              default -> RobotContainer.elevator.toL2();
-            }),
+            (height == 2 ? elevator.toL2() : elevator.toL3())),
         // Final positioning check
         Commands.waitUntil(
             () -> {
@@ -123,16 +118,17 @@ public class PathfindingAutoCommands {
                       "AutoStatus", "Raising elevator to L" + height + " for target");
                 })),
         switch (height) {
-          case 2 -> Commands.waitUntil(() -> elevator.getElevatorHeight() > 30);
-          case 3 -> Commands.waitUntil(() -> elevator.getElevatorHeight() > 45);
-          default -> Commands.waitUntil(() -> elevator.getElevatorHeight() > 30);
+          case 2 -> Commands.waitUntil(() -> elevator.getElevatorHeight() > 12);
+          case 3 -> Commands.waitUntil(() -> elevator.getElevatorHeight() > 28);
+          default -> Commands.waitUntil(() -> elevator.getElevatorHeight() > 12);
         },
         Commands.sequence(
             Commands.runOnce(() -> Logger.recordOutput("AutoStatus", "Outtaking coral at target")),
             intake.outTake(),
             Commands.waitSeconds(0.5),
             Commands.runOnce(
-                () -> Logger.recordOutput("AutoStatus", "Stopping intake after score"))));
+                () -> Logger.recordOutput("AutoStatus", "Stopping intake after first score")),
+            intake.stop()));
   }
 
   public Command stationAutoFreaktory() {
@@ -177,61 +173,51 @@ public class PathfindingAutoCommands {
     return Commands.sequence(
         Commands.runOnce(
             () -> {
-              Logger.recordOutput("AutoStatus", "Starting pathfinding to algae position");
+              Logger.recordOutput(
+                  "AutoStatus", "Starting pathfinding to algae at tag " + targetTag);
               if (RobotContainer.autoPathingEnabled) {
                 m_pathfinder.getPathfindingCommandAlgae(targetTag).schedule();
               }
             }),
         // Start preparatory movements during approach
+        RobotContainer.rotaryPart.algaeGrab().withTimeout(.2),
         Commands.sequence(
             Commands.waitUntil(
                 () -> {
-                  boolean approaching = robotContainer.armAlgaeReady(1.5);
+                  boolean approaching = robotContainer.armApproachingTarget(0, targetTag, 1.5);
                   if (approaching) {
-                    Logger.recordOutput(
-                        "AutoStatus", "Approaching algae target, preparing movements");
+                    Logger.recordOutput("AutoStatus", "Starting elevator early for algae");
                   }
                   return approaching;
                 }),
-            // Determine the appropriate height based on the input tag
+            targetTag % 2 == 0
+                ? RobotContainer.elevator.toL2Algae()
+                : RobotContainer.elevator.toL3Algae()),
+        // Final positioning check
+        Commands.waitUntil(
+            () -> {
+              boolean stopped = robotContainer.isDrivetrainStopped(0.05);
+              return stopped;
+            }),
+        // Intake sequence
+        Commands.sequence(
+            Commands.runOnce(() -> Logger.recordOutput("AutoStatus", "Grabbing algae")),
+            intake.reverseIntake(),
+            Commands.waitSeconds(0.8),
             Commands.runOnce(
                 () -> {
-                  // Even-indexed tags go to L4, odd-indexed tags go to L3
-                  if (targetTag % 2 == 0) {
-                    Logger.recordOutput(
-                        "AutoStatus", "Selected L2 height for algae based on position");
-                    // Don't schedule directly - let the command sequencer handle it
-                    // RobotContainer.elevator.toL2Algae().schedule(); <- This is the problem
-                  } else {
-                    Logger.recordOutput(
-                        "AutoStatus", "Selected L3 height for algae based on position");
-                  }
-                }),
-            Commands.parallel(
-                targetTag % 2 == 0
-                    ? RobotContainer.elevator.toL2Algae()
-                    : RobotContainer.elevator.toL3Algae(),
-                RobotContainer.rotaryPart.algaeGrab()),
-            // Wait for final positioning
-            Commands.waitUntil(
-                () -> {
-                  boolean ready = robotContainer.armAlgaeReady(0.5);
-                  boolean stopped = robotContainer.isDrivetrainStopped(0.05);
-                  Logger.recordOutput(
-                      "AutoStatus",
-                      "Waiting for algae position: " + (ready && stopped ? "Ready" : "Not Ready"));
-                  return ready && stopped;
-                }),
-            // Grab the algae
-            Commands.sequence(
-                Commands.runOnce(() -> Logger.recordOutput("AutoStatus", "Grabbing algae")),
-                intake.reverseIntake(),
-                Commands.waitSeconds(0.8),
-                Commands.runOnce(
-                    () -> {
-                      Logger.recordOutput("AutoStatus", "Holding algae after collection");
-                      intake.algaeHold();
-                    }))));
+                  Logger.recordOutput("AutoStatus", "Holding algae after collection");
+                  intake.algaeHold();
+                })));
   }
-  ;
+
+  public void processorAutoFreaktory() {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'processorAutoFreaktory'");
+  }
+
+  public void bargeAutoFreaktory() {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'bargeAutoFreaktory'");
+  }
 }

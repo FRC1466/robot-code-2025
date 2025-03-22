@@ -59,7 +59,7 @@ public class Robot extends LoggedRobot {
 
   private Command m_autonomousCommand;
   private Vision vision;
-  private final RobotContainer m_robotContainer;
+  public static RobotContainer m_robotContainer;
 
   // Combined mechanism visualizer for elevator and rotary part
   private MechanismVisualizer m_mechanismVisualizer;

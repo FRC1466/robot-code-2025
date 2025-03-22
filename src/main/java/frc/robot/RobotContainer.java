@@ -46,119 +46,6 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedNetworkString;
 
 public class RobotContainer {
-  public Command createAutoPathCommand(String pathfindingTargets) {
-    String localPathfindingTargets = pathfindingTargets;
-    if (localPathfindingTargets.isEmpty()) {
-      return Commands.runOnce(
-          () -> {
-            Logger.recordOutput("AutoStatus", "No pathfinding target selected, doing nothing");
-          });
-    }
-    
-    // Split the pathfinding targets string by dash
-    String[] targets = localPathfindingTargets.split("-");
-    Command fullCommand = Commands.none();
-  
-    int i = 0;
-    while (i < targets.length) {
-      // Branch-height pair (like "12-4")
-      if (targets[i].length() == 2
-          && Character.isDigit(targets[i].charAt(0))
-          && Character.isDigit(targets[i].charAt(1))
-          && i + 1 < targets.length
-          && Character.isDigit(targets[i + 1].charAt(0))) {
-  
-        int branch = Integer.parseInt(targets[i]);
-        int height = Integer.parseInt(targets[i + 1]);
-  
-        boolean goRight = branch % 2 == 0; // Even = right, Odd = left
-        int side = goRight ? 1 : 0; // 0 = left, 1 = right
-  
-        // Convert branch to the proper tag index (0-5)
-        int tagIndex = (branch - 1) / 2;
-  
-        final int finalTagIndex = tagIndex;
-        final int finalSide = side;
-        final int finalHeight = height;
-  
-        Command reefCmd;
-        if (finalHeight == 4) {
-          reefCmd = m_PathfindingAutoCommands.l4AutoFreaktory(finalTagIndex, finalSide);
-        } else {
-          reefCmd =
-              m_PathfindingAutoCommands.l321AutoFreaktory(finalTagIndex, finalSide, finalHeight);
-        }
-  
-        Command loggedReefCmd =
-            Commands.sequence(
-                Commands.runOnce(
-                    () ->
-                        Logger.recordOutput(
-                            "AutoStatus",
-                            "Starting pathfinding to tag "
-                                + finalTagIndex
-                                + " (branch "
-                                + branch
-                                + "), level "
-                                + finalHeight
-                                + ", side "
-                                + (goRight ? "right" : "left"))),
-                reefCmd);
-  
-        fullCommand = fullCommand.andThen(loggedReefCmd);
-        i += 2; // Skip both the branch and height
-      }
-      // Station command (just "S")
-      else if (targets[i].equals("S")) {
-        Command stationCmd = m_PathfindingAutoCommands.stationAutoFreaktory();
-  
-        Command loggedStationCmd =
-            Commands.sequence(
-                Commands.runOnce(
-                    () -> Logger.recordOutput("AutoStatus", "Starting pathfinding to station")),
-                stationCmd);
-  
-        fullCommand = fullCommand.andThen(loggedStationCmd);
-        i++;
-      }
-      // Algae command (just "A")
-      else if (targets[i].equals("A")) {
-        // The algae tag number should be the previous element in the array
-        int tagNumber;
-        
-        if (i > 0 && Character.isDigit(targets[i - 1].charAt(0))) {
-          tagNumber = Integer.parseInt(targets[i - 1]);
-          
-          // Create the algae command with the specific tag
-          Command algaeCmd = m_PathfindingAutoCommands.algaeAutoFreaktory(tagNumber);
-          
-          final int finalTagNumber = tagNumber;
-          Command loggedAlgaeCmd =
-              Commands.sequence(
-                  Commands.runOnce(
-                      () ->
-                          Logger.recordOutput(
-                              "AutoStatus",
-                              "Starting pathfinding to algae position at tag " + finalTagNumber)),
-                  algaeCmd);
-          
-          fullCommand = fullCommand.andThen(loggedAlgaeCmd);
-        } else {
-          Logger.recordOutput("AutoStatus", "Error: No valid tag number before algae command");
-        }
-        
-        i++; // Skip the "A"
-      }
-      // Skip any other elements and log
-      else {
-        Logger.recordOutput("AutoStatus", "Skipping element: " + targets[i]);
-        i++;
-      }
-    }
-  
-    return fullCommand;
-  }
-
   /**
    * Checks if the robot is approaching the target position (not yet fully positioned)
    *
@@ -237,7 +124,7 @@ public class RobotContainer {
       new LoggedNetworkString("Pathfinding Target");
 
   // Subsystems
-  private final Intake intake = new Intake();
+  public static final Intake intake = new Intake();
   public static final RotaryPart rotaryPart = new RotaryPart();
   public static final RotaryPartSim rotaryPartSim = new RotaryPartSim();
   public static final Vision photonCamera = new Vision();
@@ -246,8 +133,8 @@ public class RobotContainer {
   private final AprilTagFieldLayout layout =
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
-  final Pathfind m_pathfinder;
-  final PathfindingAutoCommands m_PathfindingAutoCommands;
+  public static Pathfind m_pathfinder;
+  public static PathfindingAutoCommands m_PathfindingAutoCommands;
 
   public static boolean visionEnabled = true;
 
@@ -373,9 +260,9 @@ public class RobotContainer {
             () -> {
               String currentPathingTarget = pathfindingTargetChooser.get();
               Logger.recordOutput(
-                  "AutoStatus", "Using auto pathing with target: " + currentPathingTarget);
+                  "AutoStatus", "Using auto pathing with input: " + currentPathingTarget);
               if (!currentPathingTarget.isEmpty()) {
-                createAutoPathCommand(currentPathingTarget).schedule();
+                PathfindingCommandParser.parseCommandString(currentPathingTarget);
               } else {
                 Logger.recordOutput("AutoStatus", "ERROR: Empty pathing target in chooser");
               }
