@@ -734,6 +734,7 @@ public class RobotContainer {
 
     safeButton3
         .and(algaeMode)
+        .and(conditionalArmAlgaeReadyl2)
         .onTrue(
             elevator
                 .toL2Algae()
@@ -766,6 +767,7 @@ public class RobotContainer {
 
     safeButton4
         .and(algaeMode)
+        .and(conditionalArmAlgaeReadyl3)
         .onTrue(
             elevator
                 .toL3Algae()
@@ -774,6 +776,10 @@ public class RobotContainer {
                         .andThen(rotaryPart.algaeGrab().alongWith(intake.reverseIntake()))));
 
     safeButton4.and(algaeMode).onFalse((intake.algaeHold()));
+
+    algaeMode
+        .and(() -> !armAlgaeReadyl2(1) && !armAlgaeReadyl3(1))
+        .whileTrue(elevator.toProcessor());
 
     safeButton13
         .or(safeButton11)
@@ -1013,13 +1019,13 @@ public class RobotContainer {
     Alliance alliance = allianceOptional.orElse(Alliance.Blue);
 
     Pose2d targetPose =
-        Pathfind.redAveragePoses[getClosestTag() % 2 == 0 ? getClosestTag() - 1 : getClosestTag()];
+        Pathfind.redAveragePoses[getClosestTag() % 2 == 0 ? getClosestTag() + 1 : getClosestTag()];
 
     // If blue alliance, flip the target pose
     if (alliance == Alliance.Blue) {
       targetPose =
           Pathfind.blueAveragePoses[
-              getClosestTag() % 2 == 0 ? getClosestTag() - 1 : getClosestTag()];
+              getClosestTag() % 2 == 0 ? getClosestTag() + 1 : getClosestTag()];
     }
 
     double distAway =
