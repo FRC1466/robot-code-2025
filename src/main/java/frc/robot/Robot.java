@@ -27,6 +27,7 @@ import frc.robot.constants.Constants;
 import frc.robot.constants.Constants.RobotType;
 import frc.robot.subsystems.Vision;
 import frc.robot.util.Blinkin;
+import frc.robot.util.ChirpPlayer;
 import frc.robot.util.LocalADStarAK;
 import frc.robot.util.MechanismVisualizer;
 import java.lang.reflect.Field;
@@ -56,6 +57,7 @@ public class Robot extends LoggedRobot {
   private final Timer disabledTimer = new Timer();
 
   private Blinkin blinkin = new Blinkin();
+  private ChirpPlayer chirpPlayer = new ChirpPlayer();
 
   private Command m_autonomousCommand;
   private Vision vision;
@@ -189,15 +191,14 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotInit() {
-
     Pathfinding.setPathfinder(new LocalADStarAK());
     RobotContainer.elevator.setSelectedSensorPosition(0);
     vision = new Vision();
-
-    // Initialize the combined mechanism visualizer if in simulation mode
-
     m_mechanismVisualizer =
         new MechanismVisualizer(RobotContainer.elevator, RobotContainer.rotaryPartSim);
+    if (Constants.PlayMusic) {
+      chirpPlayer.playChirpForAllMotors("output");
+    }
   }
 
   @Override
@@ -314,7 +315,11 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void disabledExit() {}
+  public void disabledExit() {
+    if (chirpPlayer.orchestra.isPlaying()) {
+      chirpPlayer.orchestra.stop();
+    }
+  }
 
   public boolean shouldIgnoreJoystickInput() {
     return ignoreJoystickInput;
