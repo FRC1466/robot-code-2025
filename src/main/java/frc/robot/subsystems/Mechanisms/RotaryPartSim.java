@@ -26,10 +26,7 @@ import org.littletonrobotics.junction.Logger;
 
 public class RotaryPartSim extends SubsystemBase {
   // The P gain for the PID controller that drives this arm.
-  private double setpoint;
   private double m_armKp = 50;
-  private double m_armSetpointDegrees =
-      Units.radiansToDegrees(Constants.RotationConstants.restRadians);
 
   // The arm gearbox represents a gearbox containing two Vex 775pro motors.
   private final DCMotor m_armGearbox = DCMotor.getKrakenX60(1);

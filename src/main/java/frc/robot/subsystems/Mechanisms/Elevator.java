@@ -10,8 +10,6 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
@@ -91,10 +89,6 @@ public class Elevator extends SubsystemBase {
   }
 
   public Elevator() {
-    // Create NetworkTable entry for the Pose2d (for visualization)
-    final NetworkTableInstance ntInstance = NetworkTableInstance.getDefault();
-    final NetworkTable table = ntInstance.getTable("Elevator");
-
     switch (Constants.getRobot()) {
       case COMPBOT:
         break;

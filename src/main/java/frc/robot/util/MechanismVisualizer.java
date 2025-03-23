@@ -23,13 +23,10 @@ public class MechanismVisualizer extends SubsystemBase {
 
   // Height and movement parameters
   // Height and movement parameters - adjusted for continuous elevator
-  private LoggedTunableNumber comp1HeightMultiplier =
-      new LoggedTunableNumber("Comp1HeightMultiplier", 0.5);
   private LoggedTunableNumber comp1MaxHeight =
       new LoggedTunableNumber(
           "Comp1MaxHeight", .925); // Adjust based on your actual elevator height
 
-  private LoggedTunableNumber comp2HeightOffset = new LoggedTunableNumber("Comp2HeightOffset", 0.0);
   private LoggedTunableNumber comp2HeightMultiplier =
       new LoggedTunableNumber(
           "Comp2HeightMultiplier", 0.5); // Adjust to represent the upper portion

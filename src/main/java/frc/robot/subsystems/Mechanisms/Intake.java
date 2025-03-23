@@ -97,6 +97,10 @@ public class Intake extends SubsystemBase {
   public double getCurrent(TalonFX intakeMotor) {
     return (intakeMotor.getSupplyCurrent()).getValueAsDouble();
   }
+  
+  public double getIntakeCurrent() {
+    return intakeMotor.getSupplyCurrent().getValueAsDouble();
+  }
 
   public boolean getHighCurrent() {
     if (intakeMotor.getTorqueCurrent().getValueAsDouble() > 10) {
@@ -108,7 +112,6 @@ public class Intake extends SubsystemBase {
   }
 
   public void periodic() {
-
     Logger.recordOutput("ColorSensed boolean", (m_colorSensor.getProximity() <= 120));
     Logger.recordOutput("Intake Motor Current", intakeMotor.getTorqueCurrent().getValueAsDouble());
     Logger.recordOutput("Intake Motor High Current", highCurrentBool);

@@ -200,9 +200,6 @@ public class RobotContainer {
     pathfindingTargetChooser.setDefault("");
     pathfindingTargetChooser.setDefault("54S64S");
     BooleanSupplier armRaiseReefPositionCheck = () -> armFieldReady(leftCoral, 1);
-    Trigger conditionalArmRaiseReefReady = new Trigger(armRaiseReefPositionCheck);
-    BooleanSupplier armScoreReefPositionCheck = () -> armFieldReady(leftCoral, 1);
-    Trigger conditionalArmScoreReefReady = new Trigger(armScoreReefPositionCheck);
     // Create the Intake command that runs for exactly 2 seconds
     Command intakeHeightCommand = elevator.toBottom().alongWith(rotaryPart.store());
     Command intakeCommand =
@@ -341,15 +338,6 @@ public class RobotContainer {
       .onTrue(Commands.waitSeconds(.5).andThen(intake.outTake()));*/
 
   // }
-
-  public Command l4ScoreCommandFactory(int leftRight, int tagTo) {
-    BooleanSupplier armRaisePositionCheck = () -> armFieldAutoReady(leftRight, 1, tagTo);
-    Trigger conditionalRaiseReefReady = new Trigger(armRaisePositionCheck);
-    BooleanSupplier armReefPositionCheck =
-        () -> !autoPathingEnabled || armFieldAutoReady(leftRight, .1, tagTo);
-    Trigger conditionalArmReefReady = new Trigger(armReefPositionCheck);
-    return Commands.waitUntil(armRaisePositionCheck).andThen();
-  }
 
   /*  safeButton5
       .and(coralMode)
