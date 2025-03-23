@@ -42,6 +42,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   private Notifier m_simNotifier = null;
   private double m_lastSimTime;
 
+  // Singleton instance
+  private static CommandSwerveDrivetrain instance = null;
+
   /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
   private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
   /* Red alliance sees forward as 180 degrees (toward blue alliance wall) */
@@ -190,6 +193,36 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       startSimThread();
     }
     configureAutoBuilder();
+  }
+
+  /**
+   * Gets the singleton instance of the CommandSwerveDrivetrain.
+   *
+   * @return The singleton instance of CommandSwerveDrivetrain
+   */
+  public static synchronized CommandSwerveDrivetrain getInstance() {
+    if (instance == null) {
+      throw new IllegalStateException(
+          "CommandSwerveDrivetrain instance has not been initialized. "
+              + "It must be instantiated first before calling getInstance().");
+    }
+    return instance;
+  }
+
+  /**
+   * Initializes the singleton instance of the CommandSwerveDrivetrain. This method should be called
+   * once during robot initialization with the appropriate parameters.
+   *
+   * @param drivetrainConstants Drivetrain-wide constants
+   * @param modules Constants for each specific module
+   * @return The singleton instance of CommandSwerveDrivetrain
+   */
+  public static synchronized CommandSwerveDrivetrain initInstance(
+      SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?>... modules) {
+    if (instance == null) {
+      instance = new CommandSwerveDrivetrain(drivetrainConstants, modules);
+    }
+    return instance;
   }
 
   /**

@@ -97,7 +97,7 @@ public class Intake extends SubsystemBase {
   public double getCurrent(TalonFX intakeMotor) {
     return (intakeMotor.getSupplyCurrent()).getValueAsDouble();
   }
-  
+
   public double getIntakeCurrent() {
     return intakeMotor.getSupplyCurrent().getValueAsDouble();
   }

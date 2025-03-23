@@ -204,11 +204,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public double getElevatorHeight() {
-    if (Constants.getRobot() == RobotType.SIMBOT) {
-      return Units.metersToInches(m_elevatorSim.getPositionMeters());
-    } else {
-      return masterMotor.getPosition().getValueAsDouble();
-    }
+    return masterMotor.getPosition().getValueAsDouble();
   }
 
   public void goToGoal(double goal) {

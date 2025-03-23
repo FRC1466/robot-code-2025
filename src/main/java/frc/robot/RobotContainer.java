@@ -25,7 +25,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.Constants;
-import frc.robot.constants.Constants.RobotType;
 import frc.robot.constants.PathfindConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsTester;
@@ -474,11 +473,17 @@ public class RobotContainer {
     Trigger conditionalArmRaiseReefReady = new Trigger(armRaiseReefPositionCheck);
 
     // For algae position
-    BooleanSupplier armAlgaePositionCheck = () -> !autoPathingEnabled || armAlgaeReady(1.75);
-    Trigger conditionalArmAlgaeReady = new Trigger(armAlgaePositionCheck);
+    BooleanSupplier armAlgaePositionCheckl2 = () -> !autoPathingEnabled || armAlgaeReadyl2(2);
+    Trigger conditionalArmAlgaeReadyl2 = new Trigger(armAlgaePositionCheckl2);
 
-    BooleanSupplier armRaiseAlgaePositionCheck = () -> !autoPathingEnabled || armAlgaeReady(1.75);
-    Trigger conditionalArmRaiseAlgaeReady = new Trigger(armRaiseAlgaePositionCheck);
+    BooleanSupplier armAlgaePositionCheckl3 = () -> !autoPathingEnabled || armAlgaeReadyl3(2);
+    Trigger conditionalArmAlgaeReadyl3 = new Trigger(armAlgaePositionCheckl3);
+
+    BooleanSupplier armRaiseAlgaePositionCheckl2 = () -> !autoPathingEnabled || armAlgaeReadyl2(2);
+    Trigger conditionalArmRaiseAlgaeReadyl2 = new Trigger(armRaiseAlgaePositionCheckl2);
+
+    BooleanSupplier armRaiseAlgaePositionCheckl3 = () -> !autoPathingEnabled || armAlgaeReadyl3(2);
+    Trigger conditionalArmRaiseAlgaeReadyl3 = new Trigger(armRaiseAlgaePositionCheckl3);
 
     // For barge position
     BooleanSupplier armBargePositionCheck = () -> !autoPathingEnabled || armBargeReady(.1);
@@ -713,7 +718,9 @@ public class RobotContainer {
             Commands.runOnce(
                 () -> {
                   if (autoPathingEnabled) {
-                    algaeCommand = m_pathfinder.getPathfindingCommandAlgae(getClosestTag());
+                    algaeCommand =
+                        m_pathfinder.getPathfindingCommandAlgae(
+                            getClosestTag() % 2 == 0 ? getClosestTag() : getClosestTag() - 1);
                     algaeCommand.schedule();
                   }
                 }))
@@ -727,14 +734,12 @@ public class RobotContainer {
 
     safeButton3
         .and(algaeMode)
-        .and(conditionalArmAlgaeReady)
-        .and(algaeHeightReady)
-        .onTrue(rotaryPart.algaeGrab().alongWith(intake.reverseIntake()));
-
-    safeButton3
-        .and(algaeMode)
-        .and(conditionalArmRaiseAlgaeReady)
-        .onTrue(rotaryPart.coralScore().alongWith(elevator.toL2Algae()));
+        .onTrue(
+            elevator
+                .toL2Algae()
+                .andThen(
+                    Commands.waitUntil(algaeHeightReady)
+                        .andThen(rotaryPart.algaeGrab().alongWith(intake.reverseIntake()))));
 
     safeButton3.and(algaeMode).onFalse((intake.algaeHold()));
 
@@ -745,7 +750,9 @@ public class RobotContainer {
             Commands.runOnce(
                 () -> {
                   if (autoPathingEnabled) {
-                    algaeCommand = m_pathfinder.getPathfindingCommandAlgae(getClosestTag());
+                    algaeCommand =
+                        m_pathfinder.getPathfindingCommandAlgae(
+                            getClosestTag() % 2 == 0 ? getClosestTag() + 1 : getClosestTag());
                     algaeCommand.schedule();
                   }
                 }))
@@ -759,23 +766,12 @@ public class RobotContainer {
 
     safeButton4
         .and(algaeMode)
-        .and(conditionalArmAlgaeReady)
-        .and(algaeHeightReady)
-        .onTrue(rotaryPart.algaeGrab().alongWith(intake.reverseIntake()));
-
-    // Only on real robot (not SIMBOT), move to coral score position
-    safeButton4
-        .and(algaeMode)
-        .and(conditionalArmRaiseAlgaeReady)
-        .and(() -> Constants.getRobot() != RobotType.SIMBOT) // Only on real robot
-        .onTrue(rotaryPart.coralScore().alongWith(elevator.toL3Algae()));
-
-    // For simulation, just move elevator without changing rotary part
-    safeButton4
-        .and(algaeMode)
-        .and(conditionalArmRaiseAlgaeReady)
-        .and(() -> Constants.getRobot() == RobotType.SIMBOT) // Only in simulation
-        .onTrue(elevator.toL3Algae());
+        .onTrue(
+            elevator
+                .toL3Algae()
+                .andThen(
+                    Commands.waitUntil(algaeHeightReady)
+                        .andThen(rotaryPart.algaeGrab().alongWith(intake.reverseIntake()))));
 
     safeButton4.and(algaeMode).onFalse((intake.algaeHold()));
 
@@ -990,15 +986,40 @@ public class RobotContainer {
     return distAway < displacement;
   }
 
-  public boolean armAlgaeReady(double displacement) {
+  public boolean armAlgaeReadyl2(double displacement) {
     Optional<Alliance> allianceOptional = DriverStation.getAlliance();
     Alliance alliance = allianceOptional.orElse(Alliance.Blue);
 
-    Pose2d targetPose = Pathfind.redAveragePoses[getClosestTag()];
+    Pose2d targetPose =
+        Pathfind.redAveragePoses[getClosestTag() % 2 == 0 ? getClosestTag() : getClosestTag() - 1];
 
     // If blue alliance, flip the target pose
     if (alliance == Alliance.Blue) {
-      targetPose = Pathfind.blueAveragePoses[getClosestTag()];
+      targetPose =
+          Pathfind.blueAveragePoses[
+              getClosestTag() % 2 == 0 ? getClosestTag() : getClosestTag() - 1];
+    }
+
+    double distAway =
+        Math.sqrt(
+            Math.pow(drivetrain.getState().Pose.getX() - targetPose.getX(), 2)
+                + Math.pow(drivetrain.getState().Pose.getY() - targetPose.getY(), 2));
+
+    return distAway < displacement;
+  }
+
+  public boolean armAlgaeReadyl3(double displacement) {
+    Optional<Alliance> allianceOptional = DriverStation.getAlliance();
+    Alliance alliance = allianceOptional.orElse(Alliance.Blue);
+
+    Pose2d targetPose =
+        Pathfind.redAveragePoses[getClosestTag() % 2 == 0 ? getClosestTag() - 1 : getClosestTag()];
+
+    // If blue alliance, flip the target pose
+    if (alliance == Alliance.Blue) {
+      targetPose =
+          Pathfind.blueAveragePoses[
+              getClosestTag() % 2 == 0 ? getClosestTag() - 1 : getClosestTag()];
     }
 
     double distAway =
