@@ -15,8 +15,10 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import frc.robot.Robot;
+import frc.robot.util.LoggedTunableNumber;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
@@ -35,14 +36,21 @@ import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 public class Vision {
-  public static final String kCameraName = "Camera_FrontLeft";
-  public static final String kCameraNames[] = {"Camera_FrontLeft", "Camera_FrontRight"};
-  // Cam mounted facing forward, half a meter forward of center, half a meter up from center.
-  public static final Transform3d kRobotToCam =
-      new Transform3d(new Translation3d(.267, .292, .2), new Rotation3d(0, 0, 0));
+  public static LoggedTunableNumber pitchTuning = new LoggedTunableNumber("Pitch Tuning", 30);
+  public static final String kCameraNames[] = {
+    "Camera_FrontLeft",
+    "Camera_FrontRight",
+    // "Camera_BackLeft"
+    "Camera_BackRight"
+  };
   public static final Transform3d kRobotToCams[] = {
     new Transform3d(new Translation3d(.267, .292, .2), new Rotation3d(0, 0, 0)),
-    new Transform3d(new Translation3d(.267, -.292, .2), new Rotation3d(0, 0, 0))
+    new Transform3d(new Translation3d(.267, -.292, .2), new Rotation3d(0, 0, 0)),
+    /*   new Transform3d(
+    new Translation3d(-.267, .278, .2), new Rotation3d(0, -Math.PI / 6, Math.PI * 3 / 4)),*/
+    new Transform3d(
+        new Translation3d(-.267, -.278, .2),
+        new Rotation3d(0, Units.degreesToRadians(pitchTuning.getAsDouble()), Math.PI))
   };
   // The layout of the AprilTags on the field
   public static final AprilTagFieldLayout kTagLayout =
@@ -117,7 +125,7 @@ public class Vision {
     List<PhotonTrackedTarget> allDetectedTags = new ArrayList<>();
 
     // Try each camera until we get a valid result
-    for (int i = 0; i < cameras.length; i++) {
+    for (int i = 0; i < kCameraNames.length; i++) {
       var result = cameras[i].getLatestResult();
       if (result != null) {
         allDetectedTags.addAll(result.getTargets());
@@ -138,8 +146,8 @@ public class Vision {
     // Log the vision pose estimation
     visionEst.ifPresent(
         est -> {
-          Logger.recordOutput("Vision/EstimatedPose", est.estimatedPose.toPose2d());
-          Logger.recordOutput("Vision/EstimationTimestamp", est.timestampSeconds);
+          /*    Logger.recordOutput("Vision/EstimatedPose", est.estimatedPose.toPose2d());
+          Logger.recordOutput("Vision/EstimationTimestamp", est.timestampSeconds);*/
 
           // Create array of field poses for all detected tags
           Pose2d[] tagPoses = new Pose2d[est.targetsUsed.size()];
@@ -158,9 +166,9 @@ public class Vision {
             }
           }
 
-          Logger.recordOutput("Vision/DetectedTagIDs", tagIDs);
+          /*  Logger.recordOutput("Vision/DetectedTagIDs", tagIDs);
           Logger.recordOutput("Vision/DetectedTagPoses", tagPoses);
-          Logger.recordOutput("Vision/NumberOfDetectedTags", est.targetsUsed.size());
+          Logger.recordOutput("Vision/NumberOfDetectedTags", est.targetsUsed.size());*/
         });
 
     // Log if no estimation was found but tags were detected
@@ -181,10 +189,10 @@ public class Vision {
         }
       }
 
-      Logger.recordOutput("Vision/DetectedTagIDs", tagIDs);
+      /*  Logger.recordOutput("Vision/DetectedTagIDs", tagIDs);
       Logger.recordOutput("Vision/DetectedTagPoses", tagPoses);
       Logger.recordOutput("Vision/NumberOfDetectedTags", allDetectedTags.size());
-      Logger.recordOutput("Vision/EstimatedPose", new Pose2d());
+      Logger.recordOutput("Vision/EstimatedPose", new Pose2d());*/
     }
 
     if (Robot.isSimulation()) {
@@ -223,9 +231,9 @@ public class Vision {
       }
     }
 
-    Logger.recordOutput("Vision/" + camera.getName() + "/DetectedTagIDs", tagIDs);
+    /*  Logger.recordOutput("Vision/" + camera.getName() + "/DetectedTagIDs", tagIDs);
     Logger.recordOutput("Vision/" + camera.getName() + "/DetectedTagPoses", tagPoses);
-    Logger.recordOutput("Vision/" + camera.getName() + "/NumberOfDetectedTags", targets.size());
+    Logger.recordOutput("Vision/" + camera.getName() + "/NumberOfDetectedTags", targets.size());*/
   }
 
   /**
@@ -374,15 +382,15 @@ public class Vision {
     }
 
     // Log currently visible IDs and poses
-    Logger.recordOutput("Vision/CurrentlyVisibleTagIDs", currentlyVisibleIds);
-    Logger.recordOutput("Vision/CurrentlyVisibleTagPoses", visibleTagPoses);
-    Logger.recordOutput("Vision/CurrentlyVisibleTagCount", currentlyVisibleIds.length);
+    //  Logger.recordOutput("Vision/CurrentlyVisibleTagIDs", currentlyVisibleIds);
+    //  Logger.recordOutput("Vision/CurrentlyVisibleTagPoses", visibleTagPoses);
+    //   Logger.recordOutput("Vision/CurrentlyVisibleTagCount", currentlyVisibleIds.length);*/
 
     // Log all tags and poses that have ever been seen (every second)
     if (updatedSet || (currentTime - lastLogTime > 50)) {
-      Logger.recordOutput("Vision/AllSeenAprilTagIDs", allSeenIds);
+      /*  Logger.recordOutput("Vision/AllSeenAprilTagIDs", allSeenIds);
       Logger.recordOutput("Vision/AllSeenAprilTagPoses", allTagPoses);
-      Logger.recordOutput("Vision/TotalUniqueTagsSeen", allSeenIds.length);
+      Logger.recordOutput("Vision/TotalUniqueTagsSeen", allSeenIds.length);*/
       lastLogTime = currentTime;
     }
 

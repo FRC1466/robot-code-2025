@@ -6,9 +6,7 @@ package frc.robot;
 import com.ctre.phoenix6.Utils;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.hal.AllianceStationID;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -29,18 +27,18 @@ import frc.robot.constants.Constants;
 import frc.robot.constants.Constants.RobotType;
 import frc.robot.subsystems.Vision;
 import frc.robot.util.Blinkin;
-import frc.robot.util.FlipField;
 import frc.robot.util.LocalADStarAK;
-import java.io.File;
+import frc.robot.util.MechanismVisualizer;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.stream.Stream;
 import org.littletonrobotics.junction.AutoLogOutputManager;
+import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
+import org.littletonrobotics.junction.rlog.RLOGServer;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
@@ -61,7 +59,10 @@ public class Robot extends LoggedRobot {
 
   private Command m_autonomousCommand;
   private Vision vision;
-  private final RobotContainer m_robotContainer;
+  public static RobotContainer m_robotContainer;
+
+  // Combined mechanism visualizer for elevator and rotary part
+  private MechanismVisualizer m_mechanismVisualizer;
 
   @SuppressWarnings("unused")
   private Timer algaeIntakeTimer = new Timer();
@@ -79,10 +80,6 @@ public class Robot extends LoggedRobot {
   private boolean ignoreJoystickInput = false;
 
   boolean allInputsNeutral = true;
-
-  @SuppressWarnings("unused")
-  private final StructPublisher<Pose2d> posePublisher =
-      NetworkTableInstance.getDefault().getStructTopic("Test", Pose2d.struct).publish();
 
   private final Alert lowBatteryAlert =
       new Alert(
@@ -130,34 +127,22 @@ public class Robot extends LoggedRobot {
         new PowerDistribution(1, ModuleType.kRev); // Enables power distribution logging
 
       case SIM:
-        // Running a physics simulator, log to NT
-        // Logger.addDataReceiver(new RLOGServer());
+        // Running a physics simulator, log to NT4 and RLOG
+        Logger.addDataReceiver(new RLOGServer());
         Logger.addDataReceiver(new NT4Publisher());
-        Logger.addDataReceiver(new WPILOGWriter("C:/logs"));
         break;
 
       case REPLAY:
         setUseTiming(false);
-        File logsDir = new File("D:/logs");
-        File[] logFiles = logsDir.listFiles();
-        if (logFiles == null) {
-          throw new RuntimeException("Logs directory D:/logs does not exist or is not accessible");
-        }
-        File latestLog =
-            Stream.of(logFiles)
-                .filter(file -> file.getName().endsWith(".wpilog"))
-                .max((f1, f2) -> Long.compare(f1.lastModified(), f2.lastModified()))
-                .orElseThrow(() -> new RuntimeException("No .wpilog files found in D:/logs"));
-
-        String logPath = latestLog.getAbsolutePath();
+        String logPath = LogFileUtil.findReplayLog();
         Logger.setReplaySource(new WPILOGReader(logPath));
-        Logger.addDataReceiver(new WPILOGWriter(logPath.replace(".wpilog", "_sim.wpilog")));
+        Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
         break;
     }
 
     // Configure DriverStation for sim
     if (Constants.getRobot() == RobotType.SIMBOT) {
-      DriverStationSim.setAllianceStationId(AllianceStationID.Red1);
+      DriverStationSim.setAllianceStationId(AllianceStationID.Blue3);
       DriverStationSim.notifyNewData();
     }
 
@@ -208,10 +193,17 @@ public class Robot extends LoggedRobot {
     Pathfinding.setPathfinder(new LocalADStarAK());
     RobotContainer.elevator.setSelectedSensorPosition(0);
     vision = new Vision();
+
+    // Initialize the combined mechanism visualizer if in simulation mode
+
+    m_mechanismVisualizer =
+        new MechanismVisualizer(RobotContainer.elevator, RobotContainer.rotaryPartSim);
   }
 
   @Override
   public void robotPeriodic() {
+    Logger.recordOutput("AlgaeHeightReady?", RobotContainer.elevator.getElevatorHeight() > 20);
+    RobotContainer.elevator.updateMechanism();
     Logger.recordOutput("Beam Break", beamBreak.get());
     /*if (!lastBoolean && beamBreak.get()) {
       RobotContainer.elevator.setSelectedSensorPosition(.5);
@@ -221,8 +213,6 @@ public class Robot extends LoggedRobot {
       RobotContainer.elevator.setSelectedSensorPosition(.25);
     }
     lastBoolean = beamBreak.get();
-    Logger.recordOutput(
-        "Flipped Position", FlipField.flipPose(RobotContainer.drivetrain.getState().Pose));
     // Color detectedColor = m_colorSensor.getColor();
 
     /*
@@ -247,6 +237,10 @@ public class Robot extends LoggedRobot {
             });
         break;
       case SIMBOT:
+        // Update the mechanism visualizer in simulation mode
+        if (m_mechanismVisualizer != null) {
+          m_mechanismVisualizer.periodic();
+        }
         break;
       default:
         visionEst.ifPresent(
@@ -297,13 +291,6 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void disabledInit() {
-    // Only run simulation-specific code for SIMBOT
-    if (Constants.getRobot() == RobotType.SIMBOT) {
-      System.out.println("Refreshing SIMBOT alliance configuration");
-      DriverStationSim.setAllianceStationId(AllianceStationID.Red1);
-      DriverStationSim.notifyNewData();
-    }
-
     RobotContainer.elevator.goToGoal(1);
     // fix later
     // m_robotContainer.rotaryPart.setGoal(Rotation2d.fromRadians(.05));
@@ -353,7 +340,9 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void autonomousExit() {}
+  public void autonomousExit() {
+    CommandScheduler.getInstance().cancelAll();
+  }
 
   @Override
   public void teleopInit() {
@@ -406,7 +395,8 @@ public class Robot extends LoggedRobot {
       flightstickNotCenteredAlert.set(false);
     }
 
-    RobotContainer.rotaryPart.coralScore();
+    RobotContainer.rotaryPart.setGoal(
+        Rotation2d.fromRadians(Constants.RotationConstants.coralPosRadians));
   }
 
   @Override
@@ -472,6 +462,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void simulationPeriodic() {
+    RobotContainer.elevator.simulationPeriodicElevator();
     vision.simulationPeriodic(RobotContainer.drivetrain.getState().Pose);
 
     var debugField = vision.getSimDebugField();

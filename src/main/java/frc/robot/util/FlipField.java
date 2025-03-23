@@ -14,12 +14,10 @@ import edu.wpi.first.math.geometry.Rotation3d;
  */
 public class FlipField {
   // Field dimensions for 2025 Reefscape
-  // If the middle Y is 6.08, then the full width would be approximately 12.16 meters
   public static final double FIELD_LENGTH_METERS = 17.548; // 54'1"
-  // public static final double FIELD_WIDTH_METERS = 12.16; // Calculated from center Y position
 
   // Field center point
-  public static final double FIELD_CENTER_X = 8.765; // 8.24 meters
+  public static final double FIELD_CENTER_X = 8.765;
 
   // public static final double FIELD_CENTER_Y = FIELD_WIDTH_METERS / 2.0; // 6.08 meters
 
@@ -61,7 +59,7 @@ public class FlipField {
    * vertical centerline of the field, keeps the Y coordinate the same, and adjusts the rotation
    * appropriately.
    *
-   * @param pose The original pose (typically from red alliance)
+   * @param pose The original pose (typically from red alliance in my case)
    * @return A new Pose2d flipped to the other side of the field (typically for blue alliance)
    */
   public static Pose2d flipPose(Pose2d pose) {

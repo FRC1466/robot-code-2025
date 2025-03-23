@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.Constants.RotationConstants;
 import java.util.function.DoubleSupplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import webblib.ArmPIDController;
 
@@ -35,7 +36,7 @@ public class RotaryPart extends SubsystemBase {
   @SuppressWarnings("unused")
   private double absoluteDistanceFromSpeaker;
 
-  private Rotation2d localSetpoint;
+  @AutoLogOutput public Rotation2d localSetpoint;
   private DoubleSupplier overrideFeedforward = () -> 0.0;
   private boolean disabled = false;
   private Rotation2d storedPosRad = Rotation2d.fromRadians(RotationConstants.restRadians);
@@ -131,6 +132,7 @@ public class RotaryPart extends SubsystemBase {
    * @param setpoint setpoint in radians.
    */
   public void setGoal(Rotation2d setpoint) {
+    Logger.recordOutput("Arm Setpoint", setpoint.getDegrees());
     localSetpoint = setpoint;
     armPID.setSetpoint(setpoint);
     armSetpoint = setpoint.getDegrees();

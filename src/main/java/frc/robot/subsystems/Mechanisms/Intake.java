@@ -53,7 +53,7 @@ public class Intake extends SubsystemBase {
   public Command algaeHold() {
     return runOnce(
         () -> {
-          setIntakeVoltage(.5);
+          setIntakeVoltage(.4);
           setFunnelVoltage(0);
         });
   }
@@ -82,12 +82,24 @@ public class Intake extends SubsystemBase {
         });
   }
 
+  public Command algaeOuttake() {
+    return runOnce(
+        () -> {
+          setIntakeVoltage(-2.5);
+          setFunnelVoltage(0);
+        });
+  }
+
   public boolean getIntakeDistanceBool() {
     return (m_colorSensor.getProximity() <= 120);
   }
 
   public double getCurrent(TalonFX intakeMotor) {
     return (intakeMotor.getSupplyCurrent()).getValueAsDouble();
+  }
+  
+  public double getIntakeCurrent() {
+    return intakeMotor.getSupplyCurrent().getValueAsDouble();
   }
 
   public boolean getHighCurrent() {
@@ -100,7 +112,6 @@ public class Intake extends SubsystemBase {
   }
 
   public void periodic() {
-
     Logger.recordOutput("ColorSensed boolean", (m_colorSensor.getProximity() <= 120));
     Logger.recordOutput("Intake Motor Current", intakeMotor.getTorqueCurrent().getValueAsDouble());
     Logger.recordOutput("Intake Motor High Current", highCurrentBool);
