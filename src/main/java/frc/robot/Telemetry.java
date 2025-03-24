@@ -77,7 +77,6 @@ public class Telemetry {
   /** Accept the swerve drive state and telemeterize it to Logger. */
   public void telemeterize(SwerveDriveState state) {
     /* Record the pose */
-    Logger.recordOutput("DriveState/Pose", state.Pose);
     Logger.recordOutput(
         "DriveState/CameraPose",
         new Pose3d(
