@@ -37,6 +37,7 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -457,6 +458,10 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void simulationPeriodic() {
+    Logger.recordOutput(
+        "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
+    Logger.recordOutput(
+        "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
     Logger.recordOutput("Pose", CommandSwerveDrivetrain.getInstance().getPose());
     RobotContainer.elevator.simulationPeriodicElevator();
     vision.simulationPeriodic(RobotContainer.drivetrain.getPose());

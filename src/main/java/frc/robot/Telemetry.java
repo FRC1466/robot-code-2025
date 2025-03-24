@@ -112,9 +112,6 @@ public class Telemetry {
     Logger.recordOutput("DriveState/ModuleStatesArray", m_moduleStatesArray);
     Logger.recordOutput("DriveState/ModuleTargetsArray", m_moduleTargetsArray);
 
-    /* Record field visualization data */
-    Logger.recordOutput("Field/Robot", state.Pose);
-
     /* Update the module LoggedMechanisms and log them */
     for (int i = 0; i < 4; ++i) {
       m_moduleSpeeds[i].setAngle(state.ModuleStates[i].angle);

@@ -1102,11 +1102,7 @@ public class RobotContainer {
           var tagPose = tagPoseOptional.get();
           holderDistance =
               (Math.pow(drivetrain.getPose().getX() - tagPose.getX(), 2)
-                  + Math.pow(drivetrain.getPose().getY() - tagPose.getY(), 2)
-                  + Math.pow(
-                      drivetrain.getPose().getRotation().getRadians()
-                          - tagPose.getRotation().getAngle() * 0.1,
-                      2));
+                  + Math.pow(drivetrain.getPose().getY() - tagPose.getY(), 2));
           if (holderDistance < prevDistance) {
             closestTag = i;
             prevDistance = holderDistance;
