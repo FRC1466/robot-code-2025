@@ -6,7 +6,9 @@ package frc.robot;
 import com.ctre.phoenix6.Utils;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.hal.AllianceStationID;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -198,6 +200,10 @@ public class Robot extends LoggedRobot {
         new MechanismVisualizer(RobotContainer.elevator, RobotContainer.rotaryPartSim);
     if (Constants.PlayMusic) {
       chirpPlayer.playChirpForAllMotors("output");
+    }
+    if (Constants.getRobot() == RobotType.SIMBOT) {
+      RobotContainer.drivetrain.resetPose(
+          new Pose2d(new Translation2d(7.5, 4), new Rotation2d(Math.PI)));
     }
   }
 

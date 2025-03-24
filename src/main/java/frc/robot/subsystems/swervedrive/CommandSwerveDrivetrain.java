@@ -17,19 +17,23 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathPlannerPath;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsTester.TunerSwerveDrivetrain;
 import frc.robot.subsystems.Vision;
+import frc.robot.util.simulation.MapleSimSwerveDrivetrain;
 import java.util.function.Supplier;
 
 /**
@@ -133,7 +137,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
    */
   public CommandSwerveDrivetrain(
       SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?>... modules) {
-    super(drivetrainConstants, modules);
+    super(
+        drivetrainConstants,
+        MapleSimSwerveDrivetrain.regulateModuleConstantsForSimulation(modules));
     if (Utils.isSimulation()) {
       startSimThread();
     }
@@ -155,7 +161,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       SwerveDrivetrainConstants drivetrainConstants,
       double odometryUpdateFrequency,
       SwerveModuleConstants<?, ?, ?>... modules) {
-    super(drivetrainConstants, odometryUpdateFrequency, modules);
+    super(
+        drivetrainConstants,
+        odometryUpdateFrequency,
+        // modules
+        MapleSimSwerveDrivetrain.regulateModuleConstantsForSimulation(modules));
     if (Utils.isSimulation()) {
       startSimThread();
     }
@@ -188,7 +198,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         odometryUpdateFrequency,
         odometryStandardDeviation,
         visionStandardDeviation,
-        modules);
+        // modules
+        MapleSimSwerveDrivetrain.regulateModuleConstantsForSimulation(modules));
     if (Utils.isSimulation()) {
       startSimThread();
     }
@@ -390,20 +401,35 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
   }
 
+  public MapleSimSwerveDrivetrain mapleSimSwerveDrivetrain = null;
+
   private void startSimThread() {
-    m_lastSimTime = Utils.getCurrentTimeSeconds();
-
+    mapleSimSwerveDrivetrain =
+        new MapleSimSwerveDrivetrain(
+            Seconds.of(kSimLoopPeriod),
+            Pounds.of(115), // robot weight
+            Inches.of(34), // bumper length
+            Inches.of(34), // bumper width
+            DCMotor.getKrakenX60(1), // drive motor type
+            DCMotor.getFalcon500(1), // steer motor type
+            1.2, // wheel COF
+            getModuleLocations(),
+            getPigeon2(),
+            getModules(),
+            TunerConstants.FrontLeft,
+            TunerConstants.FrontRight,
+            TunerConstants.BackLeft,
+            TunerConstants.BackRight);
     /* Run simulation at a faster rate so PID gains behave more reasonably */
-    m_simNotifier =
-        new Notifier(
-            () -> {
-              final double currentTime = Utils.getCurrentTimeSeconds();
-              double deltaTime = currentTime - m_lastSimTime;
-              m_lastSimTime = currentTime;
-
-              /* use the measured time delta, get battery voltage from WPILib */
-              updateSimState(deltaTime, RobotController.getBatteryVoltage());
-            });
+    m_simNotifier = new Notifier(mapleSimSwerveDrivetrain::update);
     m_simNotifier.startPeriodic(kSimLoopPeriod);
+  }
+
+  @Override
+  public void resetPose(Pose2d pose) {
+    if (this.mapleSimSwerveDrivetrain != null)
+      mapleSimSwerveDrivetrain.mapleSimDrive.setSimulationWorldPose(pose);
+    Timer.delay(0.05); // Wait for simulation to update
+    super.resetPose(pose);
   }
 }
