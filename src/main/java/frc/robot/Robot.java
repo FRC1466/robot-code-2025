@@ -196,9 +196,6 @@ public class Robot extends LoggedRobot {
     vision = new Vision();
     m_mechanismVisualizer =
         new MechanismVisualizer(RobotContainer.elevator, RobotContainer.rotaryPartSim);
-    if (Constants.PlayMusic) {
-      chirpPlayer.playChirpForAllMotors("output");
-    }
   }
 
   @Override
@@ -353,6 +350,9 @@ public class Robot extends LoggedRobot {
   public void teleopInit() {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
+    }
+    if (Constants.PlayMusic) {
+      chirpPlayer.playChirpForAllMotors("tarkus");
     }
 
     // Reset joystick safety flag

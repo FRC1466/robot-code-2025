@@ -516,7 +516,7 @@ public class RobotContainer {
                                     - Math.sin(gyroMultiplier)
                                         * -getAdjustedJoystickAxis(
                                             0, Robot.getInstance().shouldIgnoreJoystickInput())*/ ,
-                                    .075)),
+                                    .1)),
                                 3)
                             * MaxSpeed)
                     .withVelocityY(

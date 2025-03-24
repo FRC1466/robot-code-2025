@@ -50,7 +50,7 @@ public class ChirpPlayer {
   public void playChirpForAllMotors(String track) {
 
     // Attempt to load the chirp file
-    var status = orchestra.loadMusic(track + ".chrp");
+    var status = orchestra.loadMusic("output.chrp");
 
     if (!status.isOK()) {
       Logger.recordOutput("Chirp Player", "Unknown Error loading chirp file");

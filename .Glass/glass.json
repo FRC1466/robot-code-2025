@@ -8,10 +8,8 @@
         "RealOutputs": {
           "PhotonResults": {
             "open": true
-          },
-          "open": true
-        },
-        "open": true
+          }
+        }
       },
       "CameraPublisher": {
         "open": true
@@ -35,6 +33,7 @@
       "/Pose": "Field2d",
       "/SmartDashboard/Alerts": "Alerts",
       "/SmartDashboard/Arm Sim": "Mechanism2d",
+      "/SmartDashboard/Auto Routine": "String Chooser",
       "/SmartDashboard/Auto Selector": "String Chooser",
       "/SmartDashboard/Debug Mode": "String Chooser",
       "/SmartDashboard/Module 0": "Mechanism2d",

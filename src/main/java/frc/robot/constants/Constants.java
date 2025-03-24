@@ -15,9 +15,9 @@ public final class Constants {
   public static final boolean CHECK_ROBOT_TYPE = false; // Enables robot type check during builds
 
   public static final boolean tuningMode = false; // Allows changing of LoggedTunableNumbers
-  public static final boolean PlayMusic = false;
+  public static final boolean PlayMusic = true;
 
-  private static RobotType robotType = RobotType.SIMBOT;
+  private static RobotType robotType = RobotType.COMPBOT;
   public static Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.REPLAY;
 
   @SuppressWarnings("resource")
