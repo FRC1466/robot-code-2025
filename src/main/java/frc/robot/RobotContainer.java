@@ -5,6 +5,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -24,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.constants.PathfindConstants;
 import frc.robot.generated.TunerConstants;
@@ -187,7 +189,8 @@ public class RobotContainer {
     m_PathfindingAutoCommands = new PathfindingAutoCommands(m_pathfinder, intake, elevator, this);
 
     configureBindings();
-    configureTestingBindings();
+    // TODO: Undo this when ready to test
+    // configureSysIDBindings();
     initializeChooser();
     // Initialize the pathing kill switch chooser
     setupTestingChooser();
@@ -390,6 +393,19 @@ public class RobotContainer {
                   // Cancel any active pathing commands when disabled
 
                 }));
+  }
+
+  private void configureSysIDBindings() {
+    joystick.button(3).onTrue(Commands.runOnce(SignalLogger::start));
+    joystick.button(4).onTrue(Commands.runOnce(SignalLogger::stop));
+    joystick.button(5).whileTrue(elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    joystick.button(6).whileTrue(elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    joystick.button(7).whileTrue(elevator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    joystick.button(8).whileTrue(elevator.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    /*   joystick.button(5).whileTrue(rotaryPart.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    joystick.button(6).whileTrue(rotaryPart.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    joystick.button(7).whileTrue(rotaryPart.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    joystick.button(8).whileTrue(rotaryPart.sysIdQuasistatic(SysIdRoutine.Direction.kReverse)); */
   }
 
   @SuppressWarnings("unused")

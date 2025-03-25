@@ -3,8 +3,12 @@
  
 package frc.robot.subsystems.Mechanisms;
 
+import static edu.wpi.first.units.Units.Volts;
+
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
@@ -13,6 +17,7 @@ import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants.RotationConstants;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -26,6 +31,7 @@ public class RotaryPart extends SubsystemBase {
   private DutyCycleEncoder absoluteArmEncoder;
   private double peakOutput;
   private ArmPIDController armPID;
+  private final VoltageOut m_voltReq = new VoltageOut(0.0);
 
   @SuppressWarnings("unused")
   private double armPID_P;
@@ -42,6 +48,7 @@ public class RotaryPart extends SubsystemBase {
   private Rotation2d storedPosRad = Rotation2d.fromRadians(RotationConstants.restRadians);
   private boolean storedInPerimeter = false;
   private CurrentLimitsConfigs limitsConfigs = new CurrentLimitsConfigs();
+  private SysIdRoutine m_sysIdRoutine;
 
   public RotaryPart() {
     armMotor = new TalonFX(RotationConstants.armPort);
@@ -53,6 +60,16 @@ public class RotaryPart extends SubsystemBase {
     limitsConfigs.StatorCurrentLimitEnable = true;
     TalonFXConfigurator talonFXConfigurator = armMotor.getConfigurator();
     talonFXConfigurator.apply(limitsConfigs);
+    // TODO: Remove this once it is completed
+    m_sysIdRoutine =
+        new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                Volts.of(4),
+                null,
+                (state) -> SignalLogger.writeString("state", state.toString())),
+            new SysIdRoutine.Mechanism(
+                (volts) -> armMotor.setControl(m_voltReq.withOutput(volts.in(Volts))), null, this));
 
     // figure this out later
     // absoluteArmEncoder.setDistancePerRotation(1.0);
@@ -95,6 +112,14 @@ public class RotaryPart extends SubsystemBase {
 
   public Command totalArmBrake() {
     return runOnce(() -> setArmBrake());
+  }
+
+  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return m_sysIdRoutine.quasistatic(direction);
+  }
+
+  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    return m_sysIdRoutine.dynamic(direction);
   }
 
   @Override

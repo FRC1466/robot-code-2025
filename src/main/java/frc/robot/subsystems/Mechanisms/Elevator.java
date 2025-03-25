@@ -3,6 +3,10 @@
  
 package frc.robot.subsystems.Mechanisms;
 
+import static edu.wpi.first.units.Units.Volts;
+
+import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
@@ -19,6 +23,7 @@ import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.constants.Constants.RobotType;
 import java.util.function.DoubleSupplier;
@@ -40,7 +45,8 @@ public class Elevator extends SubsystemBase {
   private EncoderSim m_encoderSim;
   private ElevatorSim m_elevatorSim;
   private ElevatorFeedforward m_feedforward;
-
+  private SysIdRoutine m_sysIdRoutine;
+  private final VoltageOut m_voltReq = new VoltageOut(0.0);
   private double peakOutput;
 
   // Create a Mechanism2d visualization of the elevator
@@ -134,7 +140,19 @@ public class Elevator extends SubsystemBase {
     setGoal(.1);
     masterMotor.setVoltage(0);
     leftSlaveFX.setVoltage(0);
+    // TODO: Remove this once it is completed
     setNeutralMode(NeutralModeValue.Brake);
+    m_sysIdRoutine =
+        new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                Volts.of(4),
+                null,
+                (state) -> SignalLogger.writeString("state", state.toString())),
+            new SysIdRoutine.Mechanism(
+                (volts) -> masterMotor.setControl(m_voltReq.withOutput(volts.in(Volts))),
+                null,
+                this));
 
     // Publish the mechanism visualization
     Logger.recordOutput("Elevator Mech", m_Mechanism2d);
@@ -193,6 +211,14 @@ public class Elevator extends SubsystemBase {
   public void setSelectedSensorPosition(double position) {
     masterMotor.setPosition(position);
     leftSlaveFX.setPosition(position);
+  }
+
+  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return m_sysIdRoutine.quasistatic(direction);
+  }
+
+  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    return m_sysIdRoutine.dynamic(direction);
   }
 
   public void setP(double p) {
