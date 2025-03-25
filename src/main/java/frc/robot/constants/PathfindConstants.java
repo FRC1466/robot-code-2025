@@ -3,6 +3,8 @@
  
 package frc.robot.constants;
 
+import com.pathplanner.lib.commands.PathPlannerAuto;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 
@@ -47,4 +49,30 @@ public class PathfindConstants {
       new Pose2d(11.496, 7.495, Rotation2d.fromDegrees(90.000));
 
   public static final double redTargetPoseXBarge = 10.3;
+  public static final PathPlannerAuto[][] redTargetPathAlgae = {
+    {
+      new PathPlannerAuto("1 to Algae"),
+      new PathPlannerAuto("1 to Algae"),
+    },
+    {
+      new PathPlannerAuto("1 to Algae"),
+      new PathPlannerAuto("1 to Algae")
+    },
+    {
+      new PathPlannerAuto("1 to Algae"),
+      new PathPlannerAuto("1 to Algae")
+    },
+    {
+      new PathPlannerAuto("1 to Algae"),
+      new PathPlannerAuto("1 to Algae")
+    },
+    {
+      new PathPlannerAuto("1 to Algae"),
+      new PathPlannerAuto("R1 to Algae")
+    },
+    {
+      new PathPlannerAuto("R1 to Algae"),
+      new PathPlannerAuto("R1 to Algae")
+    }
+  };
 }
