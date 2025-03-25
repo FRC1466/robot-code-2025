@@ -408,6 +408,7 @@ public class RobotContainer {
     Trigger safeButton7 = createSafeJoystickTrigger(joystick.button(7));
     Trigger safeButton8 = createSafeJoystickTrigger(joystick.button(8));
     Trigger safeButton9 = createSafeJoystickTrigger(joystick.button(9));
+    // TODO: add a L4 to algae
     Trigger safeButton10 = createSafeJoystickTrigger(joystick.button(10));
     Trigger safeButton11 = createSafeJoystickTrigger(joystick.button(11));
     Trigger safeButton12 = createSafeJoystickTrigger(joystick.button(12));
@@ -499,7 +500,7 @@ public class RobotContainer {
     // For coral intake position
     BooleanSupplier coralIntakePositionCheck = () -> !autoPathingEnabled || !coralIntakeReady();
     Trigger conditionalCoralIntakeReady = new Trigger(coralIntakePositionCheck);
-
+    // TODO: make this work properly and not destroy vision measurments
     // Drivetrain default command setup
     drivetrain.setDefaultCommand(
         drivetrain.applyRequest(
@@ -544,6 +545,7 @@ public class RobotContainer {
 
     // Intake stop on coral leaving
     intakeColorSensorTrigger
+        // TODO: test if this is the issue in autoPathing - make a button that disables this
         .and(coralMode)
         .onTrue(elevator.toBottom().alongWith(rotaryPart.coralScore()).andThen(intake.stop()));
 
