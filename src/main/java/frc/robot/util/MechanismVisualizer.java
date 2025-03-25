@@ -93,7 +93,7 @@ public class MechanismVisualizer extends SubsystemBase {
       // Third component - The arm (with rotation)
       double armAngleDegrees =
           armAngleMultiplier.getAsDouble()
-              * Units.radiansToDegrees(m_rotaryPartSimSubsystem.getAngleForVisualization());
+              * Units.radiansToDegrees(m_rotaryPartSimSubsystem.getAngleForVisualizationRads());
 
       Pose3d component3Pose =
           new Pose3d(

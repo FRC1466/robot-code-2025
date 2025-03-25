@@ -57,7 +57,7 @@ public class RobotContainer {
   public boolean armApproachingTarget(
       int targetSide, int positionIndex, double proximityThreshold) {
     // Get current pose and target pose
-    Pose2d currentPose = drivetrain.getState().Pose;
+    Pose2d currentPose = drivetrain.getPose();
     Pose2d targetPose;
 
     Optional<Alliance> allianceOptional = DriverStation.getAlliance();
@@ -438,7 +438,7 @@ public class RobotContainer {
 
     safePovDown.onTrue(resetGyroCommand(0));
 
-    safePovUp.onTrue(resetGyroCommand(drivetrain.getState().Pose.getRotation().getRadians()));*/
+    safePovUp.onTrue(resetGyroCommand(drivetrain.getPose().getRotation().getRadians()));*/
 
     // Mode Switch
     safeButton2.onTrue(changeMode());
@@ -599,14 +599,22 @@ public class RobotContainer {
     safeButton7
         .and(normalMode)
         .and(coralMode)
-        .and(conditionalArmReefReady) // Use conditional trigger
+        .and(conditionalArmReefReady)
         .and(l2Ready)
         .onTrue(Commands.waitSeconds(.3).andThen(intake.outTake()));
+    safeButton7
+        .and(normalMode)
+        .and(() -> !Robot.isReal())
+        .and(coralMode)
+        .and(conditionalArmReefReady)
+        .and(l2Ready)
+        .and(() -> isDrivetrainStopped(0.2))
+        .onTrue(Commands.runOnce(() -> drivetrain.mapleSimSwerveDrivetrain.scoreSIM()));
 
     safeButton7
         .and(normalMode)
         .and(coralMode)
-        .and(conditionalArmRaiseReefReady) // Use conditional trigger
+        .and(conditionalArmRaiseReefReady)
         .onTrue(rotaryPart.coralScore().alongWith(elevator.toL2()));
 
     // L3 Reef - Button 6
@@ -642,6 +650,15 @@ public class RobotContainer {
         .and(coralMode)
         .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .onTrue(rotaryPart.coralScore().alongWith(elevator.toL3()));
+
+    safeButton6
+        .and(normalMode)
+        .and(() -> !Robot.isReal())
+        .and(coralMode)
+        .and(conditionalArmReefReady)
+        .and(l3Ready)
+        .and(() -> isDrivetrainStopped(0.15))
+        .onTrue(Commands.runOnce(() -> drivetrain.mapleSimSwerveDrivetrain.scoreSIM()));
 
     // L4 Reef - Button 5
     safeButton5
@@ -679,6 +696,15 @@ public class RobotContainer {
         .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .and(l4ScoreReady)
         .onFalse(intake.outTake());
+
+    safeButton5
+        .and(normalMode)
+        .and(() -> !Robot.isReal())
+        .and(coralMode)
+        .and(conditionalArmReefReady)
+        .and(l4ScoreReady)
+        .and(() -> isDrivetrainStopped(0.15))
+        .onFalse(Commands.runOnce(() -> drivetrain.mapleSimSwerveDrivetrain.scoreSIMl4()));
 
     // Processor - Button 1
     safeButton1
@@ -816,7 +842,7 @@ public class RobotContainer {
                 () -> {
                   if (autoPathingEnabled) {
                     algaeCommand =
-                        m_pathfinder.getPathfindingCommandBarge(drivetrain.getState().Pose.getY());
+                        m_pathfinder.getPathfindingCommandBarge(drivetrain.getPose().getY());
                     algaeCommand.schedule();
                   }
                 }))
@@ -947,8 +973,8 @@ public class RobotContainer {
 
     double distAway =
         Math.sqrt(
-            Math.pow(drivetrain.getState().Pose.getX() - targetPose.getX(), 2)
-                + Math.pow(drivetrain.getState().Pose.getY() - targetPose.getY(), 2));
+            Math.pow(drivetrain.getPose().getX() - targetPose.getX(), 2)
+                + Math.pow(drivetrain.getPose().getY() - targetPose.getY(), 2));
 
     return distAway < displacement;
   }
@@ -966,8 +992,8 @@ public class RobotContainer {
 
     double distAway =
         Math.sqrt(
-            Math.pow(drivetrain.getState().Pose.getX() - targetPose.getX(), 2)
-                + Math.pow(drivetrain.getState().Pose.getY() - targetPose.getY(), 2));
+            Math.pow(drivetrain.getPose().getX() - targetPose.getX(), 2)
+                + Math.pow(drivetrain.getPose().getY() - targetPose.getY(), 2));
 
     return distAway < displacement;
   }
@@ -986,8 +1012,8 @@ public class RobotContainer {
 
     double distAway =
         Math.sqrt(
-            Math.pow(drivetrain.getState().Pose.getX() - targetPose.getX(), 2)
-                + Math.pow(drivetrain.getState().Pose.getY() - targetPose.getY(), 2));
+            Math.pow(drivetrain.getPose().getX() - targetPose.getX(), 2)
+                + Math.pow(drivetrain.getPose().getY() - targetPose.getY(), 2));
 
     return distAway < displacement;
   }
@@ -1008,8 +1034,8 @@ public class RobotContainer {
 
     double distAway =
         Math.sqrt(
-            Math.pow(drivetrain.getState().Pose.getX() - targetPose.getX(), 2)
-                + Math.pow(drivetrain.getState().Pose.getY() - targetPose.getY(), 2));
+            Math.pow(drivetrain.getPose().getX() - targetPose.getX(), 2)
+                + Math.pow(drivetrain.getPose().getY() - targetPose.getY(), 2));
 
     return distAway < displacement;
   }
@@ -1030,8 +1056,8 @@ public class RobotContainer {
 
     double distAway =
         Math.sqrt(
-            Math.pow(drivetrain.getState().Pose.getX() - targetPose.getX(), 2)
-                + Math.pow(drivetrain.getState().Pose.getY() - targetPose.getY(), 2));
+            Math.pow(drivetrain.getPose().getX() - targetPose.getX(), 2)
+                + Math.pow(drivetrain.getPose().getY() - targetPose.getY(), 2));
 
     return distAway < displacement;
   }
@@ -1047,7 +1073,7 @@ public class RobotContainer {
       targetX = FlipField.FIELD_LENGTH_METERS - targetX;
     }
 
-    double distAway = Math.abs(drivetrain.getState().Pose.getX() - targetX);
+    double distAway = Math.abs(drivetrain.getPose().getX() - targetX);
 
     return distAway < displacement;
   }
@@ -1065,8 +1091,8 @@ public class RobotContainer {
 
     double distAway =
         Math.sqrt(
-            Math.pow(drivetrain.getState().Pose.getX() - targetPose.getX(), 2)
-                + Math.pow(drivetrain.getState().Pose.getY() - targetPose.getY(), 2));
+            Math.pow(drivetrain.getPose().getX() - targetPose.getX(), 2)
+                + Math.pow(drivetrain.getPose().getY() - targetPose.getY(), 2));
 
     return distAway < 1;
   }
@@ -1101,10 +1127,10 @@ public class RobotContainer {
         if (tagPoseOptional.isPresent()) {
           var tagPose = tagPoseOptional.get();
           holderDistance =
-              (Math.pow(drivetrain.getState().Pose.getX() - tagPose.getX(), 2)
-                  + Math.pow(drivetrain.getState().Pose.getY() - tagPose.getY(), 2)
+              (Math.pow(drivetrain.getPose().getX() - tagPose.getX(), 2)
+                  + Math.pow(drivetrain.getPose().getY() - tagPose.getY(), 2)
                   + Math.pow(
-                      drivetrain.getState().Pose.getRotation().getRadians()
+                      drivetrain.getPose().getRotation().getRadians()
                           - tagPose.getRotation().getAngle() * 0.1,
                       2));
           if (holderDistance < prevDistance) {
@@ -1126,7 +1152,7 @@ public class RobotContainer {
 
   public int getClosestStation() {
     int closestStation = -1;
-    if (drivetrain.getState().Pose.getY() >= 4.025) {
+    if (drivetrain.getPose().getY() >= 4.025) {
       closestStation = 0;
     } else {
       closestStation = 1;

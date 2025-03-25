@@ -207,6 +207,10 @@ public class Elevator extends SubsystemBase {
     return masterMotor.getPosition().getValueAsDouble();
   }
 
+  public double getElevatorHeightMeters() {
+    return getElevatorHeight() * 0.02205522;
+  }
+
   public void goToGoal(double goal) {
     localSetpoint = goal;
     elevatorPID.setSetpoint(goal);

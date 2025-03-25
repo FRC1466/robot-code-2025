@@ -4,11 +4,9 @@
 package frc.robot;
 
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
+import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
@@ -77,13 +75,7 @@ public class Telemetry {
   /** Accept the swerve drive state and telemeterize it to Logger. */
   public void telemeterize(SwerveDriveState state) {
     /* Record the pose */
-    Logger.recordOutput("DriveState/Pose", state.Pose);
-    Logger.recordOutput(
-        "DriveState/CameraPose",
-        new Pose3d(
-            new Translation3d(state.Pose.getX() - .267, state.Pose.getY() + .278, .2),
-            new Rotation3d(
-                0, -Math.PI / 6, state.Pose.getRotation().getRadians() + Math.PI * 3 / 4)));
+    Logger.recordOutput("DriveState/Pose", CommandSwerveDrivetrain.getInstance().getPose());
 
     /* Record the speeds */
     Logger.recordOutput("DriveState/Speeds", state.Speeds);

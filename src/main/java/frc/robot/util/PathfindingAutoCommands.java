@@ -11,6 +11,7 @@ import frc.robot.RobotContainer;
 import frc.robot.constants.Constants;
 import frc.robot.subsystems.Mechanisms.Elevator;
 import frc.robot.subsystems.Mechanisms.Intake;
+import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
 import org.littletonrobotics.junction.Logger;
 
 public class PathfindingAutoCommands {
@@ -72,6 +73,15 @@ public class PathfindingAutoCommands {
             Commands.runOnce(() -> Logger.recordOutput("AutoStatus", "Outtaking coral at target")),
             intake.outTake(),
             switch (Constants.getRobot()) {
+              case SIMBOT ->
+                  Commands.runOnce(
+                      () ->
+                          CommandSwerveDrivetrain.getInstance()
+                              .mapleSimSwerveDrivetrain
+                              .scoreSIMl4());
+              default -> Commands.waitSeconds(0);
+            },
+            switch (Constants.getRobot()) {
               case SIMBOT -> Commands.waitSeconds(0.5);
               case COMPBOT -> Commands.waitUntil(() -> intake.getIntakeDistanceBool());
               default -> Commands.waitSeconds(0.5);
@@ -124,7 +134,6 @@ public class PathfindingAutoCommands {
                 () -> {
                   Logger.recordOutput(
                       "AutoStatus", "Raising elevator to L" + height + " for target");
-                  intake.coralHold();
                 })),
         switch (height) {
           case 2 -> Commands.waitUntil(() -> elevator.getElevatorHeight() > 12);
@@ -135,6 +144,15 @@ public class PathfindingAutoCommands {
         Commands.sequence(
             Commands.runOnce(() -> Logger.recordOutput("AutoStatus", "Outtaking coral at target")),
             intake.outTake(),
+            switch (Constants.getRobot()) {
+              case SIMBOT ->
+                  Commands.runOnce(
+                      () ->
+                          CommandSwerveDrivetrain.getInstance()
+                              .mapleSimSwerveDrivetrain
+                              .scoreSIM());
+              default -> Commands.waitSeconds(0);
+            },
             switch (Constants.getRobot()) {
               case SIMBOT -> Commands.waitSeconds(0.5);
               case COMPBOT -> Commands.waitUntil(() -> intake.getIntakeDistanceBool());

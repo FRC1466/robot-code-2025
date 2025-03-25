@@ -29,6 +29,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.RobotContainer;
+import frc.robot.util.LoggedTunableNumber;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -37,7 +39,7 @@ import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 import org.ironmaple.simulation.motorsims.SimulatedBattery;
 import org.ironmaple.simulation.motorsims.SimulatedMotorController;
-import org.littletonrobotics.junction.Logger;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
 
 /**
  *
@@ -50,6 +52,10 @@ import org.littletonrobotics.junction.Logger;
  * <p>It replaces the {@link com.ctre.phoenix6.swerve.SimSwerveDrivetrain} class.
  */
 public class MapleSimSwerveDrivetrain {
+  LoggedTunableNumber tunableX = new LoggedTunableNumber("tunableX", 0.15);
+  LoggedTunableNumber tunableY = new LoggedTunableNumber("tunableY", 0.0);
+  LoggedTunableNumber tunableZ = new LoggedTunableNumber("tunableZ", 0.9);
+  LoggedTunableNumber tunableAngleY = new LoggedTunableNumber("tunableAngleY", 0.0);
   private final Pigeon2SimState pigeonSim;
   private final SimSwerveModule[] simModules;
   public final SwerveDriveSimulation mapleSimDrive;
@@ -137,11 +143,6 @@ public class MapleSimSwerveDrivetrain {
         RadiansPerSecond.of(
             mapleSimDrive.getDriveTrainSimulatedChassisSpeedsRobotRelative()
                 .omegaRadiansPerSecond));
-    Logger.recordOutput(
-        "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
-    Logger.recordOutput(
-        "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
-    Logger.recordOutput("FieldSimulation/Drivetrain", mapleSimDrive.getSimulatedDriveTrainPose());
   }
 
   /**
@@ -291,5 +292,51 @@ public class MapleSimSwerveDrivetrain {
         .withSteerFrictionVoltage(Volts.of(0.05))
         // Adjust steer inertia
         .withSteerInertia(KilogramSquareMeters.of(0.05));
+  }
+
+  public void scoreSIM() {
+    SimulatedArena.getInstance()
+        .addGamePieceProjectile(
+            new ReefscapeCoralOnFly(
+                // Obtain robot position from drive simulation
+                mapleSimDrive.getSimulatedDriveTrainPose().getTranslation(),
+                // The scoring mechanism is installed at (0.46, 0) (meters) on the robot
+                new Translation2d(tunableX.getAsDouble(), tunableY.getAsDouble()),
+                // Obtain robot speed from drive simulation
+                mapleSimDrive.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+                // Obtain robot facing from drive simulation
+                mapleSimDrive.getSimulatedDriveTrainPose().getRotation(),
+                // The height at which the coral is ejected
+                Meters.of(
+                    RobotContainer.elevator.getElevatorHeightMeters() + tunableZ.getAsDouble()),
+                // The initial speed of the coral
+                MetersPerSecond.of(-2),
+                // The coral is ejected at a 35-degree slope
+                Degrees.of(
+                    RobotContainer.rotaryPartSim.getAngleForVisualizationDegs()
+                        + tunableAngleY.getAsDouble())));
+  }
+
+  public void scoreSIMl4() {
+    SimulatedArena.getInstance()
+        .addGamePieceProjectile(
+            new ReefscapeCoralOnFly(
+                // Obtain robot position from drive simulation
+                mapleSimDrive.getSimulatedDriveTrainPose().getTranslation(),
+                // The scoring mechanism is installed at (0.46, 0) (meters) on the robot
+                new Translation2d(0.350000, tunableY.getAsDouble()),
+                // Obtain robot speed from drive simulation
+                mapleSimDrive.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
+                // Obtain robot facing from drive simulation
+                mapleSimDrive.getSimulatedDriveTrainPose().getRotation(),
+                // The height at which the coral is ejected
+                Meters.of(
+                    RobotContainer.elevator.getElevatorHeightMeters() + tunableZ.getAsDouble()),
+                // The initial speed of the coral
+                MetersPerSecond.of(-2),
+                // The coral is ejected at a 35-degree slope
+                Degrees.of(
+                    RobotContainer.rotaryPartSim.getAngleForVisualizationDegs()
+                        + tunableAngleY.getAsDouble())));
   }
 }

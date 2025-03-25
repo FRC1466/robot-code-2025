@@ -112,8 +112,12 @@ public class RotaryPartSim extends SubsystemBase {
     m_motor.setVoltage(pidOutput);
   }
 
-  public double getAngleForVisualization() {
+  public double getAngleForVisualizationRads() {
     return m_armSim.getAngleRads();
+  }
+
+  public double getAngleForVisualizationDegs() {
+    return 180 - Math.abs(Units.radiansToDegrees(m_armSim.getAngleRads()));
   }
 
   public void stop() {

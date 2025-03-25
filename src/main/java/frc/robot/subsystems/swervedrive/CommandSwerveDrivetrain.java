@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Robot;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsTester.TunerSwerveDrivetrain;
 import frc.robot.subsystems.Vision;
@@ -277,7 +278,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     try {
       var config = RobotConfig.fromGUISettings();
       AutoBuilder.configure(
-          () -> getState().Pose, // Supplier of current robot pose *REMEMBER THIS*
+          () -> getPose(), // Supplier of current robot pose *REMEMBER THIS*
           this::resetPose, // Consumer for seeding pose against auto
           () -> getState().Speeds, // Supplier of current robot speeds
           // Consumer of ChassisSpeeds and feedforwards to drive the robot
@@ -308,7 +309,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     try {
       return new FollowPathCommand(
           path,
-          () -> getState().Pose, // Robot pose supplier
+          () -> this.getPose(), // Robot pose supplier
           () -> getState().Speeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
           (speeds, feedforwards) ->
               setControl(
@@ -431,5 +432,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       mapleSimSwerveDrivetrain.mapleSimDrive.setSimulationWorldPose(pose);
     Timer.delay(0.05); // Wait for simulation to update
     super.resetPose(pose);
+  }
+
+  public Pose2d getPose() {
+    return Robot.isSimulation()
+        ? mapleSimSwerveDrivetrain.mapleSimDrive.getSimulatedDriveTrainPose()
+        : getState().Pose;
   }
 }
