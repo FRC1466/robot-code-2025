@@ -309,7 +309,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     try {
       return new FollowPathCommand(
           path,
-          () -> this.getPose(), // Robot pose supplier
+          () -> getPose(), // Robot pose supplier
           () -> getState().Speeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
           (speeds, feedforwards) ->
               setControl(

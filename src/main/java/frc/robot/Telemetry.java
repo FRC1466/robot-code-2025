@@ -75,8 +75,6 @@ public class Telemetry {
   /** Accept the swerve drive state and telemeterize it to Logger. */
   public void telemeterize(SwerveDriveState state) {
     /* Record the pose */
-    Logger.recordOutput("DriveState/Pose", CommandSwerveDrivetrain.getInstance().getPose());
-
     /* Record the speeds */
     Logger.recordOutput("DriveState/Speeds", state.Speeds);
 
@@ -104,9 +102,6 @@ public class Telemetry {
     }
     Logger.recordOutput("DriveState/ModuleStatesArray", m_moduleStatesArray);
     Logger.recordOutput("DriveState/ModuleTargetsArray", m_moduleTargetsArray);
-
-    /* Record field visualization data */
-    Logger.recordOutput("Field/Robot", state.Pose);
 
     /* Update the module LoggedMechanisms and log them */
     for (int i = 0; i < 4; ++i) {

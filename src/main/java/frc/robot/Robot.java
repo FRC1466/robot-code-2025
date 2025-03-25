@@ -239,33 +239,16 @@ public class Robot extends LoggedRobot {
     */
 
     var visionEst = vision.getEstimatedGlobalPose();
-    switch (Constants.getRobot()) {
-      case DEVBOT, COMPBOT:
-        visionEst.ifPresent(
-            est -> {
-              var estStdDevs = vision.getEstimationStdDevs();
-              RobotContainer.drivetrain.addVisionMeasurement(
-                  est.estimatedPose.toPose2d(),
-                  Utils.fpgaToCurrentTime(est.timestampSeconds),
-                  estStdDevs);
-            });
-        break;
-      case SIMBOT:
-        // Update the mechanism visualizer in simulation mode
-        if (m_mechanismVisualizer != null) {
-          m_mechanismVisualizer.periodic();
-        }
-        break;
-      default:
-        visionEst.ifPresent(
-            est -> {
-              var estStdDevs = vision.getEstimationStdDevs();
-              RobotContainer.drivetrain.addVisionMeasurement(
-                  est.estimatedPose.toPose2d(),
-                  Utils.fpgaToCurrentTime(est.timestampSeconds),
-                  estStdDevs);
-            });
-        break;
+    visionEst.ifPresent(
+        est -> {
+          var estStdDevs = vision.getEstimationStdDevs();
+          RobotContainer.drivetrain.addVisionMeasurement(
+              est.estimatedPose.toPose2d(),
+              Utils.fpgaToCurrentTime(est.timestampSeconds),
+              estStdDevs);
+        });
+    if (m_mechanismVisualizer != null) {
+      m_mechanismVisualizer.periodic();
     }
 
     // Low battery alert
@@ -483,6 +466,11 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void simulationPeriodic() {
+    Logger.recordOutput(
+        "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
+    Logger.recordOutput(
+        "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
+    Logger.recordOutput("Pose", CommandSwerveDrivetrain.getInstance().getPose());
     RobotContainer.elevator.simulationPeriodicElevator();
     vision.simulationPeriodic(CommandSwerveDrivetrain.getInstance().getPose());
 
