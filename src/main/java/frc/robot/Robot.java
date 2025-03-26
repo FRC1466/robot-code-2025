@@ -188,9 +188,6 @@ public class Robot extends LoggedRobot {
     } catch (Exception e) {
       DriverStation.reportWarning("Failed to disable loop overrun warnings.", false);
     }
-
-    // Switch thread to high priority to improve loop timing
-    Threads.setCurrentThreadPriority(true, 10);
   }
 
   @Override
