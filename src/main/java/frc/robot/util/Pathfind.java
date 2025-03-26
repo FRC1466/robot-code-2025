@@ -163,7 +163,7 @@ public class Pathfind {
         AutoBuilder.pathfindToPose(
             new Pose2d(
                 new Translation2d(PathfindConstants.redTargetPoseXBarge, yBarge),
-                new Rotation2d(Math.PI)),
+                new Rotation2d(0)),
             customConstraints,
             0.0);
     bluePathfindingCommand =
@@ -171,7 +171,7 @@ public class Pathfind {
             FlipField.FieldFlip(
                 new Pose2d(
                     new Translation2d(PathfindConstants.redTargetPoseXBarge, yBarge),
-                    new Rotation2d(Math.PI))),
+                    new Rotation2d(0))),
             customConstraints,
             0.0);
 

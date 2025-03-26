@@ -261,7 +261,8 @@ public class RobotContainer {
         "2.5 Piece l4 blue3", PathfindingCommandParser.parseCommandString("0-0-4--S--0-1-4--S"));
     autoChooser.addOption(
         "2.5 Piece l4 red3", PathfindingCommandParser.parseCommandString("2-0-4--S--2-1-4--S"));
-    autoChooser.addOption("1 Piece l4", PathfindingCommandParser.parseCommandString("4-1-4"));
+    autoChooser.addOption(
+        "1 Piece l4", PathfindingCommandParser.parseCommandString("3-1-4--S--3-0-4"));
     autoChooser.addOption(
         "Use AutoPathing",
         Commands.runOnce(
@@ -477,6 +478,8 @@ public class RobotContainer {
                     && rotaryPart.getPosition().getRadians() > 0);
     Trigger coralMode = new Trigger(() -> !getModeMethod());
     Trigger normalMode = new Trigger(() -> !testingBoolean);
+    Trigger teleOpEnabled = new Trigger(() -> DriverStation.isTeleopEnabled());
+
     // Change later! -
 
     // Create conditional position triggers that bypass checks when autoPathingEnabled is false
@@ -563,6 +566,7 @@ public class RobotContainer {
     intakeColorSensorTrigger
         // TODO: test if this is the issue in autoPathing - make a button that disables this
         .and(coralMode)
+        .and(teleOpEnabled)
         .onTrue(elevator.toBottom().alongWith(rotaryPart.coralScore()).andThen(intake.stop()));
 
     // Coral intake - Button 3

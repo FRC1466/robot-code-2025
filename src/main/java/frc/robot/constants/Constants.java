@@ -17,7 +17,7 @@ public final class Constants {
   public static final boolean tuningMode = true; // Allows changing of LoggedTunableNumbers
   public static final boolean PlayMusic = false;
 
-  private static RobotType robotType = RobotType.SIMBOT;
+  private static RobotType robotType = RobotType.COMPBOT;
   public static Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.REPLAY;
 
   @SuppressWarnings("resource")
@@ -104,6 +104,6 @@ public final class Constants {
     public static final int masterID = 17;
     public static final int slaveID = 16;
 
-    public static final Gains elevatorPosition = new Gains(.15, 0.00, 0.004, .0, 0, .5);
+    public static final Gains elevatorPosition = new Gains(.15, 0.00, 0.004, .0, 0, .4);
   }
 }

@@ -3,6 +3,7 @@
  
 package frc.robot.subsystems.Mechanisms;
 
+import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -14,6 +15,7 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
@@ -137,7 +139,9 @@ public class Elevator extends SubsystemBase {
             Constants.ElevatorConstants.elevatorPosition.I,
             Constants.ElevatorConstants.elevatorPosition.D);
     elevatorPID.setTolerance(.1);
-    setGoal(.1);
+
+    // TODO: UNDO THIS ONCE DONE TESTING
+    // setGoal(.1);
     masterMotor.setVoltage(0);
     leftSlaveFX.setVoltage(0);
     // TODO: Remove this once it is completed
@@ -145,9 +149,9 @@ public class Elevator extends SubsystemBase {
     m_sysIdRoutine =
         new SysIdRoutine(
             new SysIdRoutine.Config(
-                null,
-                Volts.of(4),
-                null,
+                Velocity.ofBaseUnits(.5, Volts.per(Seconds)),
+                Volts.of(2),
+                Seconds.of(10),
                 (state) -> SignalLogger.writeString("state", state.toString())),
             new SysIdRoutine.Mechanism(
                 (volts) -> masterMotor.setControl(m_voltReq.withOutput(volts.in(Volts))),
@@ -160,6 +164,7 @@ public class Elevator extends SubsystemBase {
 
   public void updateMechanism() {
     switch (Constants.getRobot()) {
+        // masterMotor.getMotorVoltage() * masterMotor.getSupplyVoltage()
       case COMPBOT:
         // Multiplying from bradys to meters
         m_elevatorMech2d.setLength((masterMotor.getPosition().getValueAsDouble()) * 0.02205522);
@@ -306,6 +311,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public void setArmHold() {
+    // TODO: UNCOMMENT!!! THIS IS IMPORTANT!!!
     var motorOutput =
         MathUtil.clamp(
             elevatorPID.calculate(getElevatorHeight(), localSetpoint), -peakOutput, peakOutput);

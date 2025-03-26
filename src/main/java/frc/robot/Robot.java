@@ -192,6 +192,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotInit() {
+    SimulatedArena.ALLOW_CREATION_ON_REAL_ROBOT = true;
     Pathfinding.setPathfinder(new LocalADStarAK());
     RobotContainer.elevator.setSelectedSensorPosition(0);
     vision = new Vision();
@@ -285,6 +286,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void disabledInit() {
+    // TODO:REENABLE THIS
     RobotContainer.elevator.goToGoal(1);
     // fix later
     // m_robotContainer.rotaryPart.setGoal(Rotation2d.fromRadians(.05));
