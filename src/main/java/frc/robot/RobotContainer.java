@@ -142,7 +142,8 @@ public class RobotContainer {
 
   public static int leftCoral = 1;
 
-  public static double gyroMultiplier = 0;
+  public static double gyroMultiplierBase;
+  public static double gyroMultiplier;
 
   public static boolean pathfindingOverride = false;
 
@@ -192,6 +193,8 @@ public class RobotContainer {
     // TODO: Undo this when ready to test
     // configureSysIDBindings();
     initializeChooser();
+    gyroMultiplierBase = drivetrain.getPose().getRotation().getRadians();
+    gyroMultiplier = drivetrain.getPose().getRotation().getRadians();
     // Initialize the pathing kill switch chooser
     setupTestingChooser();
     setupPathingKillSwitch();
@@ -439,7 +442,7 @@ public class RobotContainer {
     safePovLeft.onTrue(switchCoralDirection(0));
     safePovRight.onTrue(switchCoralDirection(1));
 
-    safePovDown.onTrue(
+    /*  safePovDown.onTrue(
         drivetrain.runOnce(
             () -> {
               visionEnabled = true;
@@ -451,12 +454,12 @@ public class RobotContainer {
             () -> {
               visionEnabled = false;
               drivetrain.seedFieldCentric();
-            }));
-    /*   // Vision/field-centric heading reset triggers
+            }));*/
+    // Vision/field-centric heading reset triggers
 
-    safePovDown.onTrue(resetGyroCommand(0));
+    safePovDown.onTrue(resetGyroCommand());
 
-    safePovUp.onTrue(resetGyroCommand(drivetrain.getPose().getRotation().getRadians()));*/
+    safePovUp.onTrue(resetGyroCommand(drivetrain.getPose().getRotation().getRadians()));
 
     // Mode Switch
     safeButton2.onTrue(changeMode());
@@ -528,28 +531,28 @@ public class RobotContainer {
                     .withVelocityX(
                         Math.pow(
                                 (MathUtil.applyDeadband(
-                                    -getAdjustedJoystickAxis(
-                                        1, Robot.getInstance().shouldIgnoreJoystickInput())
-                                    /*Math.cos(gyroMultiplier)
-                                        * -getAdjustedJoystickAxis(
-                                            1, Robot.getInstance().shouldIgnoreJoystickInput())
-                                    - Math.sin(gyroMultiplier)
-                                        * -getAdjustedJoystickAxis(
-                                            0, Robot.getInstance().shouldIgnoreJoystickInput())*/ ,
+                                    /*-getAdjustedJoystickAxis(
+                                    1, Robot.getInstance().shouldIgnoreJoystickInput())*/
+                                    Math.cos(gyroMultiplier)
+                                            * -getAdjustedJoystickAxis(
+                                                1, Robot.getInstance().shouldIgnoreJoystickInput())
+                                        - Math.sin(gyroMultiplier)
+                                            * -getAdjustedJoystickAxis(
+                                                0, Robot.getInstance().shouldIgnoreJoystickInput()),
                                     .075)),
                                 3)
                             * MaxSpeed)
                     .withVelocityY(
                         Math.pow(
                                 (MathUtil.applyDeadband(
-                                    -getAdjustedJoystickAxis(
-                                        0, Robot.getInstance().shouldIgnoreJoystickInput())
-                                    /*Math.sin(gyroMultiplier)
-                                        * -getAdjustedJoystickAxis(
-                                            1, Robot.getInstance().shouldIgnoreJoystickInput())
-                                    + Math.cos(gyroMultiplier)
-                                        * -getAdjustedJoystickAxis(
-                                            0, Robot.getInstance().shouldIgnoreJoystickInput())*/ ,
+                                    /*  -getAdjustedJoystickAxis(
+                                    0, Robot.getInstance().shouldIgnoreJoystickInput())*/
+                                    Math.sin(gyroMultiplier)
+                                            * -getAdjustedJoystickAxis(
+                                                1, Robot.getInstance().shouldIgnoreJoystickInput())
+                                        + Math.cos(gyroMultiplier)
+                                            * -getAdjustedJoystickAxis(
+                                                0, Robot.getInstance().shouldIgnoreJoystickInput()),
                                     .075)),
                                 3)
                             * MaxSpeed)
@@ -564,7 +567,6 @@ public class RobotContainer {
 
     // Intake stop on coral leaving
     intakeColorSensorTrigger
-        // TODO: test if this is the issue in autoPathing - make a button that disables this
         .and(coralMode)
         .and(teleOpEnabled)
         .onTrue(elevator.toBottom().alongWith(rotaryPart.coralScore()).andThen(intake.stop()));
@@ -936,8 +938,16 @@ public class RobotContainer {
     gyroMultiplier = radians;
   }
 
+  public void resetGyro() {
+    gyroMultiplier = gyroMultiplierBase;
+  }
+
   public Command resetGyroCommand(double radians) {
     return Commands.runOnce(() -> resetGyro(radians));
+  }
+
+  public Command resetGyroCommand() {
+    return Commands.runOnce(() -> resetGyro());
   }
 
   public void changeCoralDirection(int i) {

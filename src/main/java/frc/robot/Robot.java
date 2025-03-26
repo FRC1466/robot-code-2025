@@ -18,7 +18,6 @@ import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.RobotState;
-import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
@@ -286,7 +285,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void disabledInit() {
-    // TODO:REENABLE THIS
+
     RobotContainer.elevator.goToGoal(1);
     // fix later
     // m_robotContainer.rotaryPart.setGoal(Rotation2d.fromRadians(.05));
