@@ -439,4 +439,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         ? mapleSimSwerveDrivetrain.mapleSimDrive.getSimulatedDriveTrainPose()
         : getState().Pose;
   }
+
+  public void zeroGyro() {
+    CommandSwerveDrivetrain.super.setOperatorPerspectiveForward(getPose().getRotation());
+  }
 }

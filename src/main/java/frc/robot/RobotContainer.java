@@ -436,6 +436,10 @@ public class RobotContainer {
     Trigger safeButton14 = createSafeJoystickTrigger(joystick.button(14));
     Trigger safeButton15 = createSafeJoystickTrigger(joystick.button(15));
     Trigger safeButton16 = createSafeJoystickTrigger(joystick.button(16));
+    Trigger safeButton17 = createSafeJoystickTrigger(joystick.button(17));
+    Trigger safeButton18 = createSafeJoystickTrigger(joystick.button(18));
+    Trigger safeButton19 = createSafeJoystickTrigger(joystick.button(19));
+    Trigger safeButton20 = createSafeJoystickTrigger(joystick.button(20));
 
     // Direction selection triggers
 
@@ -455,11 +459,10 @@ public class RobotContainer {
               visionEnabled = false;
               drivetrain.seedFieldCentric();
             }));*/
-    // Vision/field-centric heading reset triggers
 
-    safePovDown.onTrue(resetGyroCommand());
+    safePovDown.onTrue(Commands.runOnce(() -> drivetrain.zeroGyro(false)));
 
-    safePovUp.onTrue(resetGyroCommand(drivetrain.getPose().getRotation().getRadians()));
+    safePovUp.onTrue(Commands.runOnce(() -> drivetrain.zeroGyro(true)));
 
     // Mode Switch
     safeButton2.onTrue(changeMode());
