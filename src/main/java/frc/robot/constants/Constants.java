@@ -17,7 +17,7 @@ public final class Constants {
   public static final boolean tuningMode = false; // Allows changing of LoggedTunableNumbers
   public static final boolean PlayMusic = true;
 
-  private static RobotType robotType = RobotType.COMPBOT;
+  private static RobotType robotType = RobotType.DEVBOT;
   public static Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.REPLAY;
 
   @SuppressWarnings("resource")

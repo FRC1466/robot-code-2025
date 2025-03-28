@@ -37,15 +37,20 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 
 public class Vision {
   public static LoggedTunableNumber pitchTuning = new LoggedTunableNumber("Pitch Tuning", 30);
+<<<<<<< Updated upstream
   public static final String kCameraNames[] = {
     "Camera_FrontLeft",
     "Camera_FrontRight",
+=======
+  public static final String kCameraNames[] = {"Camera_DevFront"
+>>>>>>> Stashed changes
     // "Camera_BackLeft"
     "Camera_BackRight"
   };
   public static final Transform3d kRobotToCams[] = {
-    new Transform3d(new Translation3d(.267, .292, .2), new Rotation3d(0, 0, 0)),
-    new Transform3d(new Translation3d(.267, -.292, .2), new Rotation3d(0, 0, 0)),
+    new Transform3d(new Translation3d(.2921, -0.1651, .2), new Rotation3d(0, 0, 0))
+    // new Transform3d(new Translation3d(.267, .292, .2), new Rotation3d(0, 0, 0)),
+    // new Transform3d(new Translation3d(.267, -.292, .2), new Rotation3d(0, 0, 0)),
     /*   new Transform3d(
     new Translation3d(-.267, .278, .2), new Rotation3d(0, -Math.PI / 6, Math.PI * 3 / 4)),*/
     new Transform3d(
@@ -58,8 +63,8 @@ public class Vision {
 
   // The standard deviations of our vision estimated poses, which affect correction rate
   // (Fake values. Experiment and determine estimation noise on an actual robot.)
-  public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
-  public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(2, 2, 4);
+  public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(8, 8, 16);
+  public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(4, 4, 8);
 
   private PhotonCamera[] cameras;
   private PhotonPoseEstimator[] photonEstimators;
