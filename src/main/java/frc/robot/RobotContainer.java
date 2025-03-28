@@ -203,7 +203,7 @@ public class RobotContainer {
   // Initialize autonomous chooser with options
   public void initializeChooser() {
     pathfindingTargetChooser.setDefault("");
-    pathfindingTargetChooser.setDefault("54S64S");
+    pathfindingTargetChooser.setDefault("");
     BooleanSupplier armRaiseReefPositionCheck = () -> armFieldReady(leftCoral, 1);
     // Create the Intake command that runs for exactly 2 seconds
     Command intakeHeightCommand = elevator.toBottom().alongWith(rotaryPart.store());

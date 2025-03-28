@@ -4,6 +4,7 @@
 package frc.robot.util;
 
 import static edu.wpi.first.wpilibj2.command.Commands.waitSeconds;
+import static edu.wpi.first.wpilibj2.command.Commands.waitUntil;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -39,7 +40,7 @@ public class PathfindingAutoCommands {
               }
             }),
         // Start preparatory movements during approach
-        RobotContainer.rotaryPart.coralScore().withTimeout(.2),
+        RobotContainer.rotaryPart.coralScore().withTimeout(.01),
         Commands.sequence(
             Commands.waitUntil(
                 () -> {
@@ -68,7 +69,8 @@ public class PathfindingAutoCommands {
                   intake.coralHold();
                 })),
         Commands.waitUntil(() -> elevator.getElevatorHeight() > 61),
-        RobotContainer.rotaryPart.l4coralScore().withTimeout(.2),
+        waitUntil(() -> robotContainer.isDrivetrainStopped(.05)),
+        RobotContainer.rotaryPart.l4coralScore().withTimeout(.01),
         Commands.sequence(
             Commands.runOnce(() -> Logger.recordOutput("AutoStatus", "Outtaking coral at target")),
             intake.outTake(),
@@ -83,13 +85,15 @@ public class PathfindingAutoCommands {
             },
             switch (Constants.getRobot()) {
               case SIMBOT -> Commands.waitSeconds(0.5);
-              case COMPBOT -> Commands.waitUntil(() -> intake.getIntakeDistanceBool());
+              case COMPBOT ->
+                  Commands.waitUntil(() -> intake.getIntakeDistanceBool())
+                      .andThen(waitSeconds(0.1));
               default -> Commands.waitSeconds(0.5);
             },
             Commands.runOnce(
                 () -> Logger.recordOutput("AutoStatus", "Stopping intake after score")),
             intake.stop()),
-        RobotContainer.rotaryPart.coralScore().withTimeout(.2));
+        RobotContainer.rotaryPart.coralScore().withTimeout(.01));
   }
 
   public Command l321AutoFreaktory(int targetTag, int targetSide, int height) {
@@ -103,7 +107,7 @@ public class PathfindingAutoCommands {
               }
             }),
         // Start preparatory movements during approach
-        RobotContainer.rotaryPart.coralScore().withTimeout(.2),
+        RobotContainer.rotaryPart.coralScore().withTimeout(.01),
         Commands.sequence(
             Commands.waitUntil(
                 () -> {
@@ -140,7 +144,8 @@ public class PathfindingAutoCommands {
           case 3 -> Commands.waitUntil(() -> elevator.getElevatorHeight() > 28);
           default -> Commands.waitUntil(() -> elevator.getElevatorHeight() > 12);
         },
-        RobotContainer.rotaryPart.coralScore().withTimeout(.2),
+        waitUntil(() -> robotContainer.isDrivetrainStopped(.05)),
+        RobotContainer.rotaryPart.coralScore().withTimeout(.01),
         Commands.sequence(
             Commands.runOnce(() -> Logger.recordOutput("AutoStatus", "Outtaking coral at target")),
             intake.outTake(),
@@ -155,13 +160,15 @@ public class PathfindingAutoCommands {
             },
             switch (Constants.getRobot()) {
               case SIMBOT -> Commands.waitSeconds(0.5);
-              case COMPBOT -> Commands.waitUntil(() -> intake.getIntakeDistanceBool());
+              case COMPBOT ->
+                  Commands.waitUntil(() -> intake.getIntakeDistanceBool())
+                      .andThen(waitSeconds(0.1));
               default -> Commands.waitSeconds(0.5);
             },
             Commands.runOnce(
                 () -> Logger.recordOutput("AutoStatus", "Stopping intake after score")),
             intake.stop()),
-        RobotContainer.rotaryPart.coralScore().withTimeout(.2));
+        RobotContainer.rotaryPart.coralScore().withTimeout(.01));
   }
 
   public Command stationAutoFreaktory() {
@@ -175,10 +182,10 @@ public class PathfindingAutoCommands {
                     .schedule();
               }
             }),
-        waitSeconds(.2),
+        waitUntil(() -> robotContainer.armAlgaeReadyl2(2.5)),
         elevator.toBottom(),
         Commands.waitUntil(() -> elevator.getElevatorHeight() < 2),
-        RobotContainer.rotaryPart.store().withTimeout(.2),
+        RobotContainer.rotaryPart.store().withTimeout(.01),
         // Wait for position at station
         Commands.waitUntil(
             () -> {
@@ -205,7 +212,7 @@ public class PathfindingAutoCommands {
                   Logger.recordOutput("AutoStatus", "Stopping intake after collection");
                 }),
             intake.stop(),
-            RobotContainer.rotaryPart.coralScore().withTimeout(.2)));
+            RobotContainer.rotaryPart.coralScore().withTimeout(.01)));
   }
 
   public Command algaeAutoFreaktory(int targetTag) {
@@ -219,7 +226,7 @@ public class PathfindingAutoCommands {
               }
             }),
         // Start preparatory movements during approach
-        RobotContainer.rotaryPart.algaeGrab().withTimeout(.2),
+        RobotContainer.rotaryPart.algaeGrab().withTimeout(.01),
         Commands.sequence(
             Commands.waitUntil(
                 () -> {
