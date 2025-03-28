@@ -440,7 +440,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         : getState().Pose;
   }
 
-  public void zeroGyro() {
-    CommandSwerveDrivetrain.super.setOperatorPerspectiveForward(getPose().getRotation());
+  public void zeroGyro(boolean useRobot) {
+    if (!useRobot) {
+      if (DriverStation.getAlliance().isPresent()
+          && DriverStation.getAlliance().get() == Alliance.Red) {
+        // If we're on the red alliance, we need to zero the gyro to 180 degrees
+        CommandSwerveDrivetrain.super.setOperatorPerspectiveForward(Rotation2d.fromDegrees(180));
+      } else {
+        CommandSwerveDrivetrain.super.setOperatorPerspectiveForward(Rotation2d.kZero);
+      }
+    } else {
+      // Use the robot's current pose to zero the gyro
+      CommandSwerveDrivetrain.super.setOperatorPerspectiveForward(getPose().getRotation());
+    }
   }
 }

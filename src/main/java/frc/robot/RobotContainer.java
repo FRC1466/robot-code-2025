@@ -459,6 +459,9 @@ public class RobotContainer {
               visionEnabled = false;
               drivetrain.seedFieldCentric();
             }));*/
+    safeButton19.onTrue(Commands.runOnce(() -> drivetrain.zeroGyro(false)));
+
+    safeButton20.onTrue(Commands.runOnce(() -> drivetrain.zeroGyro(true)));
 
     safePovDown.onTrue(Commands.runOnce(() -> drivetrain.zeroGyro(false)));
 
