@@ -22,7 +22,7 @@ public class PathfindConstants {
     },
     {
       new Pose2d(13.84, 5.02, Rotation2d.fromDegrees(-120)),
-      new Pose2d(13.56, 5.16, Rotation2d.fromDegrees(-120))
+      new Pose2d(13.53, 5.18, Rotation2d.fromDegrees(-120))
     },
     {
       new Pose2d(12.6, 5.19, Rotation2d.fromDegrees(-60)),

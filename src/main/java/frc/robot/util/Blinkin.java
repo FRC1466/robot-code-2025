@@ -11,7 +11,7 @@ public class Blinkin {
   Spark blinkin;
 
   public Blinkin() {
-    blinkin = new Spark(1);
+    blinkin = new Spark(8);
   }
 
   public void coralLights() {
