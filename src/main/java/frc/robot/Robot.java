@@ -343,7 +343,21 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void autonomousExit() {
-    CommandScheduler.getInstance().cancelAll();
+    if (RobotContainer.algaeMode && RobotContainer.m_PathfindingAutoCommands.holdAlgae) {
+      CommandScheduler.getInstance().cancelAll();
+      RobotContainer.rotaryPart.algaeGrab();
+      RobotContainer.intake.algaeHold();
+      switch (RobotContainer.m_PathfindingAutoCommands.algaeHeight) {
+        case 2:
+          RobotContainer.elevator.toL2Algae();
+        case 3:
+          RobotContainer.elevator.toL3Algae();
+        default:
+          RobotContainer.elevator.toBottom();
+      }
+    } else {
+      CommandScheduler.getInstance().cancelAll();
+    }
   }
 
   @Override
@@ -396,9 +410,22 @@ public class Robot extends LoggedRobot {
       // All inputs are neutral
       flightstickNotCenteredAlert.set(false);
     }
-
-    RobotContainer.rotaryPart.setGoal(
-        Rotation2d.fromRadians(Constants.RotationConstants.coralPosRadians));
+    if (RobotContainer.algaeMode && RobotContainer.m_PathfindingAutoCommands.holdAlgae) {
+      RobotContainer.rotaryPart.algaeGrab();
+      RobotContainer.intake.algaeHold();
+      RobotContainer.algaeMode = true; // Add command here for algae mode
+      switch (RobotContainer.m_PathfindingAutoCommands.algaeHeight) {
+        case 2:
+          RobotContainer.elevator.toL2Algae();
+        case 3:
+          RobotContainer.elevator.toL3Algae();
+        default:
+          RobotContainer.elevator.toBottom();
+      }
+    } else if (!RobotContainer.algaeMode) {
+      RobotContainer.rotaryPart.setGoal(
+          Rotation2d.fromRadians(Constants.RotationConstants.coralPosRadians));
+    }
   }
 
   @Override
@@ -442,6 +469,16 @@ public class Robot extends LoggedRobot {
     if (RobotContainer.sliderEnabled) {
       RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
     }
+    if (RobotContainer.algaeMode) {
+      blinkin.algaeLights();
+    } else if (!RobotContainer.algaeMode) {
+      blinkin.coralLights();
+    } else {
+      blinkin.warningLights();
+      Logger.recordOutput("Lights are bugging", true);
+    }
+
+    checkAndHandleAlerts();
   }
 
   @Override
@@ -478,8 +515,13 @@ public class Robot extends LoggedRobot {
 
   // Check for active alerts of WARNING or ERROR type
   private void checkAndHandleAlerts() {
+    m_robotContainer.updateAlerts();
     // Check if there are any active warnings or errors
-    boolean hasActiveAlerts = lowBatteryAlert.get() || flightstickNotCenteredAlert.get();
+    boolean hasActiveAlerts =
+        lowBatteryAlert.get()
+            || flightstickNotCenteredAlert.get()
+            || m_robotContainer.driverDisconnected.get()
+            || m_robotContainer.TeleopPaused.get();
 
     // If warning state changed, update lights accordingly
     if (hasActiveAlerts != activeWarnings) {

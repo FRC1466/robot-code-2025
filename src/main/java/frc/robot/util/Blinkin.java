@@ -15,12 +15,12 @@ public class Blinkin {
   }
 
   public void coralLights() {
-    blinkin.set(.89);
+    blinkin.set(.93);
     Logger.recordOutput("Lights", "Coral");
   }
 
   public void algaeLights() {
-    blinkin.set(.73);
+    blinkin.set(.77);
     Logger.recordOutput("Lights", "Algae");
   }
 
@@ -30,7 +30,7 @@ public class Blinkin {
   }
 
   public void warningLights() {
-    blinkin.set(-0.17);
+    blinkin.set(-0.11);
     Logger.recordOutput("Lights", "Warning");
   }
 }

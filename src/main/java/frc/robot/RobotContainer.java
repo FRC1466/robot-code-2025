@@ -98,10 +98,9 @@ public class RobotContainer {
   private Command autoCommand = null;
 
   // Warnings
-  private final Alert driverDisconnected =
+  final Alert driverDisconnected =
       new Alert("Driver controller disconnected (port 0).", AlertType.kWarning);
-  private final Alert TeleopPaused =
-      new Alert("All Teleop commands cancelled.", AlertType.kWarning);
+  final Alert TeleopPaused = new Alert("All Teleop commands cancelled.", AlertType.kWarning);
 
   // Maximum speed and angular rate
   private double MaxSpeed =
@@ -971,7 +970,7 @@ public class RobotContainer {
   // Update alerts
   public void updateAlerts() {
     // Controller disconnected alerts
-    driverDisconnected.set(!DriverStation.isJoystickConnected(joystick.getHID().getPort()));
+    driverDisconnected.set(!DriverStation.isJoystickConnected(0));
   }
 
   // Update dashboard data

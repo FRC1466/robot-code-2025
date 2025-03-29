@@ -3,6 +3,7 @@
  
 package frc.robot.util;
 
+import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 import static edu.wpi.first.wpilibj2.command.Commands.waitSeconds;
 import static edu.wpi.first.wpilibj2.command.Commands.waitUntil;
 
@@ -21,6 +22,9 @@ public class PathfindingAutoCommands {
   private final Elevator elevator;
   private final RobotContainer robotContainer;
 
+  public boolean holdAlgae = false;
+  public int algaeHeight = 0;
+
   public PathfindingAutoCommands(
       Pathfind pathfinder, Intake intake, Elevator elevator, RobotContainer robotContainer) {
     this.m_pathfinder = pathfinder;
@@ -33,6 +37,9 @@ public class PathfindingAutoCommands {
     return Commands.sequence(
         Commands.runOnce(
             () -> {
+              holdAlgae = false;
+              RobotContainer.algaeMode = false;
+              RobotContainer.intake.stop();
               Logger.recordOutput(
                   "AutoStatus", "Starting pathfinding to target (Tag " + targetTag + ")");
               if (RobotContainer.autoPathingEnabled) {
@@ -100,6 +107,9 @@ public class PathfindingAutoCommands {
     return Commands.sequence(
         Commands.runOnce(
             () -> {
+              holdAlgae = false;
+              RobotContainer.algaeMode = false;
+              RobotContainer.intake.stop();
               Logger.recordOutput(
                   "AutoStatus", "Starting pathfinding to target (Tag " + targetTag + ")");
               if (RobotContainer.autoPathingEnabled) {
@@ -175,6 +185,9 @@ public class PathfindingAutoCommands {
     return Commands.sequence(
         Commands.runOnce(
             () -> {
+              holdAlgae = false;
+              RobotContainer.algaeMode = false;
+              RobotContainer.intake.stop();
               Logger.recordOutput("AutoStatus", "Starting pathfinding to station");
               if (RobotContainer.autoPathingEnabled) {
                 m_pathfinder
@@ -219,6 +232,8 @@ public class PathfindingAutoCommands {
     return Commands.sequence(
         Commands.runOnce(
             () -> {
+              RobotContainer.algaeMode = true;
+              RobotContainer.intake.stop();
               Logger.recordOutput(
                   "AutoStatus", "Starting pathfinding to algae at tag " + targetTag);
               if (RobotContainer.autoPathingEnabled) {
@@ -237,8 +252,8 @@ public class PathfindingAutoCommands {
                   return approaching;
                 }),
             targetTag % 2 == 0
-                ? RobotContainer.elevator.toL2Algae()
-                : RobotContainer.elevator.toL3Algae()),
+                ? RobotContainer.elevator.toL2Algae().andThen(runOnce(() -> algaeHeight = 2))
+                : RobotContainer.elevator.toL2Algae().andThen(runOnce(() -> algaeHeight = 3))),
         // Final positioning check
         Commands.waitUntil(
             () -> {
@@ -254,6 +269,7 @@ public class PathfindingAutoCommands {
                 () -> {
                   Logger.recordOutput("AutoStatus", "Holding algae after collection");
                   intake.algaeHold();
+                  holdAlgae = true;
                 })));
   }
 

@@ -213,15 +213,6 @@ public class PathfindingCommandParser {
     Logger.recordOutput("PathfindingConsole", "Command parsing complete, scheduling execution");
     Logger.recordOutput("AutoStatus", "Command parsing complete, scheduling execution");
 
-    sequentialCommands =
-        sequentialCommands.andThen(
-            RobotContainer.elevator
-                .toBottom()
-                .alongWith(
-                    RobotContainer.rotaryPart
-                        .coralScore()
-                        .withTimeout(0.2)
-                        .alongWith(RobotContainer.intake.stop())));
     return sequentialCommands;
   }
 }
