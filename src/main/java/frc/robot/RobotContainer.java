@@ -536,30 +536,18 @@ public class RobotContainer {
                 drive
                     .withVelocityX(
                         Math.pow(
-                                (MathUtil.applyDeadband(
-                                    /*-getAdjustedJoystickAxis(
-                                    1, Robot.getInstance().shouldIgnoreJoystickInput())*/
-                                    Math.cos(gyroMultiplier)
-                                            * -getAdjustedJoystickAxis(
-                                                1, Robot.getInstance().shouldIgnoreJoystickInput())
-                                        - Math.sin(gyroMultiplier)
-                                            * -getAdjustedJoystickAxis(
-                                                0, Robot.getInstance().shouldIgnoreJoystickInput()),
-                                    .075)),
+                                (Deadband.apply(
+                                    -getAdjustedJoystickAxis(
+                                        1, Robot.getInstance().shouldIgnoreJoystickInput()),
+                                    .1)),
                                 3)
                             * MaxSpeed)
                     .withVelocityY(
                         Math.pow(
                                 (MathUtil.applyDeadband(
-                                    /*  -getAdjustedJoystickAxis(
-                                    0, Robot.getInstance().shouldIgnoreJoystickInput())*/
-                                    Math.sin(gyroMultiplier)
-                                            * -getAdjustedJoystickAxis(
-                                                1, Robot.getInstance().shouldIgnoreJoystickInput())
-                                        + Math.cos(gyroMultiplier)
-                                            * -getAdjustedJoystickAxis(
-                                                0, Robot.getInstance().shouldIgnoreJoystickInput()),
-                                    .075)),
+                                    -getAdjustedJoystickAxis(
+                                        0, Robot.getInstance().shouldIgnoreJoystickInput()),
+                                    .1)),
                                 3)
                             * MaxSpeed)
                     .withRotationalRate(
@@ -567,7 +555,7 @@ public class RobotContainer {
                                 (MathUtil.applyDeadband(
                                     -getAdjustedJoystickAxis(
                                         2, Robot.getInstance().shouldIgnoreJoystickInput()),
-                                    .05)),
+                                    .1)),
                                 3)
                             * MaxAngularRate)));
 
