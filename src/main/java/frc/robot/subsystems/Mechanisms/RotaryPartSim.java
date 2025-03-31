@@ -112,6 +112,14 @@ public class RotaryPartSim extends SubsystemBase {
     m_motor.setVoltage(pidOutput);
   }
 
+  public boolean isAtSetpoint() {
+    return m_controller.atSetpoint();
+  }
+
+  public double getSetpoint() {
+    return m_controller.getSetpoint();
+  }
+
   public double getAngleForVisualizationRads() {
     return m_armSim.getAngleRads();
   }

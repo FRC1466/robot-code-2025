@@ -398,6 +398,7 @@ public class RobotContainer {
                 }));
   }
 
+  @SuppressWarnings("unused")
   private void configureSysIDBindings() {
     joystick.button(3).onTrue(Commands.runOnce(SignalLogger::start));
     joystick.button(4).onTrue(Commands.runOnce(SignalLogger::stop));
@@ -525,7 +526,7 @@ public class RobotContainer {
     Trigger conditionalArmProcessorReady = new Trigger(armProcessorPositionCheck);
 
     // For coral intake position
-    BooleanSupplier coralIntakePositionCheck = () -> !autoPathingEnabled || !coralIntakeReady();
+    BooleanSupplier coralIntakePositionCheck = () -> !autoPathingEnabled || coralIntakeReady();
     Trigger conditionalCoralIntakeReady = new Trigger(coralIntakePositionCheck);
     // TODO: make this work properly and not destroy vision measurments
     // Drivetrain default command setup
@@ -558,19 +559,42 @@ public class RobotContainer {
                                 3)
                             * MaxAngularRate)));
 
-    // Intake stop on coral leaving
+    // Intake stop on coral leaving (for scoring)
     intakeColorSensorTrigger
+        .and(() -> !coralIntakeReady())
         .and(coralMode)
         .and(teleOpEnabled)
         .onTrue(elevator.toBottom().alongWith(rotaryPart.coralScore()).andThen(intake.stop()));
+
+    // Only swing arm out when there is a coral
+    coralMode
+        .and(() -> !intakeColorSensorTrigger.getAsBoolean())
+        .onTrue(intake.stop().alongWith(rotaryPart.coralScore()).alongWith(elevator.toBottom()));
 
     // Coral intake - Button 3
     safeButton3
         .and(coralMode)
         .and(intakeColorSensorTrigger)
-        // .and(conditionalCoralIntakeReady) // Use conditional trigger
-        .whileTrue(intake.intake().alongWith(rotaryPart.store()).alongWith(elevator.toBottom()))
-        .onFalse((rotaryPart.coralScore()).alongWith(intake.stop()));
+        .and(conditionalCoralIntakeReady.negate())
+        .and(() -> !rotaryPart.isAtStore())
+        .onTrue(
+            rotaryPart
+                .coralScore()
+                .andThen(Commands.waitUntil(() -> rotaryPart.isAtSetpoint()))
+                .andThen(elevator.toBottom())
+                .alongWith(Commands.waitUntil(() -> elevator.getElevatorHeight() < 20))
+                .andThen(rotaryPart.store())
+                .alongWith(intake.intake()));
+
+    safeButton3
+        .and(coralMode)
+        .and(intakeColorSensorTrigger)
+        .onTrue(
+            elevator
+                .toBottom()
+                .alongWith(Commands.waitUntil(() -> elevator.getElevatorHeight() < 20))
+                .andThen(rotaryPart.store())
+                .alongWith(intake.intake()));
 
     // Coral station pathfinding - Button 3
     safeButton3
@@ -1119,7 +1143,7 @@ public class RobotContainer {
             Math.pow(drivetrain.getPose().getX() - targetPose.getX(), 2)
                 + Math.pow(drivetrain.getPose().getY() - targetPose.getY(), 2));
 
-    return distAway < 1;
+    return distAway < 1.5;
   }
 
   // Should probably get an error handler and some data printing

@@ -196,7 +196,8 @@ public class Robot extends LoggedRobot {
     RobotContainer.elevator.setSelectedSensorPosition(0);
     vision = new Vision();
     m_mechanismVisualizer =
-        new MechanismVisualizer(RobotContainer.elevator, RobotContainer.rotaryPartSim);
+        new MechanismVisualizer(
+            RobotContainer.elevator, RobotContainer.rotaryPartSim, RobotContainer.rotaryPart);
     if (Constants.PlayMusic) {
       chirpPlayer.playChirpForAllMotors("output");
     }

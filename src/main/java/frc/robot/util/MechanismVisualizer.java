@@ -8,8 +8,10 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.Mechanisms.Elevator;
+import frc.robot.subsystems.Mechanisms.RotaryPart;
 import frc.robot.subsystems.Mechanisms.RotaryPartSim;
 import org.littletonrobotics.junction.Logger;
 
@@ -19,7 +21,8 @@ import org.littletonrobotics.junction.Logger;
  */
 public class MechanismVisualizer extends SubsystemBase {
   // References to the actual subsystems
-  private final RotaryPartSim m_rotaryPartSimSubsystem;
+  private final RotaryPartSim m_rotaryPartSim;
+  private final RotaryPart m_rotaryPart;
 
   // Height and movement parameters
   // Height and movement parameters - adjusted for continuous elevator
@@ -44,8 +47,10 @@ public class MechanismVisualizer extends SubsystemBase {
    * @param elevator The elevator subsystem
    * @param rotaryPart The rotary part subsystem
    */
-  public MechanismVisualizer(Elevator elevator, RotaryPartSim rotaryPartSim) {
-    m_rotaryPartSimSubsystem = rotaryPartSim;
+  public MechanismVisualizer(
+      Elevator elevator, RotaryPartSim rotaryPartSim, RotaryPart rotaryPart) {
+    m_rotaryPartSim = rotaryPartSim;
+    m_rotaryPart = rotaryPart;
   }
 
   @Override
@@ -91,9 +96,16 @@ public class MechanismVisualizer extends SubsystemBase {
       Pose3d component2Pose = new Pose3d(new Translation3d(0, 0, comp2Height), new Rotation3d());
 
       // Third component - The arm (with rotation)
-      double armAngleDegrees =
-          armAngleMultiplier.getAsDouble()
-              * Units.radiansToDegrees(m_rotaryPartSimSubsystem.getAngleForVisualizationRads());
+      double armAngleDegrees = 0;
+      if (Robot.isSimulation()) {
+        armAngleDegrees =
+            armAngleMultiplier.getAsDouble()
+                * Units.radiansToDegrees(m_rotaryPartSim.getAngleForVisualizationRads());
+      } else {
+        armAngleDegrees =
+            armAngleMultiplier.getAsDouble()
+                * Units.radiansToDegrees(m_rotaryPart.getPosition().getRadians());
+      }
 
       Pose3d component3Pose =
           new Pose3d(

@@ -13,11 +13,14 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Robot;
+import frc.robot.RobotContainer;
 import frc.robot.constants.Constants.RotationConstants;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -238,13 +241,29 @@ public class RotaryPart extends SubsystemBase {
    *
    * @return if arm is at setpoint.
    */
+  @AutoLogOutput
   public boolean isAtSetpoint() {
     // Logger.recordOutput("Arm PID at setpoint", armPID.atSetpoint());
-    return armPID.atSetpoint();
+    if (Robot.isReal()) {
+      return armPID.atSetpoint();
+    } else {
+      return RobotContainer.rotaryPartSim.isAtSetpoint();
+    }
   }
 
   public void reset() {
     armPID.reset();
+  }
+
+  public boolean isAtStore() {
+    if (Robot.isReal()) {
+      return armPID.getSetpoint() == (Units.radiansToDegrees(RotationConstants.restRadians))
+          && armPID.atSetpoint();
+    } else {
+      return RobotContainer.rotaryPartSim.getSetpoint()
+              == (Units.radiansToDegrees(RotationConstants.restRadians))
+          && RobotContainer.rotaryPartSim.isAtSetpoint();
+    }
   }
 
   @Override

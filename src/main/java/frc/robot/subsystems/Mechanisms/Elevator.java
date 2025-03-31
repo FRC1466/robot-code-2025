@@ -46,7 +46,10 @@ public class Elevator extends SubsystemBase {
   private Encoder m_encoder;
   private EncoderSim m_encoderSim;
   private ElevatorSim m_elevatorSim;
+
+  @SuppressWarnings("unused")
   private ElevatorFeedforward m_feedforward;
+
   private SysIdRoutine m_sysIdRoutine;
   private final VoltageOut m_voltReq = new VoltageOut(0.0);
   private double peakOutput;
@@ -167,30 +170,32 @@ public class Elevator extends SubsystemBase {
         // masterMotor.getMotorVoltage() * masterMotor.getSupplyVoltage()
       case COMPBOT:
         // Multiplying from bradys to meters
+        double currentSetpointCOMP = masterMotor.getPosition().getValueAsDouble();
+        visualizationMeters = currentSetpointCOMP * 0.02205522;
         m_elevatorMech2d.setLength((masterMotor.getPosition().getValueAsDouble()) * 0.02205522);
 
         break;
       case SIMBOT:
         // Get current setpoint
-        double currentSetpoint = masterMotor.getPosition().getValueAsDouble();
+        double currentSetpointSIM = masterMotor.getPosition().getValueAsDouble();
 
         // Use a direct multiplier instead of threshold-based visualization
-        visualizationMeters = currentSetpoint * 0.02205522;
+        visualizationMeters = currentSetpointSIM * 0.02205522;
 
         // Still log position type for debugging purposes
-        if (currentSetpoint <= RESTING_THRESHOLD) {
+        if (currentSetpointSIM <= RESTING_THRESHOLD) {
           Logger.recordOutput("Elevator/VisualizedPosition", "Resting");
-        } else if (currentSetpoint <= INTAKE_THRESHOLD) {
+        } else if (currentSetpointSIM <= INTAKE_THRESHOLD) {
           Logger.recordOutput("Elevator/VisualizedPosition", "Intake/L1");
-        } else if (currentSetpoint <= L2_THRESHOLD) {
+        } else if (currentSetpointSIM <= L2_THRESHOLD) {
           Logger.recordOutput("Elevator/VisualizedPosition", "L2");
-        } else if (currentSetpoint <= L2_ALGAE_THRESHOLD) {
+        } else if (currentSetpointSIM <= L2_ALGAE_THRESHOLD) {
           Logger.recordOutput("Elevator/VisualizedPosition", "L2 Algae");
-        } else if (currentSetpoint <= L3_THRESHOLD) {
+        } else if (currentSetpointSIM <= L3_THRESHOLD) {
           Logger.recordOutput("Elevator/VisualizedPosition", "L3");
-        } else if (currentSetpoint <= L3_ALGAE_THRESHOLD) {
+        } else if (currentSetpointSIM <= L3_ALGAE_THRESHOLD) {
           Logger.recordOutput("Elevator/VisualizedPosition", "L3 Algae");
-        } else if (currentSetpoint <= L4_THRESHOLD) {
+        } else if (currentSetpointSIM <= L4_THRESHOLD) {
           Logger.recordOutput("Elevator/VisualizedPosition", "L4");
         } else {
           Logger.recordOutput("Elevator/VisualizedPosition", "Barge/L4 Algae");
@@ -200,7 +205,7 @@ public class Elevator extends SubsystemBase {
         m_elevatorMech2d.setLength(visualizationMeters);
 
         // Log both the real setpoint and visualization position for debugging
-        Logger.recordOutput("Elevator/SetpointInches", currentSetpoint);
+        Logger.recordOutput("Elevator/SetpointInches", currentSetpointSIM);
         Logger.recordOutput("Elevator/VisualizationMeters", visualizationMeters);
         break;
       default:

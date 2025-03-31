@@ -85,6 +85,7 @@ public class MapleSimSwerveDrivetrain {
    *     SwerveDrivetrain#getModules()}
    * @param moduleConstants the constants for the swerve modules
    */
+  @SuppressWarnings("unchecked")
   public MapleSimSwerveDrivetrain(
       Time simPeriod,
       Mass robotMassWithBumpers,
@@ -198,7 +199,9 @@ public class MapleSimSwerveDrivetrain {
 
   public static class TalonFXMotorControllerWithRemoteCanCoderSim
       extends TalonFXMotorControllerSim {
+    @SuppressWarnings("unused")
     private final int encoderId;
+
     private final CANcoderSimState remoteCancoderSimState;
 
     public TalonFXMotorControllerWithRemoteCanCoderSim(TalonFX talonFX, CANcoder cancoder) {
