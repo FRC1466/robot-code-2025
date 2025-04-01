@@ -4,6 +4,7 @@
 package frc.robot;
 
 import com.ctre.phoenix6.Utils;
+import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -191,8 +192,9 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotInit() {
-    SimulatedArena.ALLOW_CREATION_ON_REAL_ROBOT = true;
+    SimulatedArena.ALLOW_CREATION_ON_REAL_ROBOT = false;
     Pathfinding.setPathfinder(new LocalADStarAK());
+    PathfindingCommand.warmupCommand().schedule();
     RobotContainer.elevator.setSelectedSensorPosition(0);
     vision = new Vision();
     m_mechanismVisualizer =
