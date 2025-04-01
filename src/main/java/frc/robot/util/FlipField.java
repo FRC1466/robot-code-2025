@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import frc.robot.constants.FieldConstants;
 
 /**
  * Utility class for transforming field coordinates between red and blue alliances. Supports both 2D
@@ -14,12 +15,11 @@ import edu.wpi.first.math.geometry.Rotation3d;
  */
 public class FlipField {
   // Field dimensions for 2025 Reefscape
-  public static final double FIELD_LENGTH_METERS = 17.548; // 54'1"
+  public static final double FIELD_LENGTH_METERS = FieldConstants.fieldLength; // Use FieldConstants
+  public static final double FIELD_WIDTH_METERS = FieldConstants.fieldWidth; // Use FieldConstants
 
   // Field center point
-  public static final double FIELD_CENTER_X = 8.765;
-
-  // public static final double FIELD_CENTER_Y = FIELD_WIDTH_METERS / 2.0; // 6.08 meters
+  public static final double FIELD_CENTER_X = FIELD_LENGTH_METERS / 2.0;
 
   /**
    * Flips a Pose3d around the field center line. This method mirrors the X coordinate across the
@@ -102,7 +102,6 @@ public class FlipField {
    * Determines if a Pose3d should be flipped based on current alliance color. If alliance is red,
    * the pose is returned unchanged. If alliance is blue, the pose is flipped.
    *
-   * @param pose The original pose (always stored in red alliance frame)
    * @return The pose, potentially flipped if on blue alliance
    */
   public static Pose3d flipIfBlue(Pose3d pose) {

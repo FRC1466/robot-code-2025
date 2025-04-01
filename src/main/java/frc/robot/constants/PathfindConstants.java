@@ -3,40 +3,43 @@
  
 package frc.robot.constants;
 
-import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import org.littletonrobotics.junction.AutoLogOutput;
 
 public class PathfindConstants {
-  // TODO: the pose for index 2 is the same for both
-  // Red Target Poses for Reef
-  // 6-11 as 0-5 , First is Left and Second is Right
-  public static final Pose2d[][] redTargetPoseReef = {
-    {
-      new Pose2d(13.550, 2.837, Rotation2d.fromDegrees(120)),
-      new Pose2d(13.853, 3.003, Rotation2d.fromDegrees(120))
-    },
-    {
-      new Pose2d(14.347, 3.860, Rotation2d.fromDegrees(-180)),
-      new Pose2d(14.347, 4.190, Rotation2d.fromDegrees(-180))
-    },
-    {
-      new Pose2d(13.84, 5.02, Rotation2d.fromDegrees(-120)),
-      new Pose2d(13.53, 5.18, Rotation2d.fromDegrees(-120))
-    },
-    {
-      new Pose2d(12.6, 5.19, Rotation2d.fromDegrees(-60)),
-      new Pose2d(12.28, 5.04, Rotation2d.fromDegrees(-60))
-    },
-    {
-      new Pose2d(11.80, 4.19, Rotation2d.fromDegrees(0)),
-      new Pose2d(11.80, 3.86, Rotation2d.fromDegrees(0))
-    },
-    {
-      new Pose2d(12.283, 2.998, Rotation2d.fromDegrees(60)),
-      new Pose2d(12.554, 2.850, Rotation2d.fromDegrees(60))
+  public static final Pose2d[][] blueTargetPoseReef = createReefPoses();
+
+  @AutoLogOutput
+  private static Pose2d[][] createReefPoses() {
+    Pose2d[][] reefPoses = new Pose2d[6][2]; // 6 faces, left and right branches
+
+    for (int i = 0; i < 6; i++) {
+      Pose2d centerFace = FieldConstants.Reef.centerFaces[i];
+      double approachDistance = 0.5; // Distance from the reef face
+      double offsetY = 0.3; // Offset for left/right branches
+
+      reefPoses[i][0] =
+          new Pose2d(
+              centerFace.getX()
+                  - (approachDistance * Math.cos(centerFace.getRotation().getRadians())),
+              centerFace.getY()
+                  - (approachDistance * Math.sin(centerFace.getRotation().getRadians()))
+                  + offsetY,
+              centerFace.getRotation());
+
+      reefPoses[i][1] =
+          new Pose2d(
+              centerFace.getX()
+                  - (approachDistance * Math.cos(centerFace.getRotation().getRadians())),
+              centerFace.getY()
+                  - (approachDistance * Math.sin(centerFace.getRotation().getRadians()))
+                  - offsetY,
+              centerFace.getRotation());
     }
-  };
+
+    return reefPoses;
+  }
 
   // Red Target Poses for Station
   public static final Pose2d[] redTargetPoseStation = {
@@ -48,14 +51,4 @@ public class PathfindConstants {
       new Pose2d(11.496, 7.495, Rotation2d.fromDegrees(90.000));
 
   public static final double redTargetPoseXBarge = 8.18;
-  public static final PathPlannerAuto[][] redTargetPathAlgae = {
-    {
-      new PathPlannerAuto("1 to Algae"), new PathPlannerAuto("1 to Algae"),
-    },
-    {new PathPlannerAuto("1 to Algae"), new PathPlannerAuto("1 to Algae")},
-    {new PathPlannerAuto("1 to Algae"), new PathPlannerAuto("1 to Algae")},
-    {new PathPlannerAuto("1 to Algae"), new PathPlannerAuto("1 to Algae")},
-    {new PathPlannerAuto("1 to Algae"), new PathPlannerAuto("R1 to Algae")},
-    {new PathPlannerAuto("R1 to Algae"), new PathPlannerAuto("R1 to Algae")}
-  };
 }

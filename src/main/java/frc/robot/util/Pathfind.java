@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotContainer;
+import frc.robot.constants.FieldConstants.CoralStation;
 import frc.robot.constants.PathfindConstants;
 import java.io.IOException;
 import java.text.ParseException;
@@ -55,14 +56,15 @@ public class Pathfind {
 
     redPathfindingCommand =
         AutoBuilder.pathfindToPose(
-            PathfindConstants.redTargetPoseReef[currentClosestTag][targetLeftOrRight],
+            FlipField.FieldFlip(
+                PathfindConstants.blueTargetPoseReef[currentClosestTag][targetLeftOrRight]),
             customConstraints,
             0.0);
 
     bluePathfindingCommand =
         AutoBuilder.pathfindToPose(
             FlipField.FieldFlip(
-                PathfindConstants.redTargetPoseReef[currentClosestTag][targetLeftOrRight]),
+                PathfindConstants.blueTargetPoseReef[currentClosestTag][targetLeftOrRight]),
             customConstraints,
             0.0);
 
@@ -79,7 +81,7 @@ public class Pathfind {
   public Command getPathfindingCommandReefL4(
       int targetLeftOrRight, int closestTag, PathConstraints customConstraints) {
     int currentClosestTag = closestTag;
-    Pose2d targetPose = PathfindConstants.redTargetPoseReef[currentClosestTag][targetLeftOrRight];
+    Pose2d targetPose = PathfindConstants.blueTargetPoseReef[currentClosestTag][targetLeftOrRight];
 
     redPathfindingCommand =
         AutoBuilder.pathfindToPose(
@@ -201,12 +203,77 @@ public class Pathfind {
     return alliance == Alliance.Red ? redPathfindingCommand : bluePathfindingCommand;
   }
 
+  /**
+   * Get the closest point from a sliding set of points along the coral station face.
+   *
+   * @param currentPose The current pose of the robot.
+   * @return The closest pose aligned with the coral station.
+   */
+  public Pose2d getClosestCoralStationPose(Pose2d currentPose) {
+    Translation2d robotPosition = currentPose.getTranslation();
+
+    // Generate a sliding set of points along the coral station face
+    int numPoints = 9; // Number of points (indents) along the station face
+    Pose2d[] stationPoints = new Pose2d[numPoints];
+    double startY = CoralStation.rightCenterFace.getY();
+    double endY = CoralStation.leftCenterFace.getY();
+    double xPosition = CoralStation.rightCenterFace.getX(); // X-coordinate remains constant
+    double spacing = (endY - startY) / (numPoints - 1);
+
+    for (int i = 0; i < numPoints; i++) {
+      double yPosition = startY + i * spacing;
+      stationPoints[i] =
+          new Pose2d(xPosition, yPosition, CoralStation.rightCenterFace.getRotation());
+    }
+
+    // Flip station points for red alliance
+    boolean isRedAlliance =
+        DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue)
+            == DriverStation.Alliance.Red;
+    if (isRedAlliance) {
+      for (int i = 0; i < stationPoints.length; i++) {
+        stationPoints[i] = FlipField.FieldFlip(stationPoints[i]);
+      }
+    }
+
+    // Find the closest point to the robot's current position
+    Pose2d closestPose = null;
+    double closestDistance = Double.MAX_VALUE;
+
+    for (Pose2d stationPose : stationPoints) {
+      double distance = robotPosition.getDistance(stationPose.getTranslation());
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestPose = stationPose;
+      }
+    }
+
+    return closestPose;
+  }
+
+  /**
+   * Example method to use the closest coral station pose for pathfinding.
+   *
+   * @param currentPose The current pose of the robot.
+   * @return The pathfinding command to the closest coral station pose.
+   */
+  public Command getPathfindingCommandStation(Pose2d currentPose) {
+    Pose2d targetPose = getClosestCoralStationPose(currentPose);
+
+    if (targetPose == null) {
+      throw new IllegalStateException("No valid coral station pose found.");
+    }
+
+    // Generate pathfinding command to the target pose
+    return AutoBuilder.pathfindToPose(targetPose, constraints, 0.0);
+  }
+
   // Calculate average of left and right reef poses for red alliance
   private static Pose2d[] calculateAverageRedReefPoses() {
-    Pose2d[] averagePoses = new Pose2d[PathfindConstants.redTargetPoseReef.length];
-    for (int i = 0; i < PathfindConstants.redTargetPoseReef.length; i++) {
-      Pose2d left = PathfindConstants.redTargetPoseReef[i][0];
-      Pose2d right = PathfindConstants.redTargetPoseReef[i][1];
+    Pose2d[] averagePoses = new Pose2d[PathfindConstants.blueTargetPoseReef.length];
+    for (int i = 0; i < PathfindConstants.blueTargetPoseReef.length; i++) {
+      Pose2d left = PathfindConstants.blueTargetPoseReef[i][0];
+      Pose2d right = PathfindConstants.blueTargetPoseReef[i][1];
       averagePoses[i] =
           new Pose2d(
               (left.getX() + right.getX()) / 2,

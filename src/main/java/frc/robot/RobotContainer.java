@@ -66,10 +66,10 @@ public class RobotContainer {
     Alliance alliance = allianceOptional.orElse(Alliance.Blue);
 
     if (alliance == Alliance.Red) {
-      targetPose = PathfindConstants.redTargetPoseReef[positionIndex][targetSide];
+      targetPose = PathfindConstants.blueTargetPoseReef[positionIndex][targetSide];
     } else {
       targetPose =
-          FlipField.FieldFlip(PathfindConstants.redTargetPoseReef[positionIndex][targetSide]);
+          FlipField.FieldFlip(PathfindConstants.blueTargetPoseReef[positionIndex][targetSide]);
     }
 
     // Calculate distance to target
@@ -864,7 +864,7 @@ public class RobotContainer {
         .onTrue(Commands.runOnce(() -> pathfindingOverride = true));
     // Barge - Button 9
     safeButton9
-        // .and(conditionalArmBargeReady)
+        .and(conditionalArmRaiseBargeReady)
         .and(algaeMode)
         .onTrue(elevator.toL4Algae())
         .onFalse(
@@ -873,7 +873,7 @@ public class RobotContainer {
                 .andThen(rotaryPart.coralScore()));
 
     safeButton9
-        // .and(conditionalArmBargeReady)
+        .and(conditionalArmBargeReady)
         .and(algaeMode)
         .onFalse(Commands.waitUntil(armBargeReady).andThen(intake.algaeOuttake()));
     safeButton9
@@ -1013,7 +1013,7 @@ public class RobotContainer {
     Optional<Alliance> allianceOptional = DriverStation.getAlliance();
     Alliance alliance = allianceOptional.orElse(Alliance.Blue);
 
-    Pose2d targetPose = PathfindConstants.redTargetPoseReef[getClosestTag()][goingLeft];
+    Pose2d targetPose = PathfindConstants.blueTargetPoseReef[getClosestTag()][goingLeft];
 
     // If blue alliance, flip the target pose
     if (alliance == Alliance.Blue) {
@@ -1032,7 +1032,7 @@ public class RobotContainer {
     Optional<Alliance> allianceOptional = DriverStation.getAlliance();
     Alliance alliance = allianceOptional.orElse(Alliance.Blue);
 
-    Pose2d targetPose = PathfindConstants.redTargetPoseReef[apriltag][goingLeft];
+    Pose2d targetPose = PathfindConstants.blueTargetPoseReef[apriltag][goingLeft];
 
     // If blue alliance, flip the target pose
     if (alliance == Alliance.Blue) {
