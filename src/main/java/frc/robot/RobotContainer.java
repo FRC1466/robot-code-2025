@@ -443,8 +443,8 @@ public class RobotContainer {
 
     // Direction selection triggers
 
-    safePovLeft.onTrue(switchCoralDirection(0));
-    safePovRight.onTrue(switchCoralDirection(1));
+    safePovLeft.onTrue(switchCoralDirection(1));
+    safePovRight.onTrue(switchCoralDirection(0));
 
     /*  safePovDown.onTrue(
         drivetrain.runOnce(
@@ -570,6 +570,11 @@ public class RobotContainer {
     coralMode
         .and(() -> !intakeColorSensorTrigger.getAsBoolean())
         .onTrue(intake.stop().alongWith(rotaryPart.coralScore()).alongWith(elevator.toBottom()));
+
+    coralMode
+        .and(() -> intakeColorSensorTrigger.getAsBoolean())
+        .and(safeButton3.negate())
+        .onTrue(intake.stop());
 
     // Coral intake - Button 3
     safeButton3
@@ -1016,7 +1021,7 @@ public class RobotContainer {
     Pose2d targetPose = PathfindConstants.blueTargetPoseReef[getClosestTag()][goingLeft];
 
     // If blue alliance, flip the target pose
-    if (alliance == Alliance.Blue) {
+    if (alliance == Alliance.Red) {
       targetPose = FlipField.FieldFlip(targetPose);
     }
 
@@ -1035,7 +1040,7 @@ public class RobotContainer {
     Pose2d targetPose = PathfindConstants.blueTargetPoseReef[apriltag][goingLeft];
 
     // If blue alliance, flip the target pose
-    if (alliance == Alliance.Blue) {
+    if (alliance == Alliance.Red) {
       targetPose = FlipField.FieldFlip(targetPose);
     }
 

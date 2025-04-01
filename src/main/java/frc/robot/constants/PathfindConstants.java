@@ -54,7 +54,7 @@ public class PathfindConstants {
 
       // Calculate left branch pose
       Pose2d leftCenterFace = leftBranchMap.get(FieldConstants.ReefLevel.L2);
-      double approachDistance = 0.5; // Distance from the reef face
+      double approachDistance = 0.475; // Distance from the reef face
 
       // Create approach pose by moving AWAY from the branch and rotating 180 degrees
       reefPoses[i][0] =

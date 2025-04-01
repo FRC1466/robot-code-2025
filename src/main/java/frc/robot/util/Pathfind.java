@@ -40,7 +40,7 @@ public class Pathfind {
     // Create the constraints to use while pathfinding. The constraints defined in the path will
     // only be used for the path.
     constraints =
-        new PathConstraints(5, 3, Units.degreesToRadians(540), Units.degreesToRadians(720));
+        new PathConstraints(5, 3, Units.degreesToRadians(270), Units.degreesToRadians(360));
   }
 
   @SuppressWarnings("unused")
@@ -85,20 +85,20 @@ public class Pathfind {
 
     redPathfindingCommand =
         AutoBuilder.pathfindToPose(
-            new Pose2d(
-                targetPose.getX() - ((.05) * Math.cos(targetPose.getRotation().getRadians())),
-                targetPose.getY() - ((.05) * Math.sin(targetPose.getRotation().getRadians())),
-                targetPose.getRotation()),
-            customConstraints,
-            0.0);
-
-    bluePathfindingCommand =
-        AutoBuilder.pathfindToPose(
             FlipField.FieldFlip(
                 new Pose2d(
                     targetPose.getX() - ((.05) * Math.cos(targetPose.getRotation().getRadians())),
                     targetPose.getY() - ((.05) * Math.sin(targetPose.getRotation().getRadians())),
                     targetPose.getRotation())),
+            customConstraints,
+            0.0);
+
+    bluePathfindingCommand =
+        AutoBuilder.pathfindToPose(
+            new Pose2d(
+                targetPose.getX() - ((.05) * Math.cos(targetPose.getRotation().getRadians())),
+                targetPose.getY() - ((.05) * Math.sin(targetPose.getRotation().getRadians())),
+                targetPose.getRotation()),
             customConstraints,
             0.0);
 
