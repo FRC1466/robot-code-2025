@@ -139,9 +139,9 @@ public class Pathfind {
   public Command getPathfindingCommandAlgae(int closestTag, PathConstraints customConstraints) {
     int currentClosestTag = closestTag;
 
-    redPathfindingCommand =
-        AutoBuilder.pathfindToPose(redAveragePoses[currentClosestTag], customConstraints, 0.0);
     bluePathfindingCommand =
+        AutoBuilder.pathfindToPose(redAveragePoses[currentClosestTag], customConstraints, 0.0);
+    redPathfindingCommand =
         AutoBuilder.pathfindToPose(blueAveragePoses[currentClosestTag], customConstraints, 0.0);
 
     Optional<Alliance> allianceOptional = DriverStation.getAlliance();
@@ -163,17 +163,17 @@ public class Pathfind {
     }
     redPathfindingCommand =
         AutoBuilder.pathfindToPose(
-            new Pose2d(
-                new Translation2d(PathfindConstants.redTargetPoseXBarge, yBarge),
-                new Rotation2d(0)),
+            FlipField.FieldFlip(
+                new Pose2d(
+                    new Translation2d(PathfindConstants.redTargetPoseXBarge, yBarge),
+                    new Rotation2d(Units.degreesToRadians(180)))),
             customConstraints,
             0.0);
     bluePathfindingCommand =
         AutoBuilder.pathfindToPose(
-            FlipField.FieldFlip(
-                new Pose2d(
-                    new Translation2d(PathfindConstants.redTargetPoseXBarge, yBarge),
-                    new Rotation2d(0))),
+            new Pose2d(
+                new Translation2d(PathfindConstants.redTargetPoseXBarge, yBarge),
+                new Rotation2d(0)),
             customConstraints,
             0.0);
 

@@ -10,6 +10,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
@@ -47,6 +48,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedNetworkString;
 
 public class RobotContainer {
+  PathConstraints bargeConstraints = new PathConstraints(2, .5, 720, 540);
+
   /**
    * Checks if the robot is approaching the target position (not yet fully positioned)
    *
@@ -515,10 +518,10 @@ public class RobotContainer {
     Trigger conditionalArmRaiseAlgaeReadyl3 = new Trigger(armRaiseAlgaePositionCheckl3);
 
     // For barge position
-    BooleanSupplier armBargePositionCheck = () -> !autoPathingEnabled || armBargeReady(.1);
+    BooleanSupplier armBargePositionCheck = () -> !autoPathingEnabled || armBargeReady(.5);
     Trigger conditionalArmBargeReady = new Trigger(armBargePositionCheck);
 
-    BooleanSupplier armRaiseBargePositionCheck = () -> !autoPathingEnabled || armBargeReady(1);
+    BooleanSupplier armRaiseBargePositionCheck = () -> !autoPathingEnabled || armBargeReady(2);
     Trigger conditionalArmRaiseBargeReady = new Trigger(armRaiseBargePositionCheck);
 
     // For processor position
@@ -849,10 +852,6 @@ public class RobotContainer {
 
     safeButton4.and(algaeMode).onFalse((intake.algaeHold()));
 
-    algaeMode
-        .and(() -> !armAlgaeReadyl2(1) && !armAlgaeReadyl3(1))
-        .whileTrue(elevator.toProcessor());
-
     safeButton13
         .or(safeButton11)
         .or(safeButton12)
@@ -872,15 +871,25 @@ public class RobotContainer {
         .and(conditionalArmRaiseBargeReady)
         .and(algaeMode)
         .onTrue(elevator.toL4Algae())
-        .onFalse(
-            rotaryPart
-                .setPeakOutput(Constants.ElevatorConstants.elevatorPosition.peakOutput * .7)
-                .andThen(rotaryPart.coralScore()));
+        .onChange(
+            Commands.waitUntil(
+                    () -> isDrivetrainStopped(0.05) && conditionalArmBargeReady.getAsBoolean())
+                .andThen(
+                    rotaryPart
+                        .setPeakOutput(Constants.ElevatorConstants.elevatorPosition.peakOutput * .7)
+                        .andThen(rotaryPart.coralScore())));
 
     safeButton9
-        .and(conditionalArmBargeReady)
         .and(algaeMode)
-        .onFalse(Commands.waitUntil(armBargeReady).andThen(intake.algaeOuttake()));
+        .onFalse(
+            Commands.waitUntil(armBargeReady)
+                .andThen(intake.algaeOuttake())
+                .andThen(Commands.waitSeconds(.5))
+                .andThen(
+                    elevator
+                        .toBottom()
+                        .alongWith(rotaryPart.coralScore())
+                        .alongWith(intake.stop())));
     safeButton9
         .and(algaeMode)
         .onTrue(
@@ -888,7 +897,8 @@ public class RobotContainer {
                 () -> {
                   if (autoPathingEnabled) {
                     algaeCommand =
-                        m_pathfinder.getPathfindingCommandBarge(drivetrain.getPose().getY());
+                        m_pathfinder.getPathfindingCommandBarge(
+                            drivetrain.getPose().getY(), bargeConstraints);
                     algaeCommand.schedule();
                   }
                 }))
@@ -1080,7 +1090,7 @@ public class RobotContainer {
         Pathfind.redAveragePoses[getClosestTag() % 2 == 0 ? getClosestTag() : getClosestTag() - 1];
 
     // If blue alliance, flip the target pose
-    if (alliance == Alliance.Blue) {
+    if (alliance == Alliance.Red) {
       targetPose =
           Pathfind.blueAveragePoses[
               getClosestTag() % 2 == 0 ? getClosestTag() : getClosestTag() - 1];
@@ -1102,7 +1112,7 @@ public class RobotContainer {
         Pathfind.redAveragePoses[getClosestTag() % 2 == 0 ? getClosestTag() + 1 : getClosestTag()];
 
     // If blue alliance, flip the target pose
-    if (alliance == Alliance.Blue) {
+    if (alliance == Alliance.Red) {
       targetPose =
           Pathfind.blueAveragePoses[
               getClosestTag() % 2 == 0 ? getClosestTag() + 1 : getClosestTag()];
@@ -1123,7 +1133,7 @@ public class RobotContainer {
     double targetX = PathfindConstants.redTargetPoseXBarge;
 
     // If blue alliance, flip the X coordinate
-    if (alliance == Alliance.Blue) {
+    if (alliance == Alliance.Red) {
       targetX = FlipField.FIELD_LENGTH_METERS - targetX;
     }
 
