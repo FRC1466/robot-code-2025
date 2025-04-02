@@ -475,7 +475,7 @@ public class RobotContainer {
 
     // Basic triggers (not position-dependent)
     Trigger intakeColorSensorTrigger = new Trigger(() -> intake.getIntakeDistanceBool());
-    Trigger algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 5);
+    Trigger algaeHeightReady = new Trigger(() -> elevator.getElevatorHeight() > 20);
     Trigger processorReady = new Trigger(() -> elevator.getElevatorHeight() > 4);
     Trigger currentIntakeSwitch = new Trigger(() -> intake.getHighCurrent());
     Trigger algaeMode = new Trigger(() -> getModeMethod());
