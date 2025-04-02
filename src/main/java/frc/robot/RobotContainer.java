@@ -16,6 +16,8 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -789,6 +791,7 @@ public class RobotContainer {
     // L2 Algae - Button 3
     safeButton3
         .and(algaeMode)
+        .and(algaeHeightReady)
         .onTrue(
             Commands.runOnce(
                 () -> {
@@ -809,7 +812,6 @@ public class RobotContainer {
 
     safeButton3
         .and(algaeMode)
-        .and(conditionalArmAlgaeReadyl2)
         .onTrue(
             elevator
                 .toL2Algae()
@@ -822,6 +824,7 @@ public class RobotContainer {
     // L3 Algae - Button 4
     safeButton4
         .and(algaeMode)
+        .and(algaeHeightReady)
         .onTrue(
             Commands.runOnce(
                 () -> {
@@ -842,7 +845,6 @@ public class RobotContainer {
 
     safeButton4
         .and(algaeMode)
-        .and(conditionalArmAlgaeReadyl3)
         .onTrue(
             elevator
                 .toL3Algae()
@@ -867,23 +869,18 @@ public class RobotContainer {
         .or(safeButton16)
         .onTrue(Commands.runOnce(() -> pathfindingOverride = true));
     // Barge - Button 9
-    safeButton9
-        .and(conditionalArmRaiseBargeReady)
-        .and(algaeMode)
-        .onTrue(elevator.toL4Algae())
-        .onChange(
-            Commands.waitUntil(
-                    () -> isDrivetrainStopped(0.05) && conditionalArmBargeReady.getAsBoolean())
-                .andThen(
-                    rotaryPart
-                        .setPeakOutput(Constants.ElevatorConstants.elevatorPosition.peakOutput * .7)
-                        .andThen(rotaryPart.coralScore())));
+    safeButton9.and(conditionalArmRaiseBargeReady).and(algaeMode).onTrue(elevator.toL4Algae());
 
     safeButton9
         .and(algaeMode)
-        .onFalse(
-            Commands.waitUntil(armBargeReady)
-                .andThen(intake.algaeOuttake())
+        .onTrue(
+            Commands.waitUntil(
+                    () -> conditionalArmBargeReady.getAsBoolean() && isDrivetrainStopped(0.05))
+                .andThen(
+                    rotaryPart
+                        .setPeakOutput(Constants.ElevatorConstants.elevatorPosition.peakOutput * .7)
+                        .andThen(rotaryPart.coralScore())
+                        .alongWith(Commands.waitSeconds(.3).andThen(intake.algaeOuttake())))
                 .andThen(Commands.waitSeconds(.5))
                 .andThen(
                     elevator
@@ -1130,14 +1127,15 @@ public class RobotContainer {
     Optional<Alliance> allianceOptional = DriverStation.getAlliance();
     Alliance alliance = allianceOptional.orElse(Alliance.Blue);
 
-    double targetX = PathfindConstants.redTargetPoseXBarge;
+    double targetX = PathfindConstants.blueTargetPoseXBarge;
+    Pose2d targetPose = new Pose2d(new Translation2d(targetX, 0), new Rotation2d());
 
     // If blue alliance, flip the X coordinate
     if (alliance == Alliance.Red) {
-      targetX = FlipField.FIELD_LENGTH_METERS - targetX;
+      targetPose = FlipField.FieldFlip(targetPose);
     }
 
-    double distAway = Math.abs(drivetrain.getPose().getX() - targetX);
+    double distAway = Math.abs(drivetrain.getPose().getX() - targetPose.getX());
 
     return distAway < displacement;
   }
@@ -1225,7 +1223,13 @@ public class RobotContainer {
     if (ignoreInput) {
       return 0.0;
     }
-    return joystick.getRawAxis(axis);
+    if (joystick.getRawAxis(axis) > .8 && axis != 3) {
+      return 1;
+    } else if (axis != 3) {
+      return joystick.getRawAxis(axis) * 1.25;
+    } else {
+      return joystick.getRawAxis(axis);
+    }
   }
 
   /**

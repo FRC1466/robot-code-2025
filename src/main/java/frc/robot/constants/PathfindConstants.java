@@ -90,5 +90,5 @@ public class PathfindConstants {
   public static final Pose2d redTargetPoseProcessor =
       new Pose2d(11.496, 7.495, Rotation2d.fromDegrees(90.000));
 
-  public static final double redTargetPoseXBarge = 8.18;
+  public static final double blueTargetPoseXBarge = 8;
 }

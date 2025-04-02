@@ -211,10 +211,12 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotPeriodic() {
-    Logger.recordOutput(
-        "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
-    Logger.recordOutput(
-        "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
+    if ((Constants.getRobot() == RobotType.SIMBOT)) {
+      Logger.recordOutput(
+          "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
+      Logger.recordOutput(
+          "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
+    }
     Logger.recordOutput("Pose", RobotContainer.drivetrain.getPose());
     Logger.recordOutput("AlgaeHeightReady?", RobotContainer.elevator.getElevatorHeight() > 20);
     RobotContainer.elevator.updateMechanism();
