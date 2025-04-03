@@ -77,7 +77,7 @@ public class PathfindingAutoCommands {
                 })),
         Commands.waitUntil(() -> elevator.getElevatorHeight() > 61),
         waitUntil(() -> robotContainer.isDrivetrainStopped(.05)),
-        RobotContainer.rotaryPart.l4coralScore().withTimeout(.01),
+        RobotContainer.rotaryPart.l4coralScore().withTimeout(.1),
         Commands.sequence(
             Commands.runOnce(() -> Logger.recordOutput("AutoStatus", "Outtaking coral at target")),
             intake.outTake(),
@@ -88,7 +88,8 @@ public class PathfindingAutoCommands {
                           CommandSwerveDrivetrain.getInstance()
                               .mapleSimSwerveDrivetrain
                               .scoreSIMl4());
-              default -> Commands.waitSeconds(0);
+              case COMPBOT -> Commands.waitSeconds(0);
+              default -> Commands.waitSeconds(0.05);
             },
             switch (Constants.getRobot()) {
               case SIMBOT -> Commands.waitSeconds(0.5);
