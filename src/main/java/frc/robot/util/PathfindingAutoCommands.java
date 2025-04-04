@@ -15,8 +15,6 @@ import frc.robot.subsystems.Mechanisms.Elevator;
 import frc.robot.subsystems.Mechanisms.Intake;
 import org.littletonrobotics.junction.Logger;
 
-import com.ctre.phoenix6.signals.RobotEnableValue;
-
 public class PathfindingAutoCommands {
   private final Pathfind m_pathfinder;
   private final Intake intake;
@@ -70,16 +68,15 @@ public class PathfindingAutoCommands {
                   Logger.recordOutput("AutoStatus", "Holding Coral");
                   intake.coralHold();
                 }),
-            RobotContainer.rotaryPart.l4coralScore().withTimeout(.01)),
+            RobotContainer.rotaryPart.l4coralScore().withTimeout(.2)),
         Commands.sequence(
             Commands.runOnce(() -> Logger.recordOutput("AutoStatus", "Outtaking coral at target")),
             intake.outTake(),
             switch (Constants.getRobot()) {
-              case SIMBOT -> Commands.waitSeconds(0.5);
               case COMPBOT ->
                   Commands.waitUntil(() -> intake.getIntakeDistanceBool())
                       .andThen(waitSeconds(0.1));
-              default -> Commands.waitSeconds(0.5);
+              default -> Commands.waitSeconds(0);
             },
             Commands.runOnce(
                 () -> Logger.recordOutput("AutoStatus", "Stopping intake after score")),

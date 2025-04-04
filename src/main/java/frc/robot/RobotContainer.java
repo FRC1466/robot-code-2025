@@ -548,10 +548,12 @@ public class RobotContainer {
     // Only swing arm out when there is a coral
     coralMode
         .and(() -> !intakeColorSensorTrigger.getAsBoolean())
+        .and(teleOpEnabled)
         .onTrue(intake.stop().alongWith(rotaryPart.coralScore()).alongWith(elevator.toBottom()));
 
     coralMode
         .and(() -> intakeColorSensorTrigger.getAsBoolean())
+        .and(teleOpEnabled)
         .and(safeButton3.negate())
         .onTrue(intake.stop());
 
@@ -705,7 +707,7 @@ public class RobotContainer {
         .and(l4ScoreReady)
         .onFalse(intake.outTake());
 
-    algaeMode.onTrue(rotaryPart.coralScore());
+    algaeMode.and(teleOpEnabled).onTrue(rotaryPart.coralScore());
 
     // Processor - Button 1
     safeButton1
