@@ -653,14 +653,6 @@ public class RobotContainer {
         .and(conditionalArmReefReady)
         .and(l2Ready)
         .onTrue(Commands.waitSeconds(.3).andThen(intake.outTake()));
-    safeButton7
-        .and(normalMode)
-        .and(() -> !Robot.isReal())
-        .and(coralMode)
-        .and(conditionalArmReefReady)
-        .and(l2Ready)
-        .and(() -> isDrivetrainStopped(0.2))
-        .onTrue(Commands.runOnce(() -> drivetrain.mapleSimSwerveDrivetrain.scoreSIM()));
 
     safeButton7
         .and(normalMode)
@@ -702,15 +694,6 @@ public class RobotContainer {
         .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .onTrue(rotaryPart.coralScore().alongWith(elevator.toL3()));
 
-    safeButton6
-        .and(normalMode)
-        .and(() -> !Robot.isReal())
-        .and(coralMode)
-        .and(conditionalArmReefReady)
-        .and(l3Ready)
-        .and(() -> isDrivetrainStopped(0.15))
-        .onTrue(Commands.runOnce(() -> drivetrain.mapleSimSwerveDrivetrain.scoreSIM()));
-
     // L4 Reef - Button 5
     safeButton5
         .and(coralMode)
@@ -747,15 +730,6 @@ public class RobotContainer {
         .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .and(l4ScoreReady)
         .onFalse(intake.outTake());
-
-    safeButton5
-        .and(normalMode)
-        .and(() -> !Robot.isReal())
-        .and(coralMode)
-        .and(conditionalArmReefReady)
-        .and(l4ScoreReady)
-        .and(() -> isDrivetrainStopped(0.15))
-        .onFalse(Commands.runOnce(() -> drivetrain.mapleSimSwerveDrivetrain.scoreSIMl4()));
 
     // Processor - Button 1
     safeButton1

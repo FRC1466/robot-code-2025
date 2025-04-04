@@ -22,7 +22,6 @@ import org.littletonrobotics.junction.Logger;
 public class MechanismVisualizer extends SubsystemBase {
   // References to the actual subsystems
   private final RotaryPartSim m_rotaryPartSim;
-  private final RotaryPart m_rotaryPart;
 
   // Height and movement parameters
   // Height and movement parameters - adjusted for continuous elevator
@@ -50,7 +49,6 @@ public class MechanismVisualizer extends SubsystemBase {
   public MechanismVisualizer(
       Elevator elevator, RotaryPartSim rotaryPartSim, RotaryPart rotaryPart) {
     m_rotaryPartSim = rotaryPartSim;
-    m_rotaryPart = rotaryPart;
   }
 
   @Override
@@ -101,10 +99,6 @@ public class MechanismVisualizer extends SubsystemBase {
         armAngleDegrees =
             armAngleMultiplier.getAsDouble()
                 * Units.radiansToDegrees(m_rotaryPartSim.getAngleForVisualizationRads());
-      } else {
-        armAngleDegrees =
-            armAngleMultiplier.getAsDouble()
-                * Units.radiansToDegrees(m_rotaryPart.getPosition().getRadians());
       }
 
       Pose3d component3Pose =

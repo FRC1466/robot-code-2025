@@ -82,15 +82,6 @@ public class PathfindingAutoCommands {
             Commands.runOnce(() -> Logger.recordOutput("AutoStatus", "Outtaking coral at target")),
             intake.outTake(),
             switch (Constants.getRobot()) {
-              case SIMBOT ->
-                  Commands.runOnce(
-                      () ->
-                          CommandSwerveDrivetrain.getInstance()
-                              .mapleSimSwerveDrivetrain
-                              .scoreSIMl4());
-              default -> Commands.waitSeconds(0);
-            },
-            switch (Constants.getRobot()) {
               case SIMBOT -> Commands.waitSeconds(0.5);
               case COMPBOT ->
                   Commands.waitUntil(() -> intake.getIntakeDistanceBool())
@@ -159,15 +150,6 @@ public class PathfindingAutoCommands {
         Commands.sequence(
             Commands.runOnce(() -> Logger.recordOutput("AutoStatus", "Outtaking coral at target")),
             intake.outTake(),
-            switch (Constants.getRobot()) {
-              case SIMBOT ->
-                  Commands.runOnce(
-                      () ->
-                          CommandSwerveDrivetrain.getInstance()
-                              .mapleSimSwerveDrivetrain
-                              .scoreSIM());
-              default -> Commands.waitSeconds(0);
-            },
             switch (Constants.getRobot()) {
               case SIMBOT -> Commands.waitSeconds(0.5);
               case COMPBOT ->
