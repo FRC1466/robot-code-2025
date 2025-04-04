@@ -13,7 +13,6 @@ import frc.robot.RobotContainer;
 import frc.robot.constants.Constants;
 import frc.robot.subsystems.Mechanisms.Elevator;
 import frc.robot.subsystems.Mechanisms.Intake;
-import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
 import org.littletonrobotics.junction.Logger;
 
 public class PathfindingAutoCommands {

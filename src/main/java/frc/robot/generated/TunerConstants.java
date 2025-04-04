@@ -238,7 +238,7 @@ public class TunerConstants {
    * program,.
    */
   public static CommandSwerveDrivetrain createDrivetrain() {
-    return CommandSwerveDrivetrain.initInstance(
+    return new CommandSwerveDrivetrain(
         DrivetrainConstants, FrontLeft, FrontRight, BackLeft, BackRight);
   }
 

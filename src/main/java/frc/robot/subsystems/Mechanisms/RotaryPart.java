@@ -19,8 +19,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Robot;
-import frc.robot.RobotContainer;
 import frc.robot.constants.Constants.RotationConstants;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -85,11 +83,6 @@ public class RotaryPart extends SubsystemBase {
     armPID.setAvoidanceRange(
         Rotation2d.fromRadians(0), Rotation2d.fromRadians(RotationConstants.maxRadians));
     armPID.setTolerance(0.15);
-
-    /*   if (Robot.isSimulation()) {
-      sim = new VirtualFourBarSimulation(absoluteArmEncoder);
-      Logger.putData("Arm Sim", sim.getMech2d());
-    }*/
 
     setGoal(Rotation2d.fromRadians(RotationConstants.restRadians));
     setDefaultCommand(hold());
@@ -244,11 +237,7 @@ public class RotaryPart extends SubsystemBase {
   @AutoLogOutput
   public boolean isAtSetpoint() {
     // Logger.recordOutput("Arm PID at setpoint", armPID.atSetpoint());
-    if (Robot.isReal()) {
-      return armPID.atSetpoint();
-    } else {
-      return RobotContainer.rotaryPartSim.isAtSetpoint();
-    }
+    return armPID.atSetpoint();
   }
 
   public void reset() {
@@ -256,14 +245,8 @@ public class RotaryPart extends SubsystemBase {
   }
 
   public boolean isAtStore() {
-    if (Robot.isReal()) {
-      return armPID.getSetpoint() == (Units.radiansToDegrees(RotationConstants.restRadians))
-          && armPID.atSetpoint();
-    } else {
-      return RobotContainer.rotaryPartSim.getSetpoint()
-              == (Units.radiansToDegrees(RotationConstants.restRadians))
-          && RobotContainer.rotaryPartSim.isAtSetpoint();
-    }
+    return armPID.getSetpoint() == (Units.radiansToDegrees(RotationConstants.restRadians))
+        && armPID.atSetpoint();
   }
 
   @Override

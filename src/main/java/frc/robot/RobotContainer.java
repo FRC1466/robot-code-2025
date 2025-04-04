@@ -36,7 +36,6 @@ import frc.robot.generated.TunerConstantsTester;
 import frc.robot.subsystems.Mechanisms.Elevator;
 import frc.robot.subsystems.Mechanisms.Intake;
 import frc.robot.subsystems.Mechanisms.RotaryPart;
-import frc.robot.subsystems.Mechanisms.RotaryPartSim;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
 import frc.robot.util.*;
@@ -132,7 +131,6 @@ public class RobotContainer {
   // Subsystems
   public static final Intake intake = new Intake();
   public static final RotaryPart rotaryPart = new RotaryPart();
-  public static final RotaryPartSim rotaryPartSim = new RotaryPartSim();
   public static final Vision photonCamera = new Vision();
   public static final Elevator elevator = new Elevator();
 

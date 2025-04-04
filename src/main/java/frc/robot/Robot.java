@@ -7,9 +7,7 @@ import com.ctre.phoenix6.Utils;
 import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.hal.AllianceStationID;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -28,16 +26,12 @@ import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
 import frc.robot.constants.Constants.RobotType;
 import frc.robot.subsystems.Vision;
-import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
 import frc.robot.util.Blinkin;
-import frc.robot.util.ChirpPlayer;
 import frc.robot.util.LocalADStarAK;
-import frc.robot.util.MechanismVisualizer;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import org.ironmaple.simulation.SimulatedArena;
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -61,14 +55,10 @@ public class Robot extends LoggedRobot {
   private final Timer disabledTimer = new Timer();
 
   private Blinkin blinkin = new Blinkin();
-  private ChirpPlayer chirpPlayer = new ChirpPlayer();
 
   private Command m_autonomousCommand;
   private Vision vision;
   public static RobotContainer m_robotContainer;
-
-  // Combined mechanism visualizer for elevator and rotary part
-  private MechanismVisualizer m_mechanismVisualizer;
 
   @SuppressWarnings("unused")
   private Timer algaeIntakeTimer = new Timer();
@@ -192,34 +182,17 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotInit() {
-    SimulatedArena.ALLOW_CREATION_ON_REAL_ROBOT = false;
     Pathfinding.setPathfinder(new LocalADStarAK());
     PathfindingCommand.warmupCommand().schedule();
     RobotContainer.elevator.setSelectedSensorPosition(0);
     vision = new Vision();
-    m_mechanismVisualizer =
-        new MechanismVisualizer(
-            RobotContainer.elevator, RobotContainer.rotaryPartSim, RobotContainer.rotaryPart);
-    if (Constants.PlayMusic) {
-      chirpPlayer.playChirpForAllMotors("output");
-    }
-    if (Constants.getRobot() == RobotType.SIMBOT) {
-      RobotContainer.drivetrain.resetPose(
-          new Pose2d(new Translation2d(7.5, 4), new Rotation2d(Math.PI)));
-    }
   }
 
   @Override
   public void robotPeriodic() {
-    if ((Constants.getRobot() == RobotType.SIMBOT)) {
-      Logger.recordOutput(
-          "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
-      Logger.recordOutput(
-          "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
-    }
+    CommandScheduler.getInstance().run();
     Logger.recordOutput("Pose", RobotContainer.drivetrain.getPose());
     Logger.recordOutput("AlgaeHeightReady?", RobotContainer.elevator.getElevatorHeight() > 20);
-    RobotContainer.elevator.updateMechanism();
     Logger.recordOutput("Beam Break", beamBreak.get());
     /*if (!lastBoolean && beamBreak.get()) {
       RobotContainer.elevator.setSelectedSensorPosition(.5);
@@ -249,9 +222,6 @@ public class Robot extends LoggedRobot {
               Utils.fpgaToCurrentTime(est.timestampSeconds),
               estStdDevs);
         });
-    if (m_mechanismVisualizer != null) {
-      m_mechanismVisualizer.periodic();
-    }
 
     // Low battery alert
     lowBatteryCycleCount += 1;
@@ -283,7 +253,6 @@ public class Robot extends LoggedRobot {
 
     // Check for alerts on each robot periodic cycle
     checkAndHandleAlerts();
-    CommandScheduler.getInstance().run();
   }
 
   public void periodic() {}
@@ -314,11 +283,7 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void disabledExit() {
-    if (chirpPlayer.orchestra.isPlaying()) {
-      chirpPlayer.orchestra.stop();
-    }
-  }
+  public void disabledExit() {}
 
   public boolean shouldIgnoreJoystickInput() {
     return ignoreJoystickInput;
@@ -331,9 +296,6 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void autonomousInit() {
-    if (!isReal()) {
-      SimulatedArena.getInstance().resetFieldForAuto();
-    }
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
     autoStart = Timer.getTimestamp();
     if (m_autonomousCommand != null) {
@@ -342,9 +304,7 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void autonomousPeriodic() {
-    blinkin.rainbowPartyLights();
-  }
+  public void autonomousPeriodic() {}
 
   @Override
   public void autonomousExit() {
@@ -505,18 +465,7 @@ public class Robot extends LoggedRobot {
   public void testExit() {}
 
   @Override
-  public void simulationPeriodic() {
-    Logger.recordOutput(
-        "FieldSimulation/Algae", SimulatedArena.getInstance().getGamePiecesArrayByType("Algae"));
-    Logger.recordOutput(
-        "FieldSimulation/Coral", SimulatedArena.getInstance().getGamePiecesArrayByType("Coral"));
-    Logger.recordOutput("Pose", CommandSwerveDrivetrain.getInstance().getPose());
-    RobotContainer.elevator.simulationPeriodicElevator();
-    vision.simulationPeriodic(CommandSwerveDrivetrain.getInstance().getPose());
-
-    var debugField = vision.getSimDebugField();
-    debugField.getObject("EstimatedRobot");
-  }
+  public void simulationPeriodic() {}
 
   // Check for active alerts of WARNING or ERROR type
   private void checkAndHandleAlerts() {
@@ -534,13 +483,10 @@ public class Robot extends LoggedRobot {
 
       if (activeWarnings) {
         // Activate warning lights when there are warnings/errors
-        blinkin.warningLights();
       } else {
         // Return to normal light pattern when no warnings/errors
         if (RobotState.isAutonomous()) {
-          blinkin.rainbowPartyLights();
         } else if (RobotState.isTeleop()) {
-          blinkin.coralLights();
         }
       }
     }
