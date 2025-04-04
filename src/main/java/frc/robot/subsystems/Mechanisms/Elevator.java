@@ -13,9 +13,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Velocity;
-import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -30,10 +28,6 @@ public class Elevator extends SubsystemBase {
   private PIDController elevatorPID;
   private double localSetpoint = 0;
   private DoubleSupplier overrideFeedforward = () -> 0;
-
-  // Simulation classes
-  private DCMotor m_elevatorGearboxSim;
-  private Encoder m_encoder;
 
   @SuppressWarnings("unused")
   private ElevatorFeedforward m_feedforward;
