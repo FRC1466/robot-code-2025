@@ -160,7 +160,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public Command toProcessor() {
-    return runOnce(() -> goToGoal(3.5));
+    return runOnce(() -> goToGoal(5.5));
   }
 
   public Command toTestingHeight() {
@@ -175,9 +175,9 @@ public class Elevator extends SubsystemBase {
     var feedforward = getElevatorHeight() * Constants.ElevatorConstants.elevatorPosition.F;
     setMotor(motorOutput + feedforward + overrideFeedforward.getAsDouble());
 
-    SmartDashboard.putNumber("Elevator PID Output", motorOutput);
-    SmartDashboard.putNumber("Arm Feedforward", feedforward);
-    SmartDashboard.putNumber("Elevator Feedforward Override", overrideFeedforward.getAsDouble());
+    Logger.recordOutput("Elevator PID Output", motorOutput);
+    Logger.recordOutput("Elevator Feedforward", feedforward);
+    Logger.recordOutput("Elevator Feedforward Override", overrideFeedforward.getAsDouble());
   }
 
   public void setFeedforward(DoubleSupplier feedforward) {

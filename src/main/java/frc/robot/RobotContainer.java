@@ -5,7 +5,6 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -28,7 +27,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.constants.PathfindConstants;
 import frc.robot.generated.TunerConstants;
@@ -69,7 +67,7 @@ public class RobotContainer {
     Optional<Alliance> allianceOptional = DriverStation.getAlliance();
     Alliance alliance = allianceOptional.orElse(Alliance.Blue);
 
-    if (alliance == Alliance.Red) {
+    if (alliance == Alliance.Blue) {
       targetPose = PathfindConstants.blueTargetPoseReef[positionIndex][targetSide];
     } else {
       targetPose =
@@ -258,16 +256,15 @@ public class RobotContainer {
     autoChooser.addOption("Right Taxi Auto", new PathPlannerAuto("Right Taxi Auto"));
     autoChooser.addOption("Left Taxi Auto", new PathPlannerAuto("Left Taxi Auto"));
     autoChooser.addOption(
-        "Triple l4 blue3",
-        PathfindingCommandParser.parseCommandString("5-1-4--S--0-1-4--S--1-0-4"));
+        "Triple L4 Rouge",
+        PathfindingCommandParser.parseCommandString("5-1-4--S--0-1-4--S--0-0-4"));
     autoChooser.addOption(
-        "Triple l4 red3", PathfindingCommandParser.parseCommandString("3-1-4--S--2-1-4--S--1-0-4"));
+        "Triple L4 Bleu", PathfindingCommandParser.parseCommandString("3-1-4--S--2-1-4--S--2-0-4"));
     autoChooser.addOption(
-        "2.5 Piece l4 blue3", PathfindingCommandParser.parseCommandString("0-0-4--S--0-1-4--S"));
+        "2.5 Piece L4 Rouge", PathfindingCommandParser.parseCommandString("5-1-4--S--0-1-4--S"));
     autoChooser.addOption(
-        "2.5 Piece l4 red3", PathfindingCommandParser.parseCommandString("2-0-4--S--2-1-4--S"));
-    autoChooser.addOption(
-        "1 Piece l4", PathfindingCommandParser.parseCommandString("3-1-4--S--3-0-4"));
+        "2.5 Piece L4 Bleu", PathfindingCommandParser.parseCommandString("3-1-4--S--2-1-4--S"));
+    autoChooser.addOption("1 Piece L4", PathfindingCommandParser.parseCommandString("4-1-4--S"));
     autoChooser.addOption(
         "Use AutoPathing",
         Commands.runOnce(
@@ -402,20 +399,6 @@ public class RobotContainer {
   }
 
   @SuppressWarnings("unused")
-  private void configureSysIDBindings() {
-    joystick.button(3).onTrue(Commands.runOnce(SignalLogger::start));
-    joystick.button(4).onTrue(Commands.runOnce(SignalLogger::stop));
-    joystick.button(5).whileTrue(elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    joystick.button(6).whileTrue(elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-    joystick.button(7).whileTrue(elevator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    joystick.button(8).whileTrue(elevator.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    /*   joystick.button(5).whileTrue(rotaryPart.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    joystick.button(6).whileTrue(rotaryPart.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-    joystick.button(7).whileTrue(rotaryPart.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    joystick.button(8).whileTrue(rotaryPart.sysIdQuasistatic(SysIdRoutine.Direction.kReverse)); */
-  }
-
-  @SuppressWarnings("unused")
   private void configureBindings() {
     // Create safe versions of all joystick trigger inputs that respect the ignoreJoystickInput flag
     Trigger safePovLeft = createSafeJoystickTrigger(joystick.povLeft());
@@ -439,10 +422,6 @@ public class RobotContainer {
     Trigger safeButton14 = createSafeJoystickTrigger(joystick.button(14));
     Trigger safeButton15 = createSafeJoystickTrigger(joystick.button(15));
     Trigger safeButton16 = createSafeJoystickTrigger(joystick.button(16));
-    Trigger safeButton17 = createSafeJoystickTrigger(joystick.button(17));
-    Trigger safeButton18 = createSafeJoystickTrigger(joystick.button(18));
-    Trigger safeButton19 = createSafeJoystickTrigger(joystick.button(19));
-    Trigger safeButton20 = createSafeJoystickTrigger(joystick.button(20));
 
     // Direction selection triggers
 
@@ -462,9 +441,6 @@ public class RobotContainer {
               visionEnabled = false;
               drivetrain.seedFieldCentric();
             }));*/
-    safeButton19.onTrue(Commands.runOnce(() -> drivetrain.zeroGyro(false)));
-
-    safeButton20.onTrue(Commands.runOnce(() -> drivetrain.zeroGyro(true)));
 
     safePovDown.onTrue(Commands.runOnce(() -> drivetrain.zeroGyro(false)));
 
@@ -728,6 +704,8 @@ public class RobotContainer {
         .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .and(l4ScoreReady)
         .onFalse(intake.outTake());
+
+    algaeMode.onTrue(rotaryPart.coralScore());
 
     // Processor - Button 1
     safeButton1

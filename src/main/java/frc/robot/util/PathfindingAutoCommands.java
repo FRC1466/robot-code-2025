@@ -15,6 +15,8 @@ import frc.robot.subsystems.Mechanisms.Elevator;
 import frc.robot.subsystems.Mechanisms.Intake;
 import org.littletonrobotics.junction.Logger;
 
+import com.ctre.phoenix6.signals.RobotEnableValue;
+
 public class PathfindingAutoCommands {
   private final Pathfind m_pathfinder;
   private final Intake intake;
@@ -46,18 +48,8 @@ public class PathfindingAutoCommands {
               }
             }),
         // Start preparatory movements during approach
-        RobotContainer.rotaryPart.coralScore().withTimeout(.01),
-        Commands.sequence(
-            Commands.waitUntil(
-                () -> {
-                  boolean approaching =
-                      robotContainer.armApproachingTarget(targetSide, targetTag, 2.5);
-                  if (approaching) {
-                    Logger.recordOutput("AutoStatus", "Starting elevator early for target");
-                  }
-                  return approaching;
-                }),
-            elevator.toL4()),
+        RobotContainer.rotaryPart.coralScore().withTimeout(.1),
+        elevator.toL4(),
         // Final positioning check
         Commands.waitUntil(
             () -> {
@@ -67,16 +59,18 @@ public class PathfindingAutoCommands {
                   "Waiting for target position: " + (stopped ? "Ready" : "Not Ready"));
               return stopped;
             }),
+        switch (Constants.getRobot()) {
+          case COMPBOT -> Commands.waitUntil(() -> elevator.getElevatorHeight() > 61);
+          default -> Commands.waitSeconds(0);
+        },
         // Start elevator while finalizing position
         Commands.parallel(
             Commands.runOnce(
                 () -> {
-                  Logger.recordOutput("AutoStatus", "Raising elevator to L4 for target");
+                  Logger.recordOutput("AutoStatus", "Holding Coral");
                   intake.coralHold();
-                })),
-        Commands.waitUntil(() -> elevator.getElevatorHeight() > 61),
-        waitUntil(() -> robotContainer.isDrivetrainStopped(.05)),
-        RobotContainer.rotaryPart.l4coralScore().withTimeout(.01),
+                }),
+            RobotContainer.rotaryPart.l4coralScore().withTimeout(.01)),
         Commands.sequence(
             Commands.runOnce(() -> Logger.recordOutput("AutoStatus", "Outtaking coral at target")),
             intake.outTake(),
