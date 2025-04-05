@@ -96,7 +96,7 @@ public class RobotContainer {
 
   Command reefCommand = null;
   private Command algaeCommand = null;
-  private Command stationCommand = null;
+  // private Command stationCommand = null;
   private Command autoCommand = null;
 
   // Warnings
@@ -583,25 +583,25 @@ public class RobotContainer {
                 .alongWith(intake.intake()));
 
     // Coral station pathfinding - Button 3
-    safeButton3
-        // .and(coralIntakePositionCheck)
-        .and(coralMode)
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  // Only schedule the command if auto pathing is enabled
-                  if (autoPathingEnabled) {
-                    stationCommand = m_pathfinder.getPathfindingCommandStation(getClosestStation());
-                    stationCommand.schedule();
-                  }
-                }))
-        .onFalse(
-            Commands.runOnce(
-                () -> {
-                  if (stationCommand != null) {
-                    stationCommand.cancel();
-                  }
-                }));
+    /*    safeButton3
+    // .and(coralIntakePositionCheck)
+    .and(coralMode)
+    .onTrue(
+        Commands.runOnce(
+            () -> {
+              // Only schedule the command if auto pathing is enabled
+              if (autoPathingEnabled) {
+                stationCommand = m_pathfinder.getPathfindingCommandStation(getClosestStation());
+                stationCommand.schedule();
+              }
+            }))
+    .onFalse(
+        Commands.runOnce(
+            () -> {
+              if (stationCommand != null) {
+                stationCommand.cancel();
+              }
+            }));*/
     // L2 Reef - Button 7
     safeButton7
         .and(normalMode)
@@ -626,15 +626,9 @@ public class RobotContainer {
     safeButton7
         .and(normalMode)
         .and(coralMode)
-        .and(conditionalArmReefReady)
-        .and(l2Ready)
-        .onTrue(Commands.waitSeconds(.3).andThen(intake.outTake()));
-
-    safeButton7
-        .and(normalMode)
-        .and(coralMode)
         .and(conditionalArmRaiseReefReady)
-        .onTrue(rotaryPart.coralScore().alongWith(elevator.toL2()));
+        .onTrue(rotaryPart.coralScore().alongWith(elevator.toL2()))
+        .onFalse((intake.outTake()));
 
     // L3 Reef - Button 6
     safeButton6
@@ -661,14 +655,8 @@ public class RobotContainer {
         .and(normalMode)
         .and(coralMode)
         .and(conditionalArmRaiseReefReady) // Use conditional trigger
-        .and(l3Ready)
-        .onTrue(Commands.waitSeconds(.3).andThen(intake.outTake()));
-
-    safeButton6
-        .and(normalMode)
-        .and(coralMode)
-        .and(conditionalArmRaiseReefReady) // Use conditional trigger
-        .onTrue(rotaryPart.coralScore().alongWith(elevator.toL3()));
+        .onTrue(rotaryPart.coralScore().alongWith(elevator.toL3()))
+        .onFalse(intake.outTake());
 
     // L4 Reef - Button 5
     safeButton5
