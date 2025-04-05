@@ -583,7 +583,7 @@ public class RobotContainer {
                 .alongWith(intake.intake()));
 
     // Coral station pathfinding - Button 3
-    safeButton3
+ /*    safeButton3
         // .and(coralIntakePositionCheck)
         .and(coralMode)
         .onTrue(
@@ -601,7 +601,7 @@ public class RobotContainer {
                   if (stationCommand != null) {
                     stationCommand.cancel();
                   }
-                }));
+                }));*/
     // L2 Reef - Button 7
     safeButton7
         .and(normalMode)
