@@ -4,6 +4,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
+import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -30,12 +31,14 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.Constants;
 import frc.robot.constants.PathfindConstants;
 import frc.robot.generated.TunerConstants;
-import frc.robot.generated.TunerConstantsTester;
 import frc.robot.subsystems.Mechanisms.Elevator;
 import frc.robot.subsystems.Mechanisms.Intake;
 import frc.robot.subsystems.Mechanisms.RotaryPart;
-import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVision;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.*;
 import java.io.IOException;
 import java.text.ParseException;
@@ -126,10 +129,11 @@ public class RobotContainer {
   private final LoggedNetworkString pathfindingTargetChooser =
       new LoggedNetworkString("Pathfinding Target");
 
+  private final Vision vision;
+
   // Subsystems
   public static final Intake intake = new Intake();
   public static final RotaryPart rotaryPart = new RotaryPart();
-  public static final Vision photonCamera = new Vision();
   public static final Elevator elevator = new Elevator();
 
   private final AprilTagFieldLayout layout =
@@ -165,21 +169,35 @@ public class RobotContainer {
   private boolean testingBoolean = false;
 
   public RobotContainer() {
-    // Initialize drivetrain once based on robot type
-    switch (Constants.getRobot()) {
-      case COMPBOT -> {
+    switch (Constants.getMode()) {
+      case REAL:
+        // Real robot, instantiate hardware IO implementations
         drivetrain = TunerConstants.createDrivetrain();
-        Logger.recordOutput("Constant File", "Using TunerConstants for Compbot");
-      }
-      case DEVBOT -> {
-        drivetrain = TunerConstantsTester.createDrivetrain();
-        Logger.recordOutput("Constant File", "Using TunerConstantsTester for Devbot");
-      }
-      case SIMBOT -> {
+        vision =
+            new Vision(
+                drivetrain::addVisionMeasurement,
+                new VisionIOPhotonVision(camera0Name, robotToCamera0),
+                new VisionIOPhotonVision(camera1Name, robotToCamera1));
+        break;
+
+      case SIM:
+        // Sim robot, instantiate physics sim IO implementations
         drivetrain = TunerConstants.createDrivetrain();
-        Logger.recordOutput("Constant File", "Using TunerConstants for simulation");
-      }
-      default -> throw new IllegalArgumentException("Unexpected value: " + Constants.getRobot());
+        vision =
+            new Vision(
+                drivetrain::addVisionMeasurement,
+                new VisionIOPhotonVisionSim(
+                    camera0Name, robotToCamera0, () -> drivetrain.getState().Pose),
+                new VisionIOPhotonVisionSim(
+                    camera1Name, robotToCamera1, () -> drivetrain.getState().Pose));
+        break;
+
+      default:
+        // Replayed robot, disable IO implementations
+        // (Use same number of dummy implementations as the real robot)
+        drivetrain = TunerConstants.createDrivetrain();
+        vision = new Vision(drivetrain::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        break;
     }
 
     try {

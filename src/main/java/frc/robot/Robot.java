@@ -3,9 +3,7 @@
  
 package frc.robot;
 
-import com.ctre.phoenix6.Utils;
 import com.pathplanner.lib.commands.PathfindingCommand;
-import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
@@ -25,9 +23,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
 import frc.robot.constants.Constants.RobotType;
-import frc.robot.subsystems.Vision;
 import frc.robot.util.Blinkin;
-import frc.robot.util.LocalADStarAK;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,7 +53,6 @@ public class Robot extends LoggedRobot {
   private Blinkin blinkin = new Blinkin();
 
   private Command m_autonomousCommand;
-  private Vision vision;
   public static RobotContainer m_robotContainer;
 
   @SuppressWarnings("unused")
@@ -182,10 +177,8 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotInit() {
-    Pathfinding.setPathfinder(new LocalADStarAK());
     PathfindingCommand.warmupCommand().schedule();
     RobotContainer.elevator.setSelectedSensorPosition(0);
-    vision = new Vision();
   }
 
   @Override
@@ -212,16 +205,6 @@ public class Robot extends LoggedRobot {
        limitSwitchCounter = m_robotContainer.limitSwitch.get();
      }
     */
-
-    var visionEst = vision.getEstimatedGlobalPose();
-    visionEst.ifPresent(
-        est -> {
-          var estStdDevs = vision.getEstimationStdDevs();
-          RobotContainer.drivetrain.addVisionMeasurement(
-              est.estimatedPose.toPose2d(),
-              Utils.fpgaToCurrentTime(est.timestampSeconds),
-              estStdDevs);
-        });
 
     // Low battery alert
     lowBatteryCycleCount += 1;
