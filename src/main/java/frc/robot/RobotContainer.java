@@ -626,15 +626,9 @@ public class RobotContainer {
     safeButton7
         .and(normalMode)
         .and(coralMode)
-        .and(conditionalArmReefReady)
-        .and(l2Ready)
-        .onTrue(Commands.waitSeconds(.3).andThen(intake.outTake()));
-
-    safeButton7
-        .and(normalMode)
-        .and(coralMode)
         .and(conditionalArmRaiseReefReady)
-        .onTrue(rotaryPart.coralScore().alongWith(elevator.toL2()));
+        .onTrue(rotaryPart.coralScore().alongWith(elevator.toL2()))
+        .onFalse((intake.outTake()));
 
     // L3 Reef - Button 6
     safeButton6
@@ -661,14 +655,8 @@ public class RobotContainer {
         .and(normalMode)
         .and(coralMode)
         .and(conditionalArmRaiseReefReady) // Use conditional trigger
-        .and(l3Ready)
-        .onTrue(Commands.waitSeconds(.3).andThen(intake.outTake()));
-
-    safeButton6
-        .and(normalMode)
-        .and(coralMode)
-        .and(conditionalArmRaiseReefReady) // Use conditional trigger
-        .onTrue(rotaryPart.coralScore().alongWith(elevator.toL3()));
+        .onTrue(rotaryPart.coralScore().alongWith(elevator.toL3()))
+        .onFalse(intake.outTake());
 
     // L4 Reef - Button 5
     safeButton5
