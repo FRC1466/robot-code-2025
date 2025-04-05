@@ -96,7 +96,7 @@ public class RobotContainer {
 
   Command reefCommand = null;
   private Command algaeCommand = null;
-  private Command stationCommand = null;
+  // private Command stationCommand = null;
   private Command autoCommand = null;
 
   // Warnings
@@ -583,25 +583,25 @@ public class RobotContainer {
                 .alongWith(intake.intake()));
 
     // Coral station pathfinding - Button 3
- /*    safeButton3
-        // .and(coralIntakePositionCheck)
-        .and(coralMode)
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  // Only schedule the command if auto pathing is enabled
-                  if (autoPathingEnabled) {
-                    stationCommand = m_pathfinder.getPathfindingCommandStation(getClosestStation());
-                    stationCommand.schedule();
-                  }
-                }))
-        .onFalse(
-            Commands.runOnce(
-                () -> {
-                  if (stationCommand != null) {
-                    stationCommand.cancel();
-                  }
-                }));*/
+    /*    safeButton3
+    // .and(coralIntakePositionCheck)
+    .and(coralMode)
+    .onTrue(
+        Commands.runOnce(
+            () -> {
+              // Only schedule the command if auto pathing is enabled
+              if (autoPathingEnabled) {
+                stationCommand = m_pathfinder.getPathfindingCommandStation(getClosestStation());
+                stationCommand.schedule();
+              }
+            }))
+    .onFalse(
+        Commands.runOnce(
+            () -> {
+              if (stationCommand != null) {
+                stationCommand.cancel();
+              }
+            }));*/
     // L2 Reef - Button 7
     safeButton7
         .and(normalMode)

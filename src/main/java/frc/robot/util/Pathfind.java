@@ -63,8 +63,7 @@ public class Pathfind {
 
     bluePathfindingCommand =
         AutoBuilder.pathfindToPose(
-         
-                PathfindConstants.blueTargetPoseReef[currentClosestTag][targetLeftOrRight],
+            PathfindConstants.blueTargetPoseReef[currentClosestTag][targetLeftOrRight],
             customConstraints,
             0.0);
 

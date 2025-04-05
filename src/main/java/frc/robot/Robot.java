@@ -299,7 +299,7 @@ public class Robot extends LoggedRobot {
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
     autoStart = Timer.getTimestamp();
     if (m_autonomousCommand != null) {
-      m_robotContainer.rotaryPart.coralScore().withTimeout(.1);
+      RobotContainer.rotaryPart.coralScore().withTimeout(.1);
 
       m_autonomousCommand.schedule();
     }
