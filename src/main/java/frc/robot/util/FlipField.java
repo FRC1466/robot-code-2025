@@ -22,6 +22,41 @@ public class FlipField {
   public static final double FIELD_CENTER_X = FIELD_LENGTH_METERS / 2.0;
 
   /**
+   * Flips an array of Pose2d objects around the field center line.
+   *
+   * @param poses The array of poses to flip
+   * @return A new array with all poses flipped
+   */
+  public static Pose2d[] flipPoseArray(Pose2d[] poses) {
+    Pose2d[] flippedPoses = new Pose2d[poses.length];
+    for (int i = 0; i < poses.length; i++) {
+      flippedPoses[i] = flipPose(poses[i]);
+    }
+    return flippedPoses;
+  }
+
+  /**
+   * Flips a 2D array of Pose2d objects around the field center line. This implementation maintains
+   * the structure of the array but flips each Pose2d.
+   *
+   * @param poses The 2D array of poses to flip
+   * @return A new 2D array with all poses flipped
+   */
+  public static Pose2d[][] flipPoseArray(Pose2d[][] poses) {
+    Pose2d[][] flippedPoses = new Pose2d[poses.length][];
+
+    for (int i = 0; i < poses.length; i++) {
+      flippedPoses[i] = new Pose2d[poses[i].length];
+      for (int j = 0; j < poses[i].length; j++) {
+        // Flip each individual pose while preserving the array structure
+        flippedPoses[i][j] = flipPose(poses[i][j]);
+      }
+    }
+
+    return flippedPoses;
+  }
+
+  /**
    * Flips a Pose3d around the field center line. This method mirrors the X coordinate across the
    * vertical centerline of the field, keeps the Y coordinate the same, and adjusts the rotation
    * appropriately. The Z coordinate remains unchanged.

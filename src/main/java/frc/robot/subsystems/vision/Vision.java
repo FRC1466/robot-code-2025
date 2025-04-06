@@ -17,7 +17,6 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import frc.robot.util.LoggedTracer;
-
 import java.util.LinkedList;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
@@ -169,7 +168,7 @@ public class Vision extends SubsystemBase {
         "Vision/Summary/RobotPosesRejected",
         allRobotPosesRejected.toArray(new Pose3d[allRobotPosesRejected.size()]));
 
-        LoggedTracer.record("Vision");
+    LoggedTracer.record("Vision");
   }
 
   @FunctionalInterface
@@ -178,5 +177,22 @@ public class Vision extends SubsystemBase {
         Pose2d visionRobotPoseMeters,
         double timestampSeconds,
         Matrix<N3, N1> visionMeasurementStdDevs);
+  }
+
+  /**
+   * Checks if a specific AprilTag ID is currently visible by any camera.
+   *
+   * @param tagId The ID of the AprilTag to look for
+   * @return True if the tag is visible, false otherwise
+   */
+  public boolean isTagVisible(int tagId) {
+    for (int i = 0; i < io.length; i++) {
+      for (int tagIdFound : inputs[i].tagIds) {
+        if (tagIdFound == tagId) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }

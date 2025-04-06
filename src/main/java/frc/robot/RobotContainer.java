@@ -498,6 +498,10 @@ public class RobotContainer {
         () -> !autoPathingEnabled || armFieldReady(leftCoral, 1);
     Trigger conditionalArmRaiseReefReady = new Trigger(armRaiseReefPositionCheck);
 
+    BooleanSupplier reefApproachPositionCheck =
+        () -> !autoPathingEnabled || armApproachReady(leftCoral, 1);
+    Trigger conditionalArmReefApproachReady = new Trigger(reefApproachPositionCheck);
+
     // For algae position
     BooleanSupplier armAlgaePositionCheckl2 = () -> !autoPathingEnabled || armAlgaeReadyl2(2);
     Trigger conditionalArmAlgaeReadyl2 = new Trigger(armAlgaePositionCheckl2);
@@ -629,7 +633,7 @@ public class RobotContainer {
                 () -> {
                   if (autoPathingEnabled) {
                     reefCommand =
-                        m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
+                        m_pathfinder.getPathfindingCommandReefApproach(leftCoral, getClosestTag());
                     reefCommand.schedule();
                   }
                 }))
@@ -644,9 +648,32 @@ public class RobotContainer {
     safeButton7
         .and(normalMode)
         .and(coralMode)
-        .and(conditionalArmRaiseReefReady)
+        .onTrue(
+            Commands.sequence(
+                Commands.waitSeconds(0.25),
+                Commands.waitUntil(() -> isDrivetrainStopped(0.1)),
+                Commands.runOnce(
+                    () -> {
+                      if (autoPathingEnabled) {
+                        reefCommand =
+                            m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
+                        reefCommand.schedule();
+                      }
+                    })))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  if (reefCommand != null) {
+                    reefCommand.cancel();
+                  }
+                }));
+
+    safeButton7
+        .and(normalMode)
+        .and(coralMode)
+        .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .onTrue(rotaryPart.coralScore().alongWith(elevator.toL2()))
-        .onFalse((intake.outTake()));
+        .onFalse(intake.outTake());
 
     // L3 Reef - Button 6
     safeButton6
@@ -998,6 +1025,25 @@ public class RobotContainer {
     return distAway < displacement;
   }
 
+  public boolean armApproachReady(int goingLeft, double displacement) {
+    Optional<Alliance> allianceOptional = DriverStation.getAlliance();
+    Alliance alliance = allianceOptional.orElse(Alliance.Blue);
+
+    Pose2d targetPose = PathfindConstants.blueTargetPoseReefApproach[getClosestTag()][goingLeft];
+
+    // If blue alliance, flip the target pose
+    if (alliance == Alliance.Red) {
+      targetPose = FlipField.FieldFlip(targetPose);
+    }
+
+    double distAway =
+        Math.sqrt(
+            Math.pow(drivetrain.getPose().getX() - targetPose.getX(), 2)
+                + Math.pow(drivetrain.getPose().getY() - targetPose.getY(), 2));
+
+    return distAway < displacement;
+  }
+
   public boolean armFieldAutoReady(int goingLeft, double displacement, int apriltag) {
     Optional<Alliance> allianceOptional = DriverStation.getAlliance();
     Alliance alliance = allianceOptional.orElse(Alliance.Blue);
@@ -1117,7 +1163,6 @@ public class RobotContainer {
     return distAway < 1.5;
   }
 
-  // Should probably get an error handler and some data printing
   /**
    * @return int from 0-5 , if blue 0 = 17 and 5 = 22 , if red 0 = 6 and 5 = 11
    */
@@ -1164,6 +1209,55 @@ public class RobotContainer {
     Logger.recordOutput("Logger/closestTagID", closestTag);
     // If no valid tag was found, return a default value (e.g., 0)
     return closestTag == -1 ? 0 : closestTag - offset;
+  }
+
+  /**
+   * @return int from 0-5 , if blue 0 = 17 and 5 = 22 , if red 0 = 6 and 5 = 11
+   */
+  @AutoLogOutput(key = "ClosestTagUnfiltered")
+  public int getClosestTagUnfiltered() {
+    int closestTag = -1;
+    double prevDistance = Double.MAX_VALUE;
+    double holderDistance = 0;
+    int offset = 0;
+    Optional<Alliance> alliance = DriverStation.getAlliance();
+    if (alliance.isPresent()) {
+      if (alliance.get() == Alliance.Red) {
+        offset = 6;
+      } else if (alliance.get() == Alliance.Blue) {
+        offset = 17;
+      }
+    } else {
+      // Default behavior if alliance is unknown
+      offset = 0; // or whatever default makes sense
+    }
+    try {
+      for (int i = offset; i < (offset + 6); i++) {
+        Optional<Pose3d> tagPoseOptional = layout.getTagPose(i);
+        if (tagPoseOptional.isEmpty()) {
+          continue;
+        }
+        // Check if the Optional contains a value before calling get()
+        if (tagPoseOptional.isPresent()) {
+          var tagPose = tagPoseOptional.get();
+          holderDistance =
+              (Math.pow(drivetrain.getPose().getX() - tagPose.getX(), 2)
+                  + Math.pow(drivetrain.getPose().getY() - tagPose.getY(), 2));
+          if (holderDistance < prevDistance) {
+            closestTag = i;
+            prevDistance = holderDistance;
+          }
+        }
+      }
+    } catch (Exception e) {
+      // Retrieve the actual exception thrown by the invoked method
+      Throwable cause = e.getCause();
+      System.err.println("The underlying exception was: " + cause);
+      e.printStackTrace();
+    }
+    Logger.recordOutput("Logger/closestTagID", closestTag);
+    // If no valid tag was found, return a default value (e.g., 0)
+    return closestTag == -1 ? 0 : closestTag;
   }
 
   public int getClosestStation() {

@@ -56,14 +56,39 @@ public class Pathfind {
 
     redPathfindingCommand =
         AutoBuilder.pathfindToPose(
-            FlipField.FieldFlip(
-                PathfindConstants.blueTargetPoseReef[currentClosestTag][targetLeftOrRight]),
+            PathfindConstants.redTargetPoseReef[currentClosestTag][targetLeftOrRight],
             customConstraints,
             0.0);
 
     bluePathfindingCommand =
         AutoBuilder.pathfindToPose(
             PathfindConstants.blueTargetPoseReef[currentClosestTag][targetLeftOrRight],
+            customConstraints,
+            0.0);
+
+    Optional<Alliance> allianceOptional = DriverStation.getAlliance();
+    Alliance alliance =
+        allianceOptional.orElse(Alliance.Blue); // choose default alliance if not present
+    return alliance == Alliance.Red ? redPathfindingCommand : bluePathfindingCommand;
+  }
+
+  public Command getPathfindingCommandReefApproach(int targetLeftOrRight, int closestTag) {
+    return getPathfindingCommandReefApproach(targetLeftOrRight, closestTag, constraints);
+  }
+
+  public Command getPathfindingCommandReefApproach(
+      int targetLeftOrRight, int closestTag, PathConstraints customConstraints) {
+    int currentClosestTag = closestTag;
+
+    redPathfindingCommand =
+        AutoBuilder.pathfindToPose(
+            PathfindConstants.redTargetPoseReefApproach[currentClosestTag][targetLeftOrRight],
+            customConstraints,
+            0.0);
+
+    bluePathfindingCommand =
+        AutoBuilder.pathfindToPose(
+            PathfindConstants.blueTargetPoseReefApproach[currentClosestTag][targetLeftOrRight],
             customConstraints,
             0.0);
 
@@ -81,14 +106,17 @@ public class Pathfind {
       int targetLeftOrRight, int closestTag, PathConstraints customConstraints) {
     int currentClosestTag = closestTag;
     Pose2d targetPose = PathfindConstants.blueTargetPoseReef[currentClosestTag][targetLeftOrRight];
+    if (DriverStation.getAlliance().isPresent()
+        && DriverStation.getAlliance().get() == Alliance.Red) {
+      targetPose = PathfindConstants.redTargetPoseReef[currentClosestTag][targetLeftOrRight];
+    }
 
     redPathfindingCommand =
         AutoBuilder.pathfindToPose(
-            FlipField.FieldFlip(
-                new Pose2d(
-                    targetPose.getX() - ((.05) * Math.cos(targetPose.getRotation().getRadians())),
-                    targetPose.getY() - ((.05) * Math.sin(targetPose.getRotation().getRadians())),
-                    targetPose.getRotation())),
+            new Pose2d(
+                targetPose.getX() - ((.05) * Math.cos(targetPose.getRotation().getRadians())),
+                targetPose.getY() - ((.05) * Math.sin(targetPose.getRotation().getRadians())),
+                targetPose.getRotation()),
             customConstraints,
             0.0);
 
