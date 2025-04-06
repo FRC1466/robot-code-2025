@@ -24,6 +24,8 @@ import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
 import frc.robot.constants.Constants.RobotType;
 import frc.robot.util.Blinkin;
+import frc.robot.util.LoggedTracer;
+import frc.robot.util.NTClientLogger;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -183,7 +185,10 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotPeriodic() {
+    LoggedTracer.reset();
+
     CommandScheduler.getInstance().run();
+    LoggedTracer.record("Commands");
     Logger.recordOutput("Pose", RobotContainer.drivetrain.getPose());
     Logger.recordOutput("AlgaeHeightReady?", RobotContainer.elevator.getElevatorHeight() > 20);
     Logger.recordOutput("Beam Break", beamBreak.get());
@@ -205,6 +210,8 @@ public class Robot extends LoggedRobot {
        limitSwitchCounter = m_robotContainer.limitSwitch.get();
      }
     */
+
+    NTClientLogger.log();
 
     // Low battery alert
     lowBatteryCycleCount += 1;
@@ -236,6 +243,8 @@ public class Robot extends LoggedRobot {
 
     // Check for alerts on each robot periodic cycle
     checkAndHandleAlerts();
+
+    LoggedTracer.record("RobotPeriodic");
   }
 
   public void periodic() {}
