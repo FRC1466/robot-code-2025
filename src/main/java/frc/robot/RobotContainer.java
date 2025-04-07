@@ -267,6 +267,7 @@ public class RobotContainer {
                 }));
   }
 
+  @SuppressWarnings("unused")
   private void configureBindings() {
     // Create safe versions of all joystick trigger inputs that respect the ignoreJoystickInput flag
     Trigger safePovLeft = createSafeJoystickTrigger(joystick.povLeft());
@@ -951,7 +952,6 @@ public class RobotContainer {
     return distAway < 1.5;
   }
 
-  // Should probably get an error handler and some data printing
   /**
    * @return int from 0-5 , if blue 0 = 17 and 5 = 22 , if red 0 = 6 and 5 = 11
    */
@@ -969,7 +969,7 @@ public class RobotContainer {
       }
     } else {
       // Default behavior if alliance is unknown
-      offset = 0; // or whatever default makes sense
+      offset = 0;
     }
     try {
       for (int i = offset; i < (offset + 6); i++) {
@@ -977,7 +977,6 @@ public class RobotContainer {
         if (tagPoseOptional.isEmpty()) {
           continue;
         }
-        // Check if the Optional contains a value before calling get()
         if (tagPoseOptional.isPresent()) {
           var tagPose = tagPoseOptional.get();
           holderDistance =
