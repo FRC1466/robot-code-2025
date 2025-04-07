@@ -91,6 +91,14 @@ public class Intake extends SubsystemBase {
         });
   }
 
+  public Command coralBackUp() {
+    return runOnce(
+        () -> {
+          setIntakeVoltage(.5);
+          setFunnelVoltage(0);
+        });
+  }
+
   @AutoLogOutput
   public boolean getIntakeDistanceBool() {
     return (m_colorSensor.getProximity() <= 120);
