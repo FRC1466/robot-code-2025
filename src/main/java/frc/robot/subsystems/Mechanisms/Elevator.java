@@ -100,7 +100,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public double getElevatorHeightMeters() {
-    return getElevatorHeight() * 0.02205522;
+    return getElevatorHeight() * 0.02205522; // Conversion from encoders to meters
   }
 
   public void goToGoal(double goal) {
@@ -122,7 +122,6 @@ public class Elevator extends SubsystemBase {
     return runOnce(() -> goToGoal(goal));
   }
 
-  // Command methods for different elevator positions
   public Command toBottom() {
     return runOnce(() -> goToGoal(.1));
   }
@@ -168,7 +167,6 @@ public class Elevator extends SubsystemBase {
   }
 
   public void setArmHold() {
-    // TODO: UNCOMMENT!!! THIS IS IMPORTANT!!!
     var motorOutput =
         MathUtil.clamp(
             elevatorPID.calculate(getElevatorHeight(), localSetpoint), -peakOutput, peakOutput);
@@ -200,7 +198,6 @@ public class Elevator extends SubsystemBase {
   @Override
   public void periodic() {
     setArmHold();
-
     Logger.recordOutput("Elevator Position", getElevatorHeight());
     Logger.recordOutput("Elevator Desired Position", elevatorPID.getSetpoint());
   }
