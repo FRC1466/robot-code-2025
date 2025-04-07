@@ -252,15 +252,12 @@ public class RotaryPart extends SubsystemBase {
   @Override
   public void periodic() {
     setArmHold();
-
-    // Logger.putData(absoluteArmEncoder);
-    // Logger.recordOutput("Arm Raw Absolute Encoder", absoluteArmEncoder.get());
+    Logger.recordOutput("Arm Raw Absolute Encoder", absoluteArmEncoder.get());
     Logger.recordOutput("Arm Processed Absolute Encoder", getPosition().getRadians());
-    // Logger.recordOutput("Get Shifted Absolute Position",
-    // getShiftedAbsoluteDistance().getRadians());
-    // Logger.recordOutput("Get Arm P", armPID_P);
-    // Logger.recordOutput("Get Arm Output", peakOutput);
-    // Logger.recordOutput("Arm PID error", armPID.getPositionError());
-    // Logger.recordOutput("Arm Disabled", disabled);
+    Logger.recordOutput("Get Shifted Absolute Position", getShiftedAbsoluteDistance().getRadians());
+    Logger.recordOutput("Get Arm P", armPID_P);
+    Logger.recordOutput("Get Arm Output", peakOutput);
+    Logger.recordOutput("Arm PID error", armPID.getPositionError());
+    Logger.recordOutput("Arm Disabled", disabled);
   }
 }
