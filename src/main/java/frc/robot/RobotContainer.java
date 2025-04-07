@@ -245,9 +245,6 @@ public class RobotContainer {
                   testingBoolean = testingChooser.getSelected();
 
                   Logger.recordOutput("DebugMode/isEnabled", testingBoolean);
-
-                  // Cancel any active pathing commands when disabled
-
                 }));
   }
 
@@ -267,13 +264,9 @@ public class RobotContainer {
                     autoPathingEnabled = pathingEnabledChooser.getSelected();
                   }
                   Logger.recordOutput("AutoPathing/isEnabled", autoPathingEnabled);
-
-                  // Cancel any active pathing commands when disabled
-
                 }));
   }
 
-  @SuppressWarnings("unused")
   private void configureBindings() {
     // Create safe versions of all joystick trigger inputs that respect the ignoreJoystickInput flag
     Trigger safePovLeft = createSafeJoystickTrigger(joystick.povLeft());
@@ -372,7 +365,7 @@ public class RobotContainer {
                 drive
                     .withVelocityX(
                         Math.pow(
-                                (Deadband.apply(
+                                (MathUtil.applyDeadband(
                                     -getAdjustedJoystickAxis(
                                         1, Robot.getInstance().shouldIgnoreJoystickInput()),
                                     .1)),
@@ -441,7 +434,7 @@ public class RobotContainer {
                 .andThen(rotaryPart.store())
                 .alongWith(intake.intake()));
 
-    // Coral station pathfinding - Button 3
+    // Coral station pathfinding - Button 3 - currently commented out
     /*    safeButton3
     // .and(coralIntakePositionCheck)
     .and(coralMode)
