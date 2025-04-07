@@ -121,6 +121,7 @@ public class Intake extends SubsystemBase {
     return highCurrentBool;
   }
 
+  @Override
   public void periodic() {
     Logger.recordOutput("ColorSensed boolean", (m_colorSensor.getProximity() <= 120));
     Logger.recordOutput("Intake Motor Current", intakeMotor.getTorqueCurrent().getValueAsDouble());
