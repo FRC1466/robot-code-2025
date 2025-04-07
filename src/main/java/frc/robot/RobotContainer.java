@@ -538,6 +538,8 @@ public class RobotContainer {
                                 3)
                             * MaxAngularRate)));
 
+    safeButton4.and(coralMode).whileTrue(intake.coralBackUp()).onFalse(intake.stop());
+
     // Intake stop on coral leaving (for scoring)
     intakeColorSensorTrigger
         .and(() -> !coralIntakeReady())
