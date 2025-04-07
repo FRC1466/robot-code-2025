@@ -7,7 +7,6 @@ import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -203,56 +202,6 @@ public class RobotContainer {
   // Initialize autonomous chooser with options
   public void initializeChooser() {
     pathfindingTargetChooser.setDefault("");
-    pathfindingTargetChooser.setDefault("");
-    BooleanSupplier armRaiseReefPositionCheck = () -> armFieldReady(leftCoral, 1);
-    // Create the Intake command that runs for exactly 2 seconds
-    Command intakeHeightCommand = elevator.toBottom().alongWith(rotaryPart.store());
-    Command intakeCommand =
-        intake.intake().withTimeout(3).andThen(rotaryPart.coralScore().alongWith(intake.stop()));
-
-    Command l2ScoreCommand =
-        elevator
-            .toL2()
-            .andThen(intake.outTake())
-            .alongWith(Commands.waitSeconds(2))
-            .andThen(elevator.toBottom().alongWith(rotaryPart.coralScore()));
-
-    // L3 command - go to position, outtake, hold for 2 seconds, then return to bottom
-    Command l3Command =
-        elevator
-            .toL3()
-            .alongWith(rotaryPart.coralScore())
-            .alongWith(Commands.waitSeconds(1))
-            .andThen(intake.outTake().withTimeout(1))
-            .andThen(elevator.toBottom().alongWith(rotaryPart.coralScore()));
-
-    // Create the L4 command with conditional follow-up action when elevator reaches position
-
-    Command l4ScoreCommand =
-        Commands.waitUntil(() -> elevator.getElevatorHeight() > 61)
-            .andThen(intake.outTake())
-            .alongWith(Commands.waitSeconds(1))
-            .andThen(intake.stop())
-            .alongWith(rotaryPart.coralScore())
-            .alongWith(elevator.toBottom());
-    Command l4RaiseCommand = elevator.toL4();
-
-    /* .until(() -> elevator.getElevatorHeight() > 58)
-    .andThen(rotaryPart.l4coralScore())
-    .alongWith(intake.coralHold());*/
-    /*    .andThen(intake.outTake().withTimeout(.5))
-    .andThen(elevator.toBottom().alongWith(rotaryPart.coralScore()))*/
-    // Register the named commands
-    NamedCommands.registerCommand("CoralScore", rotaryPart.coralScore());
-    NamedCommands.registerCommand("IntakeElevator", intakeHeightCommand);
-    NamedCommands.registerCommand("Intake", intakeCommand);
-    NamedCommands.registerCommand(
-        "l2Elevator", Commands.waitUntil(armRaiseReefPositionCheck).andThen(elevator.toL2()));
-    NamedCommands.registerCommand("l2Score", l2ScoreCommand);
-    NamedCommands.registerCommand("l3", l3Command);
-    NamedCommands.registerCommand("l4Raise", l4RaiseCommand);
-    NamedCommands.registerCommand("l4Score", l4ScoreCommand);
-    // autoChooser.addOption("Taxi", new PathPlannerAuto("Taxi Auto"));
     autoChooser.addOption("Right Taxi Auto", new PathPlannerAuto("Right Taxi Auto"));
     autoChooser.addOption("Left Taxi Auto", new PathPlannerAuto("Left Taxi Auto"));
     autoChooser.addOption(
@@ -279,84 +228,10 @@ public class RobotContainer {
                 Logger.recordOutput("AutoStatus", "ERROR: Empty pathing target in chooser");
               }
             }));
-    /*  autoChooser.addOption("2 Piece", new PathPlannerAuto("2 Piece Auto"));\
-    autoChooser.addOption("3 Piece", new PathPlannerAuto("3 Piece Auto"));
-    autoChooser.addOption("4 Piece", new PathPlannerAuto("4 Piece Auto Faster"));
-    autoChooser.addOption("5 Piece", new PathPlannerAuto("5 Piece Auto Faster"));*/
-    /*autoChooser.addOption(
-        "L4 Testing",
-        CoralScoreCommand.andThen(pathfindingAutoFactory(0, 3, true))
-            .alongWith(l4RaiseCommandFactory(0, 3))); /*
-    /  .alongWith(l4RaiseCommandFactory(0, 3))
-    .alongWith(l4ScoreCommand));*/
 
     // Publish the chooser to the dashboard
     SmartDashboard.putData("Auto Selector", autoChooser.getSendableChooser());
   }
-
-  public Command pathfindingAutoFactory(int leftRight, int tagTo, boolean L4) {
-    return Commands.runOnce(
-        () -> {
-          if (autoPathingEnabled) {
-            if (L4) {
-              reefCommand = m_pathfinder.getPathfindingCommandReefL4(leftRight, tagTo);
-            } else {
-              reefCommand = m_pathfinder.getPathfindingCommandReef(leftRight, tagTo);
-            }
-            reefCommand.schedule();
-          }
-        });
-  }
-
-  public Command l4RaiseCommandFactory(int leftRight, int tagTo) {
-    BooleanSupplier armRaisePositionCheck = () -> armFieldAutoReady(leftRight, 1, tagTo);
-    Trigger conditionalRaiseReefReady = new Trigger(armRaisePositionCheck);
-    BooleanSupplier armReefPositionCheck = () -> armFieldAutoReady(leftRight, 1, tagTo);
-    Trigger conditionalArmReefReady = new Trigger(armReefPositionCheck);
-    return Commands.waitUntil(conditionalArmReefReady)
-        .andThen(
-            rotaryPart
-                .coralScore()
-                .alongWith(elevator.toL4())
-                .alongWith(Commands.waitUntil(() -> elevator.getElevatorHeight() > 58))
-                .andThen(Commands.waitUntil(conditionalRaiseReefReady))
-                .andThen(rotaryPart.l4coralScore())
-                .alongWith(intake.coralHold())
-                .alongWith(Commands.waitUntil(conditionalArmReefReady))
-                .andThen(intake.outTake())
-                .alongWith(Commands.waitSeconds(1))
-                .andThen(intake.stop())
-                .alongWith(rotaryPart.coralScore())
-                .alongWith(elevator.toBottom()));
-  }
-
-  /*   safeButton5
-      .and(coralMode)
-      .and(conditionalArmRaiseReefReady) // Use conditional trigger
-      .and(l4ArmReady)
-      .onTrue(rotaryPart.l4coralScore().alongWith(intake.coralHold()));
-
-  safeButton5
-      .and(coralMode)
-      .and(conditionalArmReefReady) // Use conditional trigger
-      .and(l4ScoreReady)
-      .onTrue(Commands.waitSeconds(.5).andThen(intake.outTake()));*/
-
-  // }
-
-  /*  safeButton5
-      .and(coralMode)
-      .and(conditionalArmRaiseReefReady) // Use conditional trigger
-      .and(l4ArmReady)
-      .onTrue(rotaryPart.l4coralScore().alongWith(intake.coralHold()));
-
-  safeButton5
-      .and(coralMode)
-      .and(conditionalArmReefReady) // Use conditional trigger
-      .and(l4ScoreReady)
-      .onTrue(Commands.waitSeconds(.5).andThen(intake.outTake()));*/
-
-  // }
 
   /** Sets up the kill switch for autonomous pathing */
   private void setupTestingChooser() {
@@ -414,7 +289,6 @@ public class RobotContainer {
     Trigger safeButton7 = createSafeJoystickTrigger(joystick.button(7));
     Trigger safeButton8 = createSafeJoystickTrigger(joystick.button(8));
     Trigger safeButton9 = createSafeJoystickTrigger(joystick.button(9));
-    // TODO: add a L4 to algae
     Trigger safeButton10 = createSafeJoystickTrigger(joystick.button(10));
     Trigger safeButton11 = createSafeJoystickTrigger(joystick.button(11));
     Trigger safeButton12 = createSafeJoystickTrigger(joystick.button(12));
@@ -423,27 +297,10 @@ public class RobotContainer {
     Trigger safeButton15 = createSafeJoystickTrigger(joystick.button(15));
     Trigger safeButton16 = createSafeJoystickTrigger(joystick.button(16));
 
-    // Direction selection triggers
-
     safePovLeft.onTrue(switchCoralDirection(1));
     safePovRight.onTrue(switchCoralDirection(0));
 
-    /*  safePovDown.onTrue(
-        drivetrain.runOnce(
-            () -> {
-              visionEnabled = true;
-              drivetrain.seedFieldCentric();
-            }));
-
-    safePovUp.onTrue(
-        drivetrain.runOnce(
-            () -> {
-              visionEnabled = false;
-              drivetrain.seedFieldCentric();
-            }));*/
-
     safePovDown.onTrue(Commands.runOnce(() -> drivetrain.zeroGyro(false)));
-
     safePovUp.onTrue(Commands.runOnce(() -> drivetrain.zeroGyro(true)));
 
     // Mode Switch
