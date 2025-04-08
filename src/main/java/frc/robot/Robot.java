@@ -189,27 +189,15 @@ public class Robot extends LoggedRobot {
 
     CommandScheduler.getInstance().run();
     LoggedTracer.record("Commands");
+
     Logger.recordOutput("Pose", RobotContainer.drivetrain.getPose());
     Logger.recordOutput("AlgaeHeightReady?", RobotContainer.elevator.getElevatorHeight() > 20);
     Logger.recordOutput("Beam Break", beamBreak.get());
-    /*if (!lastBoolean && beamBreak.get()) {
-      RobotContainer.elevator.setSelectedSensorPosition(.5);
-    }*/
 
     if (lastBoolean && !beamBreak.get()) {
       RobotContainer.elevator.setSelectedSensorPosition(.25);
     }
     lastBoolean = beamBreak.get();
-    // Color detectedColor = m_colorSensor.getColor();
-
-    /*
-     if (m_robotContainer.limitSwitch.get() != limitSwitchCounter) {
-       if (limitSwitchCounter == false && m_robotContainer.elevator.getElevatorHeight() < 3) {
-         m_robotContainer.elevator.setSelectedSensorPosition(2.15);
-       }
-       limitSwitchCounter = m_robotContainer.limitSwitch.get();
-     }
-    */
 
     NTClientLogger.log();
 
@@ -241,7 +229,6 @@ public class Robot extends LoggedRobot {
     m_robotContainer.updateAlerts();
     m_robotContainer.updateDashboardOutputs();
 
-    // Check for alerts on each robot periodic cycle
     checkAndHandleAlerts();
 
     LoggedTracer.record("RobotPeriodic");
@@ -251,7 +238,6 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void disabledInit() {
-
     RobotContainer.elevator.goToGoal(1);
     // fix later
     // m_robotContainer.rotaryPart.setGoal(Rotation2d.fromRadians(.05));
@@ -259,17 +245,6 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void disabledPeriodic() {
-    /*  m_robotContainer.drivetrain.resetPose(
-        new Pose2d(new Translation2d(7.277, 1.358), new Rotation2d(0)));
-
-    if (m_robotContainer.getAutonomousCommand() instanceof PathPlannerAuto) {
-      SmartDashboard.putNumber(
-          "Starting Pose X",
-          ((PathPlannerAuto) m_robotContainer.getAutonomousCommand()).getStartingPose().getX());
-      SmartDashboard.putNumber(
-          "Starting Pose Y",
-          ((PathPlannerAuto) m_robotContainer.getAutonomousCommand()).getStartingPose().getY());
-    }*/
     m_robotContainer.resetPID();
     CommandScheduler.getInstance().cancelAll();
   }
@@ -424,7 +399,6 @@ public class Robot extends LoggedRobot {
       }
     }
 
-    // Rest of your existing teleopPeriodic code
     if (RobotContainer.sliderEnabled) {
       RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
     }
@@ -434,7 +408,6 @@ public class Robot extends LoggedRobot {
       blinkin.coralLights();
     } else {
       blinkin.warningLights();
-      Logger.recordOutput("Lights are bugging", true);
     }
 
     checkAndHandleAlerts();

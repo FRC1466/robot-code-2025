@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants.RotationConstants;
+import frc.robot.util.LoggedTracer;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -253,14 +254,14 @@ public class RotaryPart extends SubsystemBase {
   public void periodic() {
     setArmHold();
 
-    // Logger.putData(absoluteArmEncoder);
-    // Logger.recordOutput("Arm Raw Absolute Encoder", absoluteArmEncoder.get());
-    Logger.recordOutput("Arm Processed Absolute Encoder", getPosition().getRadians());
-    // Logger.recordOutput("Get Shifted Absolute Position",
-    // getShiftedAbsoluteDistance().getRadians());
-    // Logger.recordOutput("Get Arm P", armPID_P);
-    // Logger.recordOutput("Get Arm Output", peakOutput);
-    // Logger.recordOutput("Arm PID error", armPID.getPositionError());
-    // Logger.recordOutput("Arm Disabled", disabled);
+    Logger.recordOutput("RotaryPart/Raw Absolute Encoder", absoluteArmEncoder.get());
+    Logger.recordOutput("RotaryPart/Processed Absolute Encoder", getPosition().getRadians());
+    Logger.recordOutput(
+        "RotaryPart/Shifted Absolute Position", getShiftedAbsoluteDistance().getRadians());
+    Logger.recordOutput("RotaryPart/P", armPID_P);
+    Logger.recordOutput("RotaryPart/PeakOutput", peakOutput);
+    Logger.recordOutput("RotaryPart/PID error", armPID.getPositionError());
+    Logger.recordOutput("RotaryPart/Disabled", disabled);
+    LoggedTracer.record("RotaryPart");
   }
 }

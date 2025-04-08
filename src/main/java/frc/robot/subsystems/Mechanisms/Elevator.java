@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
+import frc.robot.util.LoggedTracer;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -203,5 +204,15 @@ public class Elevator extends SubsystemBase {
 
     Logger.recordOutput("Elevator Position", getElevatorHeight());
     Logger.recordOutput("Elevator Desired Position", elevatorPID.getSetpoint());
+    Logger.recordOutput("Elevator/Position Error", elevatorPID.getPositionError());
+    Logger.recordOutput("Elevator/At Setpoint", atSetpoint());
+    Logger.recordOutput(
+        "Elevator/Master Motor Current", masterMotor.getTorqueCurrent().getValueAsDouble());
+    Logger.recordOutput(
+        "Elevator/Slave Motor Current", leftSlaveFX.getTorqueCurrent().getValueAsDouble());
+    Logger.recordOutput("Elevator/Position Meters", getElevatorHeightMeters());
+    Logger.recordOutput("Elevator/P Value", elevatorPID.getP());
+    Logger.recordOutput("Elevator/Peak Output", peakOutput);
+    LoggedTracer.record("Elevator");
   }
 }

@@ -637,7 +637,7 @@ public class RobotContainer {
                     reefCommand.schedule();
                   }
                 }))
-        .onFalse(
+        .whileFalse(
             Commands.runOnce(
                 () -> {
                   if (reefCommand != null) {
@@ -651,7 +651,7 @@ public class RobotContainer {
         .onTrue(
             Commands.sequence(
                 Commands.waitSeconds(0.25),
-                Commands.waitUntil(() -> isDrivetrainStopped(0.1)),
+                Commands.waitUntil(() -> isDrivetrainStopped(0.15) && safeButton7.getAsBoolean()),
                 Commands.runOnce(
                     () -> {
                       if (autoPathingEnabled) {
@@ -660,7 +660,7 @@ public class RobotContainer {
                         reefCommand.schedule();
                       }
                     })))
-        .onFalse(
+        .whileFalse(
             Commands.runOnce(
                 () -> {
                   if (reefCommand != null) {

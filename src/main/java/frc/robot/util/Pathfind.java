@@ -40,7 +40,7 @@ public class Pathfind {
     // Create the constraints to use while pathfinding. The constraints defined in the path will
     // only be used for the path.
     constraints =
-        new PathConstraints(5, 3, Units.degreesToRadians(270), Units.degreesToRadians(360));
+        new PathConstraints(5, 5, Units.degreesToRadians(270), Units.degreesToRadians(360));
   }
 
   @SuppressWarnings("unused")

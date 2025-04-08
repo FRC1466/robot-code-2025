@@ -9,6 +9,7 @@ import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.util.LoggedTracer;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -27,7 +28,7 @@ public class Intake extends SubsystemBase {
   }
 
   public void setIntakeVoltage(double outputVoltage) {
-    Logger.recordOutput("Intake Voltage", outputVoltage);
+    Logger.recordOutput("Intake Voltage Setpoint", outputVoltage);
     intakeMotor.setVoltage(outputVoltage);
   }
 
@@ -113,9 +114,12 @@ public class Intake extends SubsystemBase {
     return highCurrentBool;
   }
 
+  @Override
   public void periodic() {
-    Logger.recordOutput("ColorSensed boolean", (m_colorSensor.getProximity() <= 120));
-    Logger.recordOutput("Intake Motor Current", intakeMotor.getTorqueCurrent().getValueAsDouble());
-    Logger.recordOutput("Intake Motor High Current", highCurrentBool);
+    Logger.recordOutput("Intake/No Coral", (m_colorSensor.getProximity() <= 120));
+    Logger.recordOutput("Intake/Motor Current", intakeMotor.getTorqueCurrent().getValueAsDouble());
+    Logger.recordOutput("Intake/Motor Velocity", intakeMotor.getVelocity().getValueAsDouble());
+    Logger.recordOutput("Intake/Motor Voltage", intakeMotor.getMotorVoltage().getValueAsDouble());
+    LoggedTracer.record("Intake");
   }
 }
