@@ -101,6 +101,7 @@ public class RobotContainer {
   private Command algaeCommand = null;
   // private Command stationCommand = null;
   private Command autoCommand = null;
+  private boolean elevatorReadyToGoDown = false;
 
   // Warnings
   final Alert driverDisconnected =
@@ -529,6 +530,10 @@ public class RobotContainer {
     // For coral intake position
     BooleanSupplier coralIntakePositionCheck = () -> !autoPathingEnabled || coralIntakeReady();
     Trigger conditionalCoralIntakeReady = new Trigger(coralIntakePositionCheck);
+
+    Trigger hasntGoneDownYet = new Trigger(() -> elevatorReadyToGoDown);
+
+    Trigger awayFromReef = new Trigger(() -> !armAlgaeReadyl2(.3));
     // TODO: make this work properly and not destroy vision measurments
     // Drivetrain default command setup
     drivetrain.setDefaultCommand(
@@ -742,6 +747,11 @@ public class RobotContainer {
 
     algaeMode.and(teleOpEnabled).onTrue(rotaryPart.coralScore());
 
+    algaeMode
+        .and(hasntGoneDownYet)
+        .and(awayFromReef)
+        .onTrue(elevator.toProcessor().alongWith(hasGoneDownNow()));
+
     // Processor - Button 1
     safeButton1
         .and(algaeMode)
@@ -798,8 +808,8 @@ public class RobotContainer {
     safeButton3
         .and(algaeMode)
         .onTrue(
-            elevator
-                .toL2Algae()
+            needsToGoDown()
+                .alongWith(elevator.toL2Algae())
                 .andThen(
                     Commands.waitUntil(algaeHeightReady)
                         .andThen(rotaryPart.algaeGrab().alongWith(intake.reverseIntake()))));
@@ -831,8 +841,8 @@ public class RobotContainer {
     safeButton4
         .and(algaeMode)
         .onTrue(
-            elevator
-                .toL3Algae()
+            needsToGoDown()
+                .alongWith(elevator.toL3Algae())
                 .andThen(
                     Commands.waitUntil(algaeHeightReady)
                         .andThen(rotaryPart.algaeGrab().alongWith(intake.reverseIntake()))));
@@ -948,6 +958,18 @@ public class RobotContainer {
     return algaeMode;
   }
 
+  public void readyToGoDown(boolean dennisRodman) {
+    elevatorReadyToGoDown = dennisRodman;
+  }
+
+  public Command hasGoneDownNow() {
+    return Commands.runOnce(() -> readyToGoDown(false));
+  }
+
+  public Command needsToGoDown() {
+    return Commands.runOnce(() -> readyToGoDown(true));
+  }
+
   public void resetGyro(double radians) {
     gyroMultiplier = radians;
   }
@@ -1006,6 +1028,7 @@ public class RobotContainer {
     return 0;
   }
 
+  // TODO: What this do?
   public boolean armFieldReady(int goingLeft, double displacement) {
     Optional<Alliance> allianceOptional = DriverStation.getAlliance();
     Alliance alliance = allianceOptional.orElse(Alliance.Blue);
