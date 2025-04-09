@@ -697,11 +697,34 @@ public class RobotContainer {
                 () -> {
                   if (autoPathingEnabled) {
                     reefCommand =
-                        m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
+                        m_pathfinder.getPathfindingCommandReefApproach(leftCoral, getClosestTag());
                     reefCommand.schedule();
                   }
                 }))
-        .onFalse(
+        .whileFalse(
+            Commands.runOnce(
+                () -> {
+                  if (reefCommand != null) {
+                    reefCommand.cancel();
+                  }
+                }));
+
+    safeButton6
+        .and(normalMode)
+        .and(coralMode)
+        .onTrue(
+            Commands.sequence(
+                Commands.waitSeconds(0.25),
+                Commands.waitUntil(() -> isDrivetrainStopped(0.15) && safeButton6.getAsBoolean()),
+                Commands.runOnce(
+                    () -> {
+                      if (autoPathingEnabled) {
+                        reefCommand =
+                            m_pathfinder.getPathfindingCommandReef(leftCoral, getClosestTag());
+                        reefCommand.schedule();
+                      }
+                    })))
+        .whileFalse(
             Commands.runOnce(
                 () -> {
                   if (reefCommand != null) {
@@ -816,13 +839,13 @@ public class RobotContainer {
     safeButton3
         .and(algaeMode)
         .onTrue(
-            ElevatorReadyToLower()
-                .alongWith(elevator.toL2Algae())
+            elevator
+                .toL2Algae()
                 .andThen(
                     Commands.waitUntil(algaeHeightReady)
                         .andThen(rotaryPart.algaeGrab().alongWith(intake.reverseIntake()))));
 
-    safeButton3.and(algaeMode).onFalse((intake.algaeHold()));
+    safeButton3.and(algaeMode).onFalse((intake.algaeHold()).alongWith(ElevatorReadyToLower()));
 
     // L3 Algae - Button 4
     safeButton4
@@ -849,13 +872,13 @@ public class RobotContainer {
     safeButton4
         .and(algaeMode)
         .onTrue(
-            ElevatorReadyToLower()
-                .alongWith(elevator.toL3Algae())
+            elevator
+                .toL3Algae()
                 .andThen(
                     Commands.waitUntil(algaeHeightReady)
                         .andThen(rotaryPart.algaeGrab().alongWith(intake.reverseIntake()))));
 
-    safeButton4.and(algaeMode).onFalse((intake.algaeHold()));
+    safeButton4.and(algaeMode).onFalse((intake.algaeHold()).alongWith(ElevatorReadyToLower()));
 
     safeButton13
         .or(safeButton11)
