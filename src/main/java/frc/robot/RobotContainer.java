@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.Constants;
+import frc.robot.constants.FieldConstants;
 import frc.robot.constants.PathfindConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Mechanisms.Elevator;
@@ -44,6 +45,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
+import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -101,7 +103,7 @@ public class RobotContainer {
   private Command algaeCommand = null;
   // private Command stationCommand = null;
   private Command autoCommand = null;
-  private boolean elevatorReadyToGoDown = false;
+  private static @Getter boolean elevatorReadyToGoDown;
 
   // Warnings
   final Alert driverDisconnected =
@@ -130,6 +132,7 @@ public class RobotContainer {
   private final LoggedNetworkString pathfindingTargetChooser =
       new LoggedNetworkString("Pathfinding Target");
 
+  @SuppressWarnings("unused")
   private final Vision vision;
 
   // Subsystems
@@ -160,6 +163,9 @@ public class RobotContainer {
 
   public static CommandSwerveDrivetrain drivetrain;
   public static boolean sliderEnabled = false;
+
+  public static LoggedTunableNumber distanceFromReefTunable =
+      new LoggedTunableNumber("DistanceFromReef", 1.6);
 
   // Kill switch for autonomous pathing
   @AutoLogOutput public static boolean autoPathingEnabled = true;
@@ -533,7 +539,8 @@ public class RobotContainer {
 
     Trigger hasntGoneDownYet = new Trigger(() -> elevatorReadyToGoDown);
 
-    Trigger awayFromReef = new Trigger(() -> !armAlgaeReadyl2(.3));
+    Trigger awayFromReef =
+        new Trigger(() -> awayFromReefBool(distanceFromReefTunable.getAsDouble()));
     // TODO: make this work properly and not destroy vision measurments
     // Drivetrain default command setup
     drivetrain.setDefaultCommand(
@@ -750,7 +757,7 @@ public class RobotContainer {
     algaeMode
         .and(hasntGoneDownYet)
         .and(awayFromReef)
-        .onTrue(elevator.toProcessor().alongWith(hasGoneDownNow()));
+        .onTrue(elevator.toProcessor().alongWith(ElevatorLowered()));
 
     // Processor - Button 1
     safeButton1
@@ -808,7 +815,7 @@ public class RobotContainer {
     safeButton3
         .and(algaeMode)
         .onTrue(
-            needsToGoDown()
+            ElevatorReadyToLower()
                 .alongWith(elevator.toL2Algae())
                 .andThen(
                     Commands.waitUntil(algaeHeightReady)
@@ -841,7 +848,7 @@ public class RobotContainer {
     safeButton4
         .and(algaeMode)
         .onTrue(
-            needsToGoDown()
+            ElevatorReadyToLower()
                 .alongWith(elevator.toL3Algae())
                 .andThen(
                     Commands.waitUntil(algaeHeightReady)
@@ -958,16 +965,16 @@ public class RobotContainer {
     return algaeMode;
   }
 
-  public void readyToGoDown(boolean dennisRodman) {
-    elevatorReadyToGoDown = dennisRodman;
+  public Command ElevatorLowered() {
+    return Commands.runOnce(() -> setElevatorLoweredState(false));
   }
 
-  public Command hasGoneDownNow() {
-    return Commands.runOnce(() -> readyToGoDown(false));
+  public Command ElevatorReadyToLower() {
+    return Commands.runOnce(() -> setElevatorLoweredState(true));
   }
 
-  public Command needsToGoDown() {
-    return Commands.runOnce(() -> readyToGoDown(true));
+  private void setElevatorLoweredState(boolean needsToLower) {
+    elevatorReadyToGoDown = needsToLower;
   }
 
   public void resetGyro(double radians) {
@@ -1104,6 +1111,17 @@ public class RobotContainer {
                 + Math.pow(drivetrain.getPose().getY() - targetPose.getY(), 2));
 
     return distAway < displacement;
+  }
+
+  public boolean awayFromReefBool(double displacement) {
+    Pose2d reefCenter = new Pose2d(FieldConstants.Reef.center, new Rotation2d());
+    if (DriverStation.getAlliance().isPresent()
+        && DriverStation.getAlliance().get() == Alliance.Red) {
+      reefCenter = FlipField.FieldFlip(reefCenter);
+    }
+    double distAway =
+        drivetrain.getPose().getTranslation().getDistance(reefCenter.getTranslation());
+    return distAway > displacement;
   }
 
   public boolean armAlgaeReadyl2(double displacement) {

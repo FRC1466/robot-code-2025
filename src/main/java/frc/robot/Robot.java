@@ -231,6 +231,9 @@ public class Robot extends LoggedRobot {
 
     checkAndHandleAlerts();
 
+    Logger.recordOutput(
+        "RobotContainer/ElevatorReadyToGoDown", RobotContainer.isElevatorReadyToGoDown());
+
     LoggedTracer.record("RobotPeriodic");
   }
 
