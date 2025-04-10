@@ -916,22 +916,26 @@ public class RobotContainer {
     safeButton9
         .and(algaeMode)
         .onTrue(
-            Commands.runOnce(
-                () -> {
-                  if (autoPathingEnabled) {
-                    algaeCommand =
-                        m_pathfinder.getPathfindingCommandBarge(
-                            drivetrain.getPose().getY(), bargeConstraints);
-                    algaeCommand.schedule();
-                  }
-                }))
+            Commands.runOnce(vision::setVisionPaused)
+                .andThen(
+                    Commands.runOnce(
+                        () -> {
+                          if (autoPathingEnabled) {
+                            algaeCommand =
+                                m_pathfinder.getPathfindingCommandBarge(
+                                    drivetrain.getPose().getY(), bargeConstraints);
+                            algaeCommand.schedule();
+                          }
+                        })))
         .onFalse(
-            Commands.runOnce(
-                () -> {
-                  if (algaeCommand != null) {
-                    algaeCommand.cancel();
-                  }
-                }));
+            Commands.runOnce(vision::setVisionResumed)
+                .andThen(
+                    Commands.runOnce(
+                        () -> {
+                          if (algaeCommand != null) {
+                            algaeCommand.cancel();
+                          }
+                        })));
 
     // Slider control - Button
     // joystick.button(9).onTrue(switchState(true)).onFalse(switchState(false));

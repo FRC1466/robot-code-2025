@@ -20,9 +20,11 @@ import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import frc.robot.util.LoggedTracer;
 import java.util.LinkedList;
 import java.util.List;
+import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
+  private @Setter boolean visionPause;
   private final VisionConsumer consumer;
   private final VisionIO[] io;
   private final VisionIOInputsAutoLogged[] inputs;
@@ -97,12 +99,13 @@ public class Vision extends SubsystemBase {
                     && observation.ambiguity() > maxAmbiguity) // Cannot be high ambiguity
                 || Math.abs(observation.pose().getZ())
                     > maxZError // Must have realistic Z coordinate
-
                 // Must be within the field boundaries
                 || observation.pose().getX() < 0.0
                 || observation.pose().getX() > aprilTagLayout.getFieldLength()
                 || observation.pose().getY() < 0.0
-                || observation.pose().getY() > aprilTagLayout.getFieldWidth();
+                || observation.pose().getY() > aprilTagLayout.getFieldWidth()
+                // Must stop for Barge Scoring
+                || visionPause;
 
         // Add pose to log
         robotPoses.add(observation.pose());
@@ -195,5 +198,13 @@ public class Vision extends SubsystemBase {
       }
     }
     return false;
+  }
+
+  public void setVisionPaused() {
+    setVisionPause(true);
+  }
+
+  public void setVisionResumed() {
+    setVisionPause(false);
   }
 }
