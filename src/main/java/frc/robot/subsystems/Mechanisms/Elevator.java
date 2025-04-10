@@ -3,6 +3,8 @@
  
 package frc.robot.subsystems.Mechanisms;
 
+import static edu.wpi.first.units.Units.Volts;
+
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -15,9 +17,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
-
-import static edu.wpi.first.units.Units.Volts;
-
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -51,7 +50,6 @@ public class Elevator extends SubsystemBase {
   private double peakOutput;
 
   private final SysIdRoutine m_sysIdRoutine;
- 
 
   public Elevator() {
     masterMotor = new TalonFX(Constants.ElevatorConstants.masterID);
@@ -65,28 +63,23 @@ public class Elevator extends SubsystemBase {
             Constants.ElevatorConstants.elevatorPosition.I,
             Constants.ElevatorConstants.elevatorPosition.D);
     elevatorPID.setTolerance(.1);
-    setGoal(.5);
-    masterMotor.setVoltage(0);
-    leftSlaveFX.setVoltage(0);
+    //  setGoal(.5);
+    /*masterMotor.setVoltage(0);
+    leftSlaveFX.setVoltage(0);*/
     setNeutralMode(NeutralModeValue.Brake);
-    m_sysIdRoutine = new SysIdRoutine(
-    new SysIdRoutine.Config(
-      null,
-      Volts.of(4),
-      null,
-
-      (state) -> SignalLogger.writeString("state", state.toString())
-    ),
-    new SysIdRoutine.Mechanism(
-      (volts) -> masterMotor.setControl(m_voltReq.withOutput(volts.in(Volts))),
-      null,
-      this
-    )
-  );
-
+    m_sysIdRoutine =
+        new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                Volts.of(4),
+                null,
+                (state) -> SignalLogger.writeString("state", state.toString())),
+            new SysIdRoutine.Mechanism(
+                (volts) -> masterMotor.setControl(m_voltReq.withOutput(volts.in(Volts))),
+                null,
+                this));
   }
- 
-  
+
   private void setNeutralMode(NeutralModeValue neutralMode) {
     masterMotor.setNeutralMode(neutralMode);
     leftSlaveFX.setNeutralMode(neutralMode);
@@ -171,12 +164,13 @@ public class Elevator extends SubsystemBase {
   }
 
   public void setArmHold() {
-   
     var motorOutput =
         MathUtil.clamp(
             elevatorPID.calculate(getElevatorHeight(), localSetpoint), -peakOutput, peakOutput);
-    var feedforward = 0; // elevatorFeedforward.calculate(masterMotor.getVelocity().getValueAsDouble() * 12, masterMotor.getAcceleration().getValueAsDouble() * 12);
-    setMotor(motorOutput + feedforward);
+    var feedforward =
+        0; // elevatorFeedforward.calculate(masterMotor.getVelocity().getValueAsDouble() * 12,
+    // masterMotor.getAcceleration().getValueAsDouble() * 12);
+    // setMotorVoltage(motorOutput + feedforward);
     SmartDashboard.putNumber("Elevator PID Output", motorOutput);
     SmartDashboard.putNumber("Arm Feedforward", feedforward);
     SmartDashboard.putNumber("Elevator Feedforward Override", overrideFeedforward.getAsDouble());

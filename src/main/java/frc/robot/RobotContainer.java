@@ -15,7 +15,6 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -25,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstantsTester;
@@ -188,10 +188,10 @@ public class RobotContainer {
 
     joystick.povRight().whileTrue(m_pathfinder.getPathfindingCommand(1, getClosestTag()));
 
-    joystick.button(1).whileTrue(elevator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    joystick.button(2).whileTrue(elevator.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    joystick.button(1).whileTrue(elevator.sysIdQuasistaic(SysIdRoutine.Direction.kForward));
+    joystick.button(2).whileTrue(elevator.sysIdQuasistaic(SysIdRoutine.Direction.kReverse));
     joystick.button(3).whileTrue(elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    joystick.button(4).whileTrue(elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    joystick.button(10).whileTrue(elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
     joystick.button(5).onTrue(Commands.runOnce(SignalLogger::start));
     joystick.button(6).onTrue(Commands.runOnce(SignalLogger::stop));
     // Note that X is defined as forward according to WPILib convention,
@@ -241,7 +241,11 @@ public class RobotContainer {
                   visionEnabled = false;
                   drivetrain.seedFieldCentric();
                 }));
-
+    joystick.button(7).onTrue(rotatyPart.coralScore());
+    joystick
+        .button(9)
+        .whileTrue(elevator.setElevatorVoltage(4))
+        .onFalse(elevator.setElevatorVoltage(0));
     // Intake Coral
     // joystick.button(1).and(intakeProximityTrigger).whileTrue(elevator.toBottom().alongWith(rotatyPart.store()).alongWith(intake.intake())).onFalse(intake.stop().alongWith(rotatyPart.coralScore()));
     // Run SysId routines when holding back/start and X/Y.

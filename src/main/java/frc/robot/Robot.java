@@ -338,7 +338,7 @@ public class Robot extends LoggedRobot {
       DriverStationSim.notifyNewData();
     }
 
-    RobotContainer.elevator.goToGoal(.5);
+    // RobotContainer.elevator.goToGoal(.5);
     // fix later
     // m_robotContainer.rotatyPart.setGoal(Rotation2d.fromRadians(.05));
   }
@@ -373,7 +373,6 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
-    RobotContainer.rotatyPart.coralScore();
   }
 
   @Override
@@ -381,9 +380,9 @@ public class Robot extends LoggedRobot {
 
     // SmartDashboard.putBoolean(
     //   "Drive Command Running", RobotContainer.drivetrain.getDefaultCommand().isScheduled());
-    if (RobotContainer.sliderEnabled) {
-      RobotContainer.elevator.goToGoal(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
-    }
+    /*  if (RobotContainer.sliderEnabled) {
+      RobotContainer.elevator.(((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65);
+    }*/
     Logger.recordOutput(
         "Elevator Slider Position", (((m_robotContainer.joystick.getRawAxis(3) + 1) / 2) * 65));
   }
