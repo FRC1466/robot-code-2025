@@ -180,7 +180,10 @@ public class Robot extends LoggedRobot {
   @Override
   public void robotInit() {
     PathfindingCommand.warmupCommand().schedule();
-    RobotContainer.elevator.setSelectedSensorPosition(0);
+    // Update to use the new IO-based elevator
+    if (RobotContainer.elevator != null) {
+      RobotContainer.elevator.setSelectedSensorPosition(0);
+    }
   }
 
   @Override

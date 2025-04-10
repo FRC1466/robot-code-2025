@@ -33,6 +33,8 @@ import frc.robot.constants.FieldConstants;
 import frc.robot.constants.PathfindConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Mechanisms.Elevator;
+import frc.robot.subsystems.Mechanisms.ElevatorIO;
+import frc.robot.subsystems.Mechanisms.ElevatorIOTalonFX;
 import frc.robot.subsystems.Mechanisms.Intake;
 import frc.robot.subsystems.Mechanisms.RotaryPart;
 import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
@@ -138,7 +140,7 @@ public class RobotContainer {
   // Subsystems
   public static final Intake intake = new Intake();
   public static final RotaryPart rotaryPart = new RotaryPart();
-  public static final Elevator elevator = new Elevator();
+  public static Elevator elevator; // Changed from final to allow initialization based on mode
 
   private final AprilTagFieldLayout layout =
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
@@ -185,6 +187,8 @@ public class RobotContainer {
                 drivetrain::addVisionMeasurement,
                 new VisionIOPhotonVision(camera0Name, robotToCamera0),
                 new VisionIOPhotonVision(camera1Name, robotToCamera1));
+        // Initialize elevator with real hardware implementation
+        elevator = new Elevator(new ElevatorIOTalonFX());
         break;
 
       case SIM:
@@ -197,6 +201,8 @@ public class RobotContainer {
                     camera0Name, robotToCamera0, () -> drivetrain.getState().Pose),
                 new VisionIOPhotonVisionSim(
                     camera1Name, robotToCamera1, () -> drivetrain.getState().Pose));
+        // Initialize elevator with simulation implementation
+        elevator = new Elevator(new ElevatorIO() {});
         break;
 
       default:
@@ -204,6 +210,8 @@ public class RobotContainer {
         // (Use same number of dummy implementations as the real robot)
         drivetrain = TunerConstants.createDrivetrain();
         vision = new Vision(drivetrain::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        // Initialize elevator with dummy implementation
+        elevator = new Elevator(new ElevatorIO() {});
         break;
     }
 

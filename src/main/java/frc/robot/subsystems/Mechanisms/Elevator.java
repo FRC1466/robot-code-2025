@@ -7,56 +7,78 @@ import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.SignalLogger;
-import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.Velocity;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
-import frc.robot.util.LoggedTracer;
+import frc.robot.util.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
 public class Elevator extends SubsystemBase {
-  private final TalonFX masterMotor, leftSlaveFX;
+  // Motion profile constraints
+  private static final double MAX_VELOCITY_METERS_PER_SEC = 2.0;
+  private static final double MAX_ACCELERATION_METERS_PER_SEC_SQUARED = 4.0;
 
-  private PIDController elevatorPID;
-  private double localSetpoint = 0;
+  // Profiled PID controller
+  private final TrapezoidProfile.Constraints constraints =
+      new TrapezoidProfile.Constraints(
+          MAX_VELOCITY_METERS_PER_SEC, MAX_ACCELERATION_METERS_PER_SEC_SQUARED);
+  private final ProfiledPIDController profiledPIDController;
+
+  // Profile state tracking
+  private TrapezoidProfile.State goalState = new TrapezoidProfile.State();
+  private TrapezoidProfile.State currentState = new TrapezoidProfile.State();
+
+  // Tunable PID and motion profile parameters
+  private final LoggedTunableNumber kP = new LoggedTunableNumber("Elevator/kP", 1.0);
+  private final LoggedTunableNumber kI = new LoggedTunableNumber("Elevator/kI", 0.0);
+  private final LoggedTunableNumber kD = new LoggedTunableNumber("Elevator/kD", 0.0);
+  private final LoggedTunableNumber maxVelocity =
+      new LoggedTunableNumber("Elevator/MaxVelocity", MAX_VELOCITY_METERS_PER_SEC);
+  private final LoggedTunableNumber maxAcceleration =
+      new LoggedTunableNumber("Elevator/MaxAcceleration", MAX_ACCELERATION_METERS_PER_SEC_SQUARED);
+
+  // IO and inputs
+  private final ElevatorIO io;
+  private final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
+
   private DoubleSupplier overrideFeedforward = () -> 0;
 
   @SuppressWarnings("unused")
   private ElevatorFeedforward m_feedforward;
 
   private SysIdRoutine m_sysIdRoutine;
-  private final VoltageOut m_voltReq = new VoltageOut(0.0);
+
+  @SuppressWarnings("unused")
   private double peakOutput;
+
   public double visualizationMeters = 0.0;
 
-  public Elevator() {
-    // Configure real motors
-    masterMotor = new TalonFX(Constants.ElevatorConstants.masterID);
-    leftSlaveFX = new TalonFX(Constants.ElevatorConstants.slaveID);
+  // Position conversion factor - motor rotations to meters
+  private static final double POSITION_CONVERSION_FACTOR = 0.02205522;
+
+  public Elevator(ElevatorIO io) {
+    this.io = io;
+
+    // Setup feedforward controller for gravity compensation
+    m_feedforward = new ElevatorFeedforward(0.0, 0.15, 0.0);
 
     peakOutput = Constants.ElevatorConstants.elevatorPosition.peakOutput;
-    elevatorPID =
-        new PIDController(
-            Constants.ElevatorConstants.elevatorPosition.P,
-            Constants.ElevatorConstants.elevatorPosition.I,
-            Constants.ElevatorConstants.elevatorPosition.D);
-    elevatorPID.setTolerance(.1);
 
-    // TODO: UNDO THIS ONCE DONE TESTING
-    // setGoal(.1);
-    masterMotor.setVoltage(0);
-    leftSlaveFX.setVoltage(0);
-    // TODO: Remove this once it is completed
-    setNeutralMode(NeutralModeValue.Brake);
+    // Initialize profiled PID controller with default parameters
+    profiledPIDController = new ProfiledPIDController(kP.get(), kI.get(), kD.get(), constraints);
+    profiledPIDController.setTolerance(0.02); // 2cm position tolerance
+
+    // Set brake mode for safety
+    io.setNeutralMode(true);
+
+    // Configure system identification routine
     m_sysIdRoutine =
         new SysIdRoutine(
             new SysIdRoutine.Config(
@@ -64,20 +86,11 @@ public class Elevator extends SubsystemBase {
                 Volts.of(2),
                 Seconds.of(10),
                 (state) -> SignalLogger.writeString("state", state.toString())),
-            new SysIdRoutine.Mechanism(
-                (volts) -> masterMotor.setControl(m_voltReq.withOutput(volts.in(Volts))),
-                null,
-                this));
-  }
-
-  private void setNeutralMode(NeutralModeValue neutralMode) {
-    masterMotor.setNeutralMode(neutralMode);
-    leftSlaveFX.setNeutralMode(neutralMode);
+            new SysIdRoutine.Mechanism((volts) -> io.setVoltage(volts.in(Volts)), null, this));
   }
 
   public void setSelectedSensorPosition(double position) {
-    masterMotor.setPosition(position);
-    leftSlaveFX.setPosition(position);
+    io.setEncoderPosition(position);
   }
 
   public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
@@ -89,43 +102,63 @@ public class Elevator extends SubsystemBase {
   }
 
   public void setP(double p) {
-    elevatorPID.setP(p);
+    profiledPIDController.setP(p);
   }
 
   public void setPeakOutput(double peak) {
     peakOutput = peak;
   }
 
+  /**
+   * @return Current position in motor encoder units
+   */
   public double getElevatorHeight() {
-    return masterMotor.getPosition().getValueAsDouble();
+    return inputs.positionEncoderUnits;
   }
 
+  /**
+   * @return Current position in meters
+   */
   public double getElevatorHeightMeters() {
-    return getElevatorHeight() * 0.02205522;
+    return getElevatorHeight() * POSITION_CONVERSION_FACTOR;
   }
 
+  /**
+   * Sets the goal position for the elevator with motion profiling
+   *
+   * @param goal The target position in encoder units
+   */
   public void goToGoal(double goal) {
-    localSetpoint = goal;
-    elevatorPID.setSetpoint(goal);
-    SmartDashboard.putNumber("Elevator PID Setpoint", goal);
+    goalState = new TrapezoidProfile.State(goal, 0);
+
+    // Reset the profiled PID controller with the current state
+    double currentPosition = getElevatorHeight();
+    currentState = new TrapezoidProfile.State(currentPosition, getCurrentVelocity());
+    profiledPIDController.reset(currentPosition);
+
+    // Set the goal for the profiled controller
+    profiledPIDController.setGoal(goal);
+
+    Logger.recordOutput("Elevator/GoalPosition", goal);
   }
 
-  public void setMotor(double percent) {
-    masterMotor.set(percent);
-    leftSlaveFX.set(-percent);
+  /**
+   * @return Current velocity in motor units per second
+   */
+  public double getCurrentVelocity() {
+    return inputs.velocityEncoderUnitsPerSec;
   }
 
+  /**
+   * @return Whether the elevator has reached the target position
+   */
   public boolean atSetpoint() {
-    return elevatorPID.atSetpoint();
-  }
-
-  public Command setGoal(double goal) {
-    return runOnce(() -> goToGoal(goal));
+    return profiledPIDController.atGoal();
   }
 
   // Command methods for different elevator positions
   public Command toBottom() {
-    return runOnce(() -> goToGoal(.1));
+    return runOnce(() -> goToGoal(0.1));
   }
 
   public Command toL1() {
@@ -168,51 +201,81 @@ public class Elevator extends SubsystemBase {
     return runOnce(() -> goToGoal(8));
   }
 
-  public void setArmHold() {
-    // TODO: UNCOMMENT!!! THIS IS IMPORTANT!!!
-    var motorOutput =
-        MathUtil.clamp(
-            elevatorPID.calculate(getElevatorHeight(), localSetpoint), -peakOutput, peakOutput);
-    var feedforward = getElevatorHeight() * Constants.ElevatorConstants.elevatorPosition.F;
-    setMotor(motorOutput + feedforward + overrideFeedforward.getAsDouble());
-
-    Logger.recordOutput("Elevator PID Output", motorOutput);
-    Logger.recordOutput("Elevator Feedforward", feedforward);
-    Logger.recordOutput("Elevator Feedforward Override", overrideFeedforward.getAsDouble());
-  }
-
+  /**
+   * Sets a custom feedforward provider for the elevator
+   *
+   * @param feedforward DoubleSupplier that provides feedforward values
+   */
   public void setFeedforward(DoubleSupplier feedforward) {
     overrideFeedforward = feedforward;
   }
 
+  /**
+   * Sets motor voltage directly
+   *
+   * @param volts Voltage to apply
+   */
   public void setMotorVoltage(double volts) {
-    masterMotor.setVoltage(volts);
-    leftSlaveFX.setVoltage(-volts);
+    io.setVoltage(volts);
   }
 
+  /**
+   * Command to set a specific voltage
+   *
+   * @param volts Voltage to apply
+   * @return Command that sets voltage
+   */
   public Command setElevatorVoltage(double volts) {
     return runOnce(() -> setMotorVoltage(volts));
   }
 
+  /** Resets the PID controller and motion profile */
   public void reset() {
-    elevatorPID.reset();
+    double currentPosition = getElevatorHeight();
+    profiledPIDController.reset(new TrapezoidProfile.State(currentPosition, getCurrentVelocity()));
   }
 
   @Override
   public void periodic() {
-    setArmHold();
+    // Update inputs from hardware
+    io.updateInputs(inputs);
+    Logger.processInputs("Elevator", inputs);
 
-    Logger.recordOutput("Elevator Position", getElevatorHeight());
-    Logger.recordOutput("Elevator Desired Position", elevatorPID.getSetpoint());
-    Logger.recordOutput("Elevator/Position Error", elevatorPID.getPositionError());
-    Logger.recordOutput("Elevator/At Setpoint", atSetpoint());
-    Logger.recordOutput(
-        "Elevator/Master Motor Current", masterMotor.getTorqueCurrent().getValueAsDouble());
-    Logger.recordOutput(
-        "Elevator/Slave Motor Current", leftSlaveFX.getTorqueCurrent().getValueAsDouble());
-    Logger.recordOutput("Elevator/Position Meters", getElevatorHeightMeters());
-    Logger.recordOutput("Elevator/P Value", elevatorPID.getP());
-    Logger.recordOutput("Elevator/Peak Output", peakOutput);
-    LoggedTracer.record("Elevator");
+    // Update PID and motion profile parameters if changed
+    if (kP.hasChanged(0) || kI.hasChanged(0) || kD.hasChanged(0)) {
+      profiledPIDController.setPID(kP.get(), kI.get(), kD.get());
+    }
+
+    if (maxVelocity.hasChanged(0) || maxAcceleration.hasChanged(0)) {
+      TrapezoidProfile.Constraints newConstraints =
+          new TrapezoidProfile.Constraints(maxVelocity.get(), maxAcceleration.get());
+      profiledPIDController.setConstraints(newConstraints);
+    }
+
+    // Get the current measurement
+    double currentPosition = getElevatorHeight();
+
+    // Calculate the next output using the profiled PID controller
+    double pidOutput = profiledPIDController.calculate(currentPosition);
+
+    // Calculate feedforward (gravity compensation)
+    double feedforwardOutput = overrideFeedforward.getAsDouble();
+
+    // Combine PID output and feedforward
+    double combinedOutput = pidOutput + feedforwardOutput;
+
+    // Apply the control output to the elevator motor with voltage limiting
+    combinedOutput = MathUtil.clamp(combinedOutput, -12.0, 12.0);
+    io.setVoltage(combinedOutput);
+
+    // Log debugging information
+    Logger.recordOutput("Elevator/CurrentPosition", currentPosition);
+    Logger.recordOutput("Elevator/ProfileSetpoint", profiledPIDController.getSetpoint().position);
+    Logger.recordOutput("Elevator/ProfileVelocity", profiledPIDController.getSetpoint().velocity);
+    Logger.recordOutput("Elevator/PIDOutput", pidOutput);
+    Logger.recordOutput("Elevator/FeedforwardOutput", feedforwardOutput);
+    Logger.recordOutput("Elevator/CombinedOutput", combinedOutput);
+    Logger.recordOutput("Elevator/AtGoal", profiledPIDController.atGoal());
+    Logger.recordOutput("Elevator/PositionError", profiledPIDController.getPositionError());
   }
 }
