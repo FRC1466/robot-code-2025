@@ -15,7 +15,7 @@ public final class Constants {
   public static boolean disableHAL = false;
   public static final boolean CHECK_ROBOT_TYPE = false; // Enables robot type check during builds
 
-  public static final boolean tuningMode = true; // Allows changing of LoggedTunableNumbers
+  public static final boolean tuningMode = false; // Allows changing of LoggedTunableNumbers
   public static final boolean PlayMusic = false;
   public static final double loopPeriodSecs = 0.02; // 50Hz loop rate
 

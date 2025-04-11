@@ -15,7 +15,6 @@ import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 public class ElevatorVisualizer {
   // Constants for visualization
   private static final double BASE_HEIGHT = 0.1; // Base height in meters
-  private static final double MAX_ELEVATOR_HEIGHT = 1.0; // Maximum height in meters
 
   // 2D visualization components
   private final String name;
@@ -64,11 +63,6 @@ public class ElevatorVisualizer {
     elevatorMechanism.setLength(displayHeight);
     Logger.recordOutput("Mechanism2d/" + name, mechanism);
 
-    // Constants for continuous two-stage elevator
-    final double STAGE_1_MAX = MAX_ELEVATOR_HEIGHT * 0.5; // Maximum height of first stage
-    final double STAGE_2_MAX = MAX_ELEVATOR_HEIGHT * 0.5; // Maximum height of second stage
-    final double TOTAL_MAX = STAGE_1_MAX + STAGE_2_MAX; // Total maximum elevator height
-
     // Calculate position of each stage based on current height
     double stage1Height, stage2Height;
 
@@ -85,7 +79,7 @@ public class ElevatorVisualizer {
             baseOrigin.plus(new Translation3d(0, 0, stage2Height)),
             new edu.wpi.first.math.geometry.Rotation3d()), // Stage 2
         new Pose3d(
-            baseOrigin.plus(new Translation3d(0.25, 0.006, stage2Height + 0.37)),
+            baseOrigin.plus(new Translation3d(0.28, 0.0, stage2Height + 0.365)),
             new edu.wpi.first.math.geometry.Rotation3d())); // Carriage
   }
 }

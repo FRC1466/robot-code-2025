@@ -36,7 +36,10 @@ public class Elevator extends SubsystemBase {
   private final ProfiledPIDController profiledPIDController;
 
   // Profile state tracking
+  @SuppressWarnings("unused")
   private TrapezoidProfile.State goalState = new TrapezoidProfile.State();
+
+  @SuppressWarnings("unused")
   private TrapezoidProfile.State currentState = new TrapezoidProfile.State();
 
   // Tunable PID and motion profile parameters
@@ -57,7 +60,6 @@ public class Elevator extends SubsystemBase {
 
   private DoubleSupplier overrideFeedforward = () -> 0;
 
-  @SuppressWarnings("unused")
   private ElevatorFeedforward m_feedforward;
 
   private SysIdRoutine m_sysIdRoutine;
