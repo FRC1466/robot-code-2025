@@ -19,8 +19,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
-import frc.robot.constants.Constants;
-import frc.robot.constants.Constants.RobotType;
+import frc.robot.constants.Constants.ElevatorConstants;
 import frc.robot.util.PhoenixUtil;
 
 public class ElevatorIOTalonFX implements ElevatorIO {
