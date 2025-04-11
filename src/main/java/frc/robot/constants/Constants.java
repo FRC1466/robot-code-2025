@@ -19,7 +19,7 @@ public final class Constants {
   public static final boolean PlayMusic = false;
   public static final double loopPeriodSecs = 0.02; // 50Hz loop rate
 
-  private static RobotType robotType = RobotType.SIMBOT;
+  private static RobotType robotType = RobotType.COMPBOT;
   public static Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.REPLAY;
 
   @SuppressWarnings("resource")

@@ -135,7 +135,6 @@ public class RobotContainer {
   private final LoggedNetworkString pathfindingTargetChooser =
       new LoggedNetworkString("Pathfinding Target");
 
-  @SuppressWarnings("unused")
   private final Vision vision;
 
   // Subsystems

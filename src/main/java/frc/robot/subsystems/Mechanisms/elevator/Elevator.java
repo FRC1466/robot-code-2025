@@ -21,13 +21,12 @@ import frc.robot.constants.Constants;
 import frc.robot.util.LoggedTracer;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Elevator extends SubsystemBase {
   // Motion profile constraints
-  private static final double MAX_VELOCITY_TICKS_PER_SEC = 120;
-  private static final double MAX_ACCELERATION_TICKS_PER_SEC_SQUARED = 60;
+  private static final double MAX_VELOCITY_TICKS_PER_SEC = 150;
+  private static final double MAX_ACCELERATION_TICKS_PER_SEC_SQUARED = 75;
 
   // Profiled PID controller
   private TrapezoidProfile.Constraints constraints =
@@ -64,9 +63,6 @@ public class Elevator extends SubsystemBase {
 
   private SysIdRoutine m_sysIdRoutine;
 
-  @SuppressWarnings("unused")
-  private double peakOutput;
-
   public double visualizationMeters = 0.0;
 
   private static ElevatorVisualizer elevatorVisualizer = new ElevatorVisualizer("Measured");
@@ -81,8 +77,6 @@ public class Elevator extends SubsystemBase {
 
     // Setup feedforward controller for gravity compensation
     m_feedforward = new ElevatorFeedforward(kS.get(), kG.get(), kV.get());
-
-    peakOutput = Constants.ElevatorConstants.elevatorPosition.peakOutput;
 
     switch (Constants.getRobot()) {
       case COMPBOT -> {
@@ -130,8 +124,12 @@ public class Elevator extends SubsystemBase {
     profiledPIDController.setP(p);
   }
 
-  public void setPeakOutput(double peak) {
-    peakOutput = peak;
+  public void setI(double i) {
+    profiledPIDController.setI(i);
+  }
+
+  public void setD(double d) {
+    profiledPIDController.setD(d);
   }
 
   /**
@@ -144,7 +142,6 @@ public class Elevator extends SubsystemBase {
   /**
    * @return Current position in meters
    */
-  @AutoLogOutput(key = "Elevator/MeasuredHeightMeters")
   public double getPositionMeters() {
     return (inputs.data.positionRad()) * 0.02205522;
   }
@@ -308,7 +305,7 @@ public class Elevator extends SubsystemBase {
     Logger.recordOutput("Elevator/CombinedOutput", combinedOutput);
     Logger.recordOutput("Elevator/AtGoal", profiledPIDController.atGoal());
     Logger.recordOutput("Elevator/PositionError", profiledPIDController.getPositionError());
-    elevatorVisualizer.update(getPositionMeters());
+    elevatorVisualizer.update(currentPosition);
     setPointVisualizer.update(profiledPIDController.getSetpoint().position);
 
     LoggedTracer.record("Elevator");
