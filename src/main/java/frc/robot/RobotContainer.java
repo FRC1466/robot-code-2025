@@ -289,7 +289,7 @@ public class RobotContainer {
         "2.5 Piece L4 Rouge", PathfindingCommandParser.parseCommandString("5-1-4--S--0-1-4--S"));
     autoChooser.addOption(
         "2.5 Piece L4 Bleu", PathfindingCommandParser.parseCommandString("3-1-4--S--2-1-4--S"));
-    autoChooser.addOption("1 Piece L4", PathfindingCommandParser.parseCommandString("4-1-4--S"));
+    autoChooser.addOption("1 Piece L4", PathfindingCommandParser.parseCommandString("4-1-4"));
     autoChooser.addOption(
         "Use AutoPathing",
         Commands.runOnce(

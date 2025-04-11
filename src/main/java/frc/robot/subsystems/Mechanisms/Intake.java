@@ -79,7 +79,7 @@ public class Intake extends SubsystemBase {
   public Command outTake() {
     return runOnce(
         () -> {
-          setIntakeVoltage(-6);
+          setIntakeVoltage(-10);
           setFunnelVoltage(0);
         });
   }
