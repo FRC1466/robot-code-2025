@@ -11,8 +11,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotContainer;
 import frc.robot.constants.Constants;
-import frc.robot.subsystems.Mechanisms.Elevator;
 import frc.robot.subsystems.Mechanisms.Intake;
+import frc.robot.subsystems.Mechanisms.elevator.Elevator;
 import org.littletonrobotics.junction.Logger;
 
 public class PathfindingAutoCommands {

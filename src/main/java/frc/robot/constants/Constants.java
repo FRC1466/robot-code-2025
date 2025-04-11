@@ -5,6 +5,7 @@ package frc.robot.constants;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -14,8 +15,9 @@ public final class Constants {
   public static boolean disableHAL = false;
   public static final boolean CHECK_ROBOT_TYPE = false; // Enables robot type check during builds
 
-  public static final boolean tuningMode = false; // Allows changing of LoggedTunableNumbers
+  public static final boolean tuningMode = true; // Allows changing of LoggedTunableNumbers
   public static final boolean PlayMusic = false;
+  public static final double loopPeriodSecs = 0.02; // 50Hz loop rate
 
   private static RobotType robotType = RobotType.SIMBOT;
   public static Mode currentMode = RobotBase.isReal() ? Mode.REAL : Mode.REPLAY;
@@ -104,6 +106,10 @@ public final class Constants {
     public static final int masterID = 17;
     public static final int slaveID = 16;
 
+    public static final double G = 9.807;
+    public static final double elevatorMaxTravel = 2.1;
+
     public static final Gains elevatorPosition = new Gains(.15, 0.00, 0.005, .0, 0, .45);
+    public static final Rotation2d elevatorAngle = Rotation2d.fromDegrees(90.0);
   }
 }

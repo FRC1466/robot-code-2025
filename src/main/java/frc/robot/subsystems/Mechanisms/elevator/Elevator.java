@@ -1,7 +1,7 @@
 // Copyright (c) 2025 FRC Team 1466
 // https://github.com/FRC1466
  
-package frc.robot.subsystems.Mechanisms;
+package frc.robot.subsystems.Mechanisms.elevator;
 
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
@@ -11,24 +11,28 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
+import frc.robot.util.LoggedTracer;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Elevator extends SubsystemBase {
   // Motion profile constraints
-  private static final double MAX_VELOCITY_METERS_PER_SEC = 2.0;
-  private static final double MAX_ACCELERATION_METERS_PER_SEC_SQUARED = 4.0;
+  private static final double MAX_VELOCITY_TICKS_PER_SEC = 120;
+  private static final double MAX_ACCELERATION_TICKS_PER_SEC_SQUARED = 60;
 
   // Profiled PID controller
-  private final TrapezoidProfile.Constraints constraints =
+  private TrapezoidProfile.Constraints constraints =
       new TrapezoidProfile.Constraints(
-          MAX_VELOCITY_METERS_PER_SEC, MAX_ACCELERATION_METERS_PER_SEC_SQUARED);
+          MAX_VELOCITY_TICKS_PER_SEC, MAX_ACCELERATION_TICKS_PER_SEC_SQUARED);
   private final ProfiledPIDController profiledPIDController;
 
   // Profile state tracking
@@ -39,10 +43,13 @@ public class Elevator extends SubsystemBase {
   private final LoggedTunableNumber kP = new LoggedTunableNumber("Elevator/kP", 1.0);
   private final LoggedTunableNumber kI = new LoggedTunableNumber("Elevator/kI", 0.0);
   private final LoggedTunableNumber kD = new LoggedTunableNumber("Elevator/kD", 0.0);
+  private final LoggedTunableNumber kS = new LoggedTunableNumber("Elevator/kS", 1.0);
+  private final LoggedTunableNumber kV = new LoggedTunableNumber("Elevator/kV", 0.0);
+  private final LoggedTunableNumber kG = new LoggedTunableNumber("Elevator/kG", 0.0);
   private final LoggedTunableNumber maxVelocity =
-      new LoggedTunableNumber("Elevator/MaxVelocity", MAX_VELOCITY_METERS_PER_SEC);
+      new LoggedTunableNumber("Elevator/MaxVelocity", MAX_VELOCITY_TICKS_PER_SEC);
   private final LoggedTunableNumber maxAcceleration =
-      new LoggedTunableNumber("Elevator/MaxAcceleration", MAX_ACCELERATION_METERS_PER_SEC_SQUARED);
+      new LoggedTunableNumber("Elevator/MaxAcceleration", MAX_ACCELERATION_TICKS_PER_SEC_SQUARED);
 
   // IO and inputs
   private final ElevatorIO io;
@@ -60,23 +67,39 @@ public class Elevator extends SubsystemBase {
 
   public double visualizationMeters = 0.0;
 
+  private static ElevatorVisualizer elevatorVisualizer = new ElevatorVisualizer("Measured");
+  private static ElevatorVisualizer setPointVisualizer = new ElevatorVisualizer("Setpoint");
+
   // Position conversion factor - motor rotations to meters
-  private static final double POSITION_CONVERSION_FACTOR = 0.02205522;
+  public static final double POSITION_CONVERSION_FACTOR = 0.02205522;
+  public static final double drumRadius = Units.inchesToMeters(1.0);
 
   public Elevator(ElevatorIO io) {
     this.io = io;
 
     // Setup feedforward controller for gravity compensation
-    m_feedforward = new ElevatorFeedforward(0.0, 0.15, 0.0);
+    m_feedforward = new ElevatorFeedforward(kS.get(), kG.get(), kV.get());
 
     peakOutput = Constants.ElevatorConstants.elevatorPosition.peakOutput;
+
+    switch (Constants.getRobot()) {
+      case COMPBOT -> {
+        kP.initDefault(1500);
+        kD.initDefault(30);
+      }
+      case SIMBOT -> {
+        kP.initDefault(5000);
+        kD.initDefault(2000);
+      }
+      default -> Commands.none();
+    }
 
     // Initialize profiled PID controller with default parameters
     profiledPIDController = new ProfiledPIDController(kP.get(), kI.get(), kD.get(), constraints);
     profiledPIDController.setTolerance(0.02); // 2cm position tolerance
 
     // Set brake mode for safety
-    io.setNeutralMode(true);
+    io.setBrakeMode(true);
 
     // Configure system identification routine
     m_sysIdRoutine =
@@ -86,7 +109,7 @@ public class Elevator extends SubsystemBase {
                 Volts.of(2),
                 Seconds.of(10),
                 (state) -> SignalLogger.writeString("state", state.toString())),
-            new SysIdRoutine.Mechanism((volts) -> io.setVoltage(volts.in(Volts)), null, this));
+            new SysIdRoutine.Mechanism((volts) -> io.runVolts(volts.in(Volts)), null, this));
   }
 
   public void setSelectedSensorPosition(double position) {
@@ -113,14 +136,15 @@ public class Elevator extends SubsystemBase {
    * @return Current position in motor encoder units
    */
   public double getElevatorHeight() {
-    return inputs.positionEncoderUnits;
+    return inputs.data.positionRad();
   }
 
   /**
    * @return Current position in meters
    */
-  public double getElevatorHeightMeters() {
-    return getElevatorHeight() * POSITION_CONVERSION_FACTOR;
+  @AutoLogOutput(key = "Elevator/MeasuredHeightMeters")
+  public double getPositionMeters() {
+    return (inputs.data.positionRad()) * 0.02205522;
   }
 
   /**
@@ -138,15 +162,13 @@ public class Elevator extends SubsystemBase {
 
     // Set the goal for the profiled controller
     profiledPIDController.setGoal(goal);
-
-    Logger.recordOutput("Elevator/GoalPosition", goal);
   }
 
   /**
    * @return Current velocity in motor units per second
    */
   public double getCurrentVelocity() {
-    return inputs.velocityEncoderUnitsPerSec;
+    return inputs.data.velocityRadPerSec();
   }
 
   /**
@@ -216,7 +238,7 @@ public class Elevator extends SubsystemBase {
    * @param volts Voltage to apply
    */
   public void setMotorVoltage(double volts) {
-    io.setVoltage(volts);
+    io.runVolts(volts);
   }
 
   /**
@@ -245,6 +267,11 @@ public class Elevator extends SubsystemBase {
     if (kP.hasChanged(0) || kI.hasChanged(0) || kD.hasChanged(0)) {
       profiledPIDController.setPID(kP.get(), kI.get(), kD.get());
     }
+    if (kS.hasChanged(0) || kV.hasChanged(0) || kG.hasChanged(0)) {
+      m_feedforward.setKs(kS.get());
+      m_feedforward.setKv(kV.get());
+      m_feedforward.setKg(kG.get());
+    }
 
     if (maxVelocity.hasChanged(0) || maxAcceleration.hasChanged(0)) {
       TrapezoidProfile.Constraints newConstraints =
@@ -254,6 +281,7 @@ public class Elevator extends SubsystemBase {
 
     // Get the current measurement
     double currentPosition = getElevatorHeight();
+    double currentPositionMeters = getPositionMeters();
 
     // Calculate the next output using the profiled PID controller
     double pidOutput = profiledPIDController.calculate(currentPosition);
@@ -266,10 +294,11 @@ public class Elevator extends SubsystemBase {
 
     // Apply the control output to the elevator motor with voltage limiting
     combinedOutput = MathUtil.clamp(combinedOutput, -12.0, 12.0);
-    io.setVoltage(combinedOutput);
+    io.runVolts(combinedOutput);
 
     // Log debugging information
     Logger.recordOutput("Elevator/CurrentPosition", currentPosition);
+    Logger.recordOutput("Elevator/CurrentPositionMeters", currentPositionMeters);
     Logger.recordOutput("Elevator/ProfileSetpoint", profiledPIDController.getSetpoint().position);
     Logger.recordOutput("Elevator/ProfileVelocity", profiledPIDController.getSetpoint().velocity);
     Logger.recordOutput("Elevator/PIDOutput", pidOutput);
@@ -277,5 +306,9 @@ public class Elevator extends SubsystemBase {
     Logger.recordOutput("Elevator/CombinedOutput", combinedOutput);
     Logger.recordOutput("Elevator/AtGoal", profiledPIDController.atGoal());
     Logger.recordOutput("Elevator/PositionError", profiledPIDController.getPositionError());
+    elevatorVisualizer.update(getPositionMeters());
+    setPointVisualizer.update(profiledPIDController.getSetpoint().position);
+
+    LoggedTracer.record("Elevator");
   }
 }

@@ -32,11 +32,12 @@ import frc.robot.constants.Constants;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.PathfindConstants;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.Mechanisms.Elevator;
-import frc.robot.subsystems.Mechanisms.ElevatorIO;
-import frc.robot.subsystems.Mechanisms.ElevatorIOTalonFX;
 import frc.robot.subsystems.Mechanisms.Intake;
 import frc.robot.subsystems.Mechanisms.RotaryPart;
+import frc.robot.subsystems.Mechanisms.elevator.Elevator;
+import frc.robot.subsystems.Mechanisms.elevator.ElevatorIO;
+import frc.robot.subsystems.Mechanisms.elevator.ElevatorIOSim;
+import frc.robot.subsystems.Mechanisms.elevator.ElevatorIOTalonFX;
 import frc.robot.subsystems.swervedrive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
@@ -202,7 +203,7 @@ public class RobotContainer {
                 new VisionIOPhotonVisionSim(
                     camera1Name, robotToCamera1, () -> drivetrain.getState().Pose));
         // Initialize elevator with simulation implementation
-        elevator = new Elevator(new ElevatorIO() {});
+        elevator = new Elevator(new ElevatorIOSim());
         break;
 
       default:
