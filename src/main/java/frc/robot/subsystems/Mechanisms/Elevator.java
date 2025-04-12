@@ -29,6 +29,7 @@ import org.littletonrobotics.junction.Logger;
 
 public class Elevator extends SubsystemBase {
   private final TalonFX masterMotor, leftSlaveFX;
+  // freaky
 
   private PIDController elevatorPID;
   private double localSetpoint = 0;
