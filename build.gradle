@@ -95,88 +95,6 @@ task(replayWatch, type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
 }
 
-task updateConstants {
-    doLast {
-        def constantsPath = "src/main/java/frc/robot/constants/Constants.java"
-        def constantsFile = file(constantsPath)
-        def constantsText = constantsFile.text
-        def matcher = constantsText =~ /public static final boolean CHECK_ROBOT_TYPE\s*=\s*(true|false);/
-        def checkRobotType = matcher.find() ? matcher.group(1).toBoolean() : true
-        if (!checkRobotType) {
-            println "CHECK_ROBOT_TYPE disabled, skipping updateConstants task."
-            return
-        }
-
-        def robotTypeOptions = ["SIMBOT", "DEVBOT", "COMPBOT"]
-        def robotTypeIndex = 0
-
-        // Check if we can get console input
-        if (System.console() != null) {
-            // Display options
-            println "Select robot type:"
-            robotTypeOptions.eachWithIndex { type, index ->
-                println "${index + 1}. ${type}"
-            }
-
-            // Get user input
-            def robotTypeInput = System.console().readLine("Enter selection (1-${robotTypeOptions.size()}): ")
-
-            try {
-                robotTypeIndex = Integer.parseInt(robotTypeInput) - 1
-                if (robotTypeIndex < 0 || robotTypeIndex >= robotTypeOptions.size()) {
-                    println "Invalid selection, defaulting to SIMBOT"
-                    robotTypeIndex = 0
-                }
-            } catch (NumberFormatException e) {
-                println "Invalid input, defaulting to SIMBOT"
-                robotTypeIndex = 0
-            }
-        } else {
-            // If console is not available, use alternative input method
-            def scanner = new java.util.Scanner(System.in)
-
-            println "Select robot type:"
-            robotTypeOptions.eachWithIndex { type, index ->
-                println "${index + 1}. ${type}"
-            }
-
-            println "Enter selection (1-${robotTypeOptions.size()}):"
-
-            try {
-                if (scanner.hasNextLine()) {
-                    def input = scanner.nextLine()
-                    robotTypeIndex = Integer.parseInt(input) - 1
-                    if (robotTypeIndex < 0 || robotTypeIndex >= robotTypeOptions.size()) {
-                        println "Invalid selection, defaulting to SIMBOT"
-                        robotTypeIndex = 0
-                    }
-                }
-            } catch (Exception e) {
-                println "Error getting input, defaulting to SIMBOT"
-                robotTypeIndex = 0
-            }
-        }
-
-        def robotType = robotTypeOptions[robotTypeIndex]
-        println "Setting robot type to: ${robotType}"
-
-        // Update Constants.java
-        def fileContent = constantsFile.text.replaceAll(
-                /public static final String ROBOT_TYPE = ".*?";/,
-                "public static final String ROBOT_TYPE = \"${robotType}\";"
-                )
-        fileContent = fileContent.replaceAll(
-                /private static RobotType robotType = RobotType\.[A-Z]+;/,
-                "private static RobotType robotType = RobotType.${robotType};"
-                )
-        constantsFile.text = fileContent
-        println "Updated Constants.java with ROBOT_TYPE = ${robotType}"
-    }
-}
-
-// Make sure this task runs before compilation
-compileJava.dependsOn updateConstants
-
 // Configure test task
 test {
     useJUnitPlatform()
@@ -222,6 +140,38 @@ gversion {
     indent       = "  "
 }
 
+task(eventDeploy) {
+    doLast {
+        if (project.gradle.startParameter.taskNames.any({ it.toLowerCase().contains("deploy") })) {
+            def branchPrefix = "event"
+            def branch = 'git branch --show-current'.execute().text.trim()
+            def commitMessage = "Update at '${new Date().toString()}'"
+
+            if (branch.startsWith(branchPrefix)) {
+                exec {
+                    workingDir(projectDir)
+                    executable 'git'
+                    args 'add', '-A'
+                }
+                exec {
+                    workingDir(projectDir)
+                    executable 'git'
+                    args 'commit', '-m', commitMessage
+                    ignoreExitValue = true
+                }
+
+                println "Committed to branch: '$branch'"
+                println "Commit message: '$commitMessage'"
+            } else {
+                println "Not on an event branch, skipping commit"
+            }
+        } else {
+            println "Not running deploy task, skipping commit"
+        }
+    }
+}
+createVersionFile.dependsOn(eventDeploy)
+
 // Spotless formatting
 project.compileJava.dependsOn(spotlessApply)
 spotless {
@@ -235,7 +185,7 @@ spotless {
         removeUnusedImports()
         trimTrailingWhitespace()
         endWithNewline()
-        licenseHeader("// Copyright (c) 2025 FRC Team 1466\n// https://github.com/FRC1466\n ")
+        licenseHeader("// Copyright (c) 2025 FRC 1466\n// http://github.com/FRC1466\n//\n// Use of this source code is governed by an MIT-style\n// license that can be found in the LICENSE file at\n// the root directory of this project.\n\n")
     }
     groovyGradle {
         target fileTree(".") {
@@ -245,6 +195,22 @@ spotless {
         greclipse()
         indentWithSpaces(4)
         trimTrailingWhitespace()
+        endWithNewline()
+    }
+    json {
+        target fileTree(".") {
+            include "**/*.json"
+            exclude "**/build/**", "**/build-*/**"
+        }
+        gson().indentWithSpaces(2)
+    }
+    format "misc", {
+        target fileTree(".") {
+            include "**/*.md", "**/.gitignore"
+            exclude "**/build/**", "**/build-*/**"
+        }
+        trimTrailingWhitespace()
+        indentWithSpaces(2)
         endWithNewline()
     }
 }

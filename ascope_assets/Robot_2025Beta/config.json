@@ -1,6 +1,19 @@
 {
   "name": "2025Beta",
-  "rotations": [{"axis": "x", "degrees": 90},{"axis": "z", "degrees": 90}],
-  "position": [0.329, 0.354, 0.025],
+  "rotations": [
+    {
+      "axis": "x",
+      "degrees": 90
+    },
+    {
+      "axis": "z",
+      "degrees": 90
+    }
+  ],
+  "position": [
+    0.329,
+    0.354,
+    0.025
+  ],
   "components": []
 }
