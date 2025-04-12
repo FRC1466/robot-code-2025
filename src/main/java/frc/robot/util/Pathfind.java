@@ -28,9 +28,9 @@ public class Pathfind {
   static Command redPathfindingCommand;
   static Command bluePathfindingCommand;
   public static Pose2d[] redAveragePoses = calculateAverageRedReefPoses();
-  public static Pose2d[] blueAveragePoses = calculateAverageBlueReefApproachPoses();
-  public static Pose2d[] redAverageApproachPoses = calculateAverageRedReefPoses();
-  public static Pose2d[] blueAverageApproachPoses = calculateAverageRedReefApproachPoses();
+  public static Pose2d[] blueAveragePoses = calculateAverageBlueReefPoses();
+  public static Pose2d[] redAverageApproachPoses = calculateAverageRedReefApproachPoses();
+  public static Pose2d[] blueAverageApproachPoses = calculateAverageBlueReefApproachPoses();
 
   // sendable chooser for pathfinding testing
   static Command TestPathfindingCommand;
@@ -180,16 +180,19 @@ public class Pathfind {
   }
 
   public Command getPathfindingCommandAlgaeApproach(int closestTag) {
-    return getPathfindingCommandAlgae(closestTag, constraints);
+    return getPathfindingCommandAlgaeApproach(closestTag, constraints);
   }
 
-  public Command getPathfindingCommandAlgaeApproach(int closestTag, PathConstraints customConstraints) {
+  public Command getPathfindingCommandAlgaeApproach(
+      int closestTag, PathConstraints customConstraints) {
     int currentClosestTag = closestTag;
 
     bluePathfindingCommand =
-        AutoBuilder.pathfindToPose(redAveragePoses[currentClosestTag], customConstraints, 0.0);
+        AutoBuilder.pathfindToPose(
+            redAverageApproachPoses[currentClosestTag], customConstraints, 0.0);
     redPathfindingCommand =
-        AutoBuilder.pathfindToPose(blueAveragePoses[currentClosestTag], customConstraints, 0.0);
+        AutoBuilder.pathfindToPose(
+            blueAverageApproachPoses[currentClosestTag], customConstraints, 0.0);
 
     Optional<Alliance> allianceOptional = DriverStation.getAlliance();
     Alliance alliance =
@@ -363,7 +366,7 @@ public class Pathfind {
   // Calculate average of left and right reef poses for blue alliance
   private static Pose2d[] calculateAverageBlueReefApproachPoses() {
     // Get the average red poses first
-    Pose2d[] averageRedPoses = calculateAverageRedReefPoses();
+    Pose2d[] averageRedPoses = calculateAverageRedReefApproachPoses();
 
     // Then flip each average pose to get the blue alliance equivalents
     Pose2d[] averageBluePoses = new Pose2d[averageRedPoses.length];

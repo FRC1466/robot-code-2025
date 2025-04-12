@@ -844,17 +844,26 @@ public class RobotContainer {
     // L2 Algae - Button 3
     safeButton3
         .and(algaeMode)
-        .and(algaeHeightReady)
         .onTrue(
-            Commands.runOnce(
-                () -> {
-                  if (autoPathingEnabled) {
-                    algaeCommand =
-                        m_pathfinder.getPathfindingCommandAlgae(
-                            getClosestTag() % 2 == 0 ? getClosestTag() : getClosestTag() - 1);
-                    algaeCommand.schedule();
-                  }
-                }))
+            Commands.sequence(
+                    Commands.runOnce(
+                        () -> {
+                          if (autoPathingEnabled) {
+                            algaeCommand =
+                                m_pathfinder.getPathfindingCommandAlgaeApproach(
+                                    getClosestTag() % 2 == 0
+                                        ? getClosestTag()
+                                        : getClosestTag() - 1);
+                            algaeCommand.schedule();
+                          }
+                        }))
+                .alongWith(
+                    elevator
+                        .toL2Algae()
+                        .andThen(
+                            Commands.waitUntil(algaeHeightReady)
+                                .andThen(
+                                    rotaryPart.algaeGrab().alongWith(intake.reverseIntake())))))
         .onFalse(
             Commands.runOnce(
                 () -> {
@@ -862,32 +871,58 @@ public class RobotContainer {
                     algaeCommand.cancel();
                   }
                 }));
-
     safeButton3
         .and(algaeMode)
         .onTrue(
-            elevator
-                .toL2Algae()
-                .andThen(
-                    Commands.waitUntil(algaeHeightReady)
-                        .andThen(rotaryPart.algaeGrab().alongWith(intake.reverseIntake()))));
+            Commands.sequence(
+                Commands.waitSeconds(0.25),
+                Commands.waitUntil(
+                    () ->
+                        isDrivetrainStopped(0.15)
+                            && safeButton3.getAsBoolean()
+                            && algaeHeightReady.getAsBoolean()),
+                Commands.runOnce(
+                    () -> {
+                      if (autoPathingEnabled) {
+                        algaeCommand =
+                            m_pathfinder.getPathfindingCommandAlgae(
+                                getClosestTag() % 2 == 0 ? getClosestTag() : getClosestTag() - 1);
+                        algaeCommand.schedule();
+                      }
+                    })))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  if (algaeCommand != null) {
+                    algaeCommand.cancel();
+                  }
+                }));
 
     safeButton3.and(algaeMode).onFalse((intake.algaeHold()).alongWith(ElevatorReadyToLower()));
 
     // L3 Algae - Button 4
     safeButton4
         .and(algaeMode)
-        .and(algaeHeightReady)
         .onTrue(
-            Commands.runOnce(
-                () -> {
-                  if (autoPathingEnabled) {
-                    algaeCommand =
-                        m_pathfinder.getPathfindingCommandAlgae(
-                            getClosestTag() % 2 == 0 ? getClosestTag() + 1 : getClosestTag());
-                    algaeCommand.schedule();
-                  }
-                }))
+            Commands.sequence(
+                    Commands.runOnce(
+                        () -> {
+                          if (autoPathingEnabled) {
+                            algaeCommand =
+                                m_pathfinder.getPathfindingCommandAlgaeApproach(
+                                    getClosestTag() % 2 == 0
+                                        ? getClosestTag() + 1
+                                        : getClosestTag());
+                            algaeCommand.schedule();
+                          }
+                        }))
+                .alongWith(
+                    elevator
+                        .toL3Algae()
+                        .andThen(
+                            Commands.waitUntil(algaeHeightReady)
+                                .andThen(
+                                    rotaryPart.algaeGrab().alongWith(intake.reverseIntake())))))
         .onFalse(
             Commands.runOnce(
                 () -> {
@@ -895,15 +930,32 @@ public class RobotContainer {
                     algaeCommand.cancel();
                   }
                 }));
-
     safeButton4
         .and(algaeMode)
         .onTrue(
-            elevator
-                .toL3Algae()
-                .andThen(
-                    Commands.waitUntil(algaeHeightReady)
-                        .andThen(rotaryPart.algaeGrab().alongWith(intake.reverseIntake()))));
+            Commands.sequence(
+                Commands.waitSeconds(0.25),
+                Commands.waitUntil(
+                    () ->
+                        isDrivetrainStopped(0.15)
+                            && safeButton4.getAsBoolean()
+                            && algaeHeightReady.getAsBoolean()),
+                Commands.runOnce(
+                    () -> {
+                      if (autoPathingEnabled) {
+                        algaeCommand =
+                            m_pathfinder.getPathfindingCommandAlgae(
+                                getClosestTag() % 2 == 0 ? getClosestTag() + 1 : getClosestTag());
+                        algaeCommand.schedule();
+                      }
+                    })))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  if (algaeCommand != null) {
+                    algaeCommand.cancel();
+                  }
+                }));
 
     safeButton4.and(algaeMode).onFalse((intake.algaeHold()).alongWith(ElevatorReadyToLower()));
 
