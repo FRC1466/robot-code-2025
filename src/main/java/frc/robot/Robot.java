@@ -194,7 +194,7 @@ public class Robot extends LoggedRobot {
     Logger.recordOutput("AlgaeHeightReady?", RobotContainer.elevator.getElevatorHeight() > 20);
     Logger.recordOutput("Beam Break", beamBreak.get());
 
-    if (lastBoolean && !beamBreak.get()) {
+    if (lastBoolean && !beamBreak.get() && RobotContainer.elevator.getElevatorHeight() < 7) {
       RobotContainer.elevator.setSelectedSensorPosition(.25);
     }
     lastBoolean = beamBreak.get();
