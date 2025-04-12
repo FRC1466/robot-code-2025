@@ -502,7 +502,7 @@ public class RobotContainer {
     Trigger conditionalArmReefReady = new Trigger(armReefPositionCheck);
 
     BooleanSupplier armRaiseReefPositionCheck =
-        () -> !autoPathingEnabled || armFieldReady(leftCoral, 1);
+        () -> !autoPathingEnabled || armFieldReady(leftCoral, 1.5);
     Trigger conditionalArmRaiseReefReady = new Trigger(armRaiseReefPositionCheck);
 
     BooleanSupplier reefApproachPositionCheck =
