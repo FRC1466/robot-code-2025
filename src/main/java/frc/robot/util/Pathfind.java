@@ -28,7 +28,9 @@ public class Pathfind {
   static Command redPathfindingCommand;
   static Command bluePathfindingCommand;
   public static Pose2d[] redAveragePoses = calculateAverageRedReefPoses();
-  public static Pose2d[] blueAveragePoses = calculateAverageBlueReefPoses();
+  public static Pose2d[] blueAveragePoses = calculateAverageBlueReefApproachPoses();
+  public static Pose2d[] redAverageApproachPoses = calculateAverageRedReefPoses();
+  public static Pose2d[] blueAverageApproachPoses = calculateAverageRedReefApproachPoses();
 
   // sendable chooser for pathfinding testing
   static Command TestPathfindingCommand;
@@ -164,6 +166,24 @@ public class Pathfind {
   }
 
   public Command getPathfindingCommandAlgae(int closestTag, PathConstraints customConstraints) {
+    int currentClosestTag = closestTag;
+
+    bluePathfindingCommand =
+        AutoBuilder.pathfindToPose(redAveragePoses[currentClosestTag], customConstraints, 0.0);
+    redPathfindingCommand =
+        AutoBuilder.pathfindToPose(blueAveragePoses[currentClosestTag], customConstraints, 0.0);
+
+    Optional<Alliance> allianceOptional = DriverStation.getAlliance();
+    Alliance alliance =
+        allianceOptional.orElse(Alliance.Blue); // choose default alliance if not present
+    return alliance == Alliance.Red ? redPathfindingCommand : bluePathfindingCommand;
+  }
+
+  public Command getPathfindingCommandAlgaeApproach(int closestTag) {
+    return getPathfindingCommandAlgae(closestTag, constraints);
+  }
+
+  public Command getPathfindingCommandAlgaeApproach(int closestTag, PathConstraints customConstraints) {
     int currentClosestTag = closestTag;
 
     bluePathfindingCommand =
@@ -313,6 +333,35 @@ public class Pathfind {
 
   // Calculate average of left and right reef poses for blue alliance
   private static Pose2d[] calculateAverageBlueReefPoses() {
+    // Get the average red poses first
+    Pose2d[] averageRedPoses = calculateAverageRedReefPoses();
+
+    // Then flip each average pose to get the blue alliance equivalents
+    Pose2d[] averageBluePoses = new Pose2d[averageRedPoses.length];
+    for (int i = 0; i < averageRedPoses.length; i++) {
+      averageBluePoses[i] = FlipField.FieldFlip(averageRedPoses[i]);
+    }
+
+    return averageBluePoses;
+  }
+
+  private static Pose2d[] calculateAverageRedReefApproachPoses() {
+    Pose2d[] averagePoses = new Pose2d[PathfindConstants.blueTargetPoseReefApproach.length];
+    for (int i = 0; i < PathfindConstants.blueTargetPoseReefApproach.length; i++) {
+      Pose2d left = PathfindConstants.blueTargetPoseReefApproach[i][0];
+      Pose2d right = PathfindConstants.blueTargetPoseReefApproach[i][1];
+      averagePoses[i] =
+          new Pose2d(
+              (left.getX() + right.getX()) / 2,
+              (left.getY() + right.getY()) / 2,
+              left.getRotation() // Using left pose rotation as reference
+              );
+    }
+    return averagePoses;
+  }
+
+  // Calculate average of left and right reef poses for blue alliance
+  private static Pose2d[] calculateAverageBlueReefApproachPoses() {
     // Get the average red poses first
     Pose2d[] averageRedPoses = calculateAverageRedReefPoses();
 

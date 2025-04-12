@@ -741,17 +741,18 @@ public class RobotContainer {
 
     // L4 Reef - Button 5
     safeButton5
+        .and(normalMode)
         .and(coralMode)
         .onTrue(
             Commands.runOnce(
                 () -> {
                   if (autoPathingEnabled) {
                     reefCommand =
-                        m_pathfinder.getPathfindingCommandReefL4(leftCoral, getClosestTag());
+                        m_pathfinder.getPathfindingCommandReefApproach(leftCoral, getClosestTag());
                     reefCommand.schedule();
                   }
                 }))
-        .onFalse(
+        .whileFalse(
             Commands.runOnce(
                 () -> {
                   if (reefCommand != null) {
@@ -760,19 +761,45 @@ public class RobotContainer {
                 }));
 
     safeButton5
+        .and(normalMode)
+        .and(coralMode)
+        .onTrue(
+            Commands.sequence(
+                Commands.waitSeconds(0.25),
+                Commands.waitUntil(() -> isDrivetrainStopped(0.15) && safeButton5.getAsBoolean()),
+                Commands.runOnce(
+                    () -> {
+                      if (autoPathingEnabled) {
+                        reefCommand =
+                            m_pathfinder.getPathfindingCommandReefL4(leftCoral, getClosestTag());
+                        reefCommand.schedule();
+                      }
+                    })))
+        .whileFalse(
+            Commands.runOnce(
+                () -> {
+                  if (reefCommand != null) {
+                    reefCommand.cancel();
+                  }
+                }));
+
+    safeButton5
+        .and(normalMode)
         .and(coralMode)
         .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .onTrue(rotaryPart.coralScore().alongWith(elevator.toL4()));
 
     safeButton5
+        .and(normalMode)
         .and(coralMode)
         .and(conditionalArmRaiseReefReady) // Use conditional trigger
         .and(l4ArmReady)
         .onTrue(rotaryPart.l4coralScore().alongWith(intake.coralHold()));
 
     safeButton5
+        .and(normalMode)
         .and(coralMode)
-        .and(conditionalArmRaiseReefReady) // Use conditional trigger
+        .and(conditionalArmReefReady) // Use conditional trigger
         .and(l4ScoreReady)
         .onFalse(intake.outTake());
 
