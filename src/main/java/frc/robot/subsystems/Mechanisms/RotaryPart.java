@@ -66,7 +66,6 @@ public class RotaryPart extends SubsystemBase {
     limitsConfigs.StatorCurrentLimitEnable = true;
     TalonFXConfigurator talonFXConfigurator = armMotor.getConfigurator();
     talonFXConfigurator.apply(limitsConfigs);
-    // TODO: Remove this once it is completed
     m_sysIdRoutine =
         new SysIdRoutine(
             new SysIdRoutine.Config(
@@ -76,9 +75,6 @@ public class RotaryPart extends SubsystemBase {
                 (state) -> SignalLogger.writeString("state", state.toString())),
             new SysIdRoutine.Mechanism(
                 (volts) -> armMotor.setControl(m_voltReq.withOutput(volts.in(Volts))), null, this));
-
-    // figure this out later
-    // absoluteArmEncoder.setDistancePerRotation(1.0);
 
     armPID =
         new ArmPIDController(

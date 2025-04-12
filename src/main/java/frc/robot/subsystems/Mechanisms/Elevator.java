@@ -29,7 +29,6 @@ import org.littletonrobotics.junction.Logger;
 
 public class Elevator extends SubsystemBase {
   private final TalonFX masterMotor, leftSlaveFX;
-  // freaky
 
   private PIDController elevatorPID;
   private double localSetpoint = 0;
@@ -56,11 +55,8 @@ public class Elevator extends SubsystemBase {
             Constants.ElevatorConstants.elevatorPosition.D);
     elevatorPID.setTolerance(.1);
 
-    // TODO: UNDO THIS ONCE DONE TESTING
-    // setGoal(.1);
     masterMotor.setVoltage(0);
     leftSlaveFX.setVoltage(0);
-    // TODO: Remove this once it is completed
     setNeutralMode(NeutralModeValue.Brake);
     m_sysIdRoutine =
         new SysIdRoutine(
@@ -174,7 +170,6 @@ public class Elevator extends SubsystemBase {
   }
 
   public void setArmHold() {
-    // TODO: UNCOMMENT!!! THIS IS IMPORTANT!!!
     var motorOutput =
         MathUtil.clamp(
             elevatorPID.calculate(getElevatorHeight(), localSetpoint), -peakOutput, peakOutput);

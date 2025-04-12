@@ -137,7 +137,7 @@ public class Robot extends LoggedRobot {
         break;
     }
 
-    // Configure DriverStation for sim
+    // Configure DriverStation Alliance for SIM
     if (Constants.getRobot() == RobotType.SIMBOT) {
       DriverStationSim.setAllianceStationId(AllianceStationID.Red1);
       DriverStationSim.notifyNewData();
@@ -161,13 +161,11 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance()
         .onCommandInterrupt((Command command) -> logCommandFunction.accept(command, false));
 
-    // Set up auto logging for RobotState
     AutoLogOutputManager.addObject(RobotState.class);
 
     DriverStation.silenceJoystickConnectionWarning(true);
     disabledTimer.restart();
 
-    // Start AdvantageKit Logger
     Logger.start();
 
     // Adjust loop overrun warning timeout
@@ -229,7 +227,6 @@ public class Robot extends LoggedRobot {
         autoMessagePrinted = true;
       }
     }
-    // Robot container periodic methods
     m_robotContainer.updateAlerts();
     m_robotContainer.updateDashboardOutputs();
 
@@ -246,8 +243,6 @@ public class Robot extends LoggedRobot {
   @Override
   public void disabledInit() {
     RobotContainer.elevator.goToGoal(1);
-    // fix later
-    // m_robotContainer.rotaryPart.setGoal(Rotation2d.fromRadians(.05));
   }
 
   @Override

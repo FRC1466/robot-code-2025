@@ -219,12 +219,9 @@ public class RobotContainer {
     m_PathfindingAutoCommands = new PathfindingAutoCommands(m_pathfinder, intake, elevator, this);
 
     configureBindings();
-    // TODO: Undo this when ready to test
-    // configureSysIDBindings();
     initializeChooser();
     gyroMultiplierBase = drivetrain.getPose().getRotation().getRadians();
     gyroMultiplier = drivetrain.getPose().getRotation().getRadians();
-    // Initialize the pathing kill switch chooser
     setupTestingChooser();
     setupPathingKillSwitch();
   }
@@ -443,7 +440,6 @@ public class RobotContainer {
     Trigger safeButton7 = createSafeJoystickTrigger(joystick.button(7));
     Trigger safeButton8 = createSafeJoystickTrigger(joystick.button(8));
     Trigger safeButton9 = createSafeJoystickTrigger(joystick.button(9));
-    // TODO: add a L4 to algae
     Trigger safeButton10 = createSafeJoystickTrigger(joystick.button(10));
     Trigger safeButton11 = createSafeJoystickTrigger(joystick.button(11));
     Trigger safeButton12 = createSafeJoystickTrigger(joystick.button(12));
@@ -456,20 +452,6 @@ public class RobotContainer {
 
     safePovLeft.onTrue(switchCoralDirection(1));
     safePovRight.onTrue(switchCoralDirection(0));
-
-    /*  safePovDown.onTrue(
-        drivetrain.runOnce(
-            () -> {
-              visionEnabled = true;
-              drivetrain.seedFieldCentric();
-            }));
-
-    safePovUp.onTrue(
-        drivetrain.runOnce(
-            () -> {
-              visionEnabled = false;
-              drivetrain.seedFieldCentric();
-            }));*/
 
     safePovDown.onTrue(Commands.runOnce(() -> drivetrain.zeroGyro(false)));
 
@@ -545,7 +527,7 @@ public class RobotContainer {
 
     Trigger awayFromReef =
         new Trigger(() -> awayFromReefBool(distanceFromReefTunable.getAsDouble()));
-    // TODO: make this work properly and not destroy vision measurments
+        
     // Drivetrain default command setup
     drivetrain.setDefaultCommand(
         drivetrain.applyRequest(
@@ -1146,7 +1128,6 @@ public class RobotContainer {
     return 0;
   }
 
-  // TODO: What this do?
   public boolean armFieldReady(int goingLeft, double displacement) {
     Optional<Alliance> allianceOptional = DriverStation.getAlliance();
     Alliance alliance = allianceOptional.orElse(Alliance.Blue);
