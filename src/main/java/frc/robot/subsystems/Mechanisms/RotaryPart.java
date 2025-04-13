@@ -171,9 +171,9 @@ public class RotaryPart extends SubsystemBase {
     var feedforward = getPosition().getSin() * RotationConstants.gravityFF;
     setMotor(motorOutput + feedforward + overrideFeedforward.getAsDouble());
 
-    // Logger.recordOutput("Arm PID Output", motorOutput);
-    // Logger.recordOutput("Arm Feedforward", feedforward);
-    // Logger.recordOutput("Arm Feedforward Override", overrideFeedforward.getAsDouble());
+    Logger.recordOutput("Arm PID Output", motorOutput);
+    Logger.recordOutput("Arm Feedforward", feedforward);
+    Logger.recordOutput("Arm Feedforward Override", overrideFeedforward.getAsDouble());
   }
 
   public void setMotor(double percent) {
