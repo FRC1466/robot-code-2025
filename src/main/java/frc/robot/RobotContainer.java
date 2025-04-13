@@ -527,7 +527,7 @@ public class RobotContainer {
 
     Trigger awayFromReef =
         new Trigger(() -> awayFromReefBool(distanceFromReefTunable.getAsDouble()));
-        
+
     // Drivetrain default command setup
     drivetrain.setDefaultCommand(
         drivetrain.applyRequest(
