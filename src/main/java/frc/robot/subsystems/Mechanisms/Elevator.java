@@ -165,7 +165,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public Command toProcessor() {
-    return runOnce(() -> goToGoal(5.5));
+    return runOnce(() -> goToGoal(4.5));
   }
 
   public Command toTestingHeight() {

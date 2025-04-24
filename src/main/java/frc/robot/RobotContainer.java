@@ -987,7 +987,8 @@ public class RobotContainer {
                     () -> conditionalArmBargeReady.getAsBoolean() && isDrivetrainStopped(0.05))
                 .andThen(
                     rotaryPart
-                        .setPeakOutput(Constants.ElevatorConstants.elevatorPosition.peakOutput * .7)
+                        .setPeakOutput(
+                            Constants.ElevatorConstants.elevatorPosition.peakOutput * 1.1)
                         .andThen(rotaryPart.coralScore())
                         .alongWith(Commands.waitSeconds(.3).andThen(intake.algaeOuttake())))
                 .andThen(Commands.waitSeconds(.5))
