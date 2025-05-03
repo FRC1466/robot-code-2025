@@ -361,13 +361,13 @@ public class RobotContainer {
 
   /*   safeButton5
       .and(coralMode)
-      .and(conditionalArmRaiseReefReady) // Use conditional trigger
+      .and(conditionalArmRaiseReefReady)
       .and(l4ArmReady)
       .onTrue(rotaryPart.l4coralScore().alongWith(intake.coralHold()));
 
   safeButton5
       .and(coralMode)
-      .and(conditionalArmReefReady) // Use conditional trigger
+      .and(conditionalArmReefReady)
       .and(l4ScoreReady)
       .onTrue(Commands.waitSeconds(.5).andThen(intake.outTake()));*/
 
@@ -375,13 +375,13 @@ public class RobotContainer {
 
   /*  safeButton5
       .and(coralMode)
-      .and(conditionalArmRaiseReefReady) // Use conditional trigger
+      .and(conditionalArmRaiseReefReady)
       .and(l4ArmReady)
       .onTrue(rotaryPart.l4coralScore().alongWith(intake.coralHold()));
 
   safeButton5
       .and(coralMode)
-      .and(conditionalArmReefReady) // Use conditional trigger
+      .and(conditionalArmReefReady)
       .and(l4ScoreReady)
       .onTrue(Commands.waitSeconds(.5).andThen(intake.outTake()));*/
 
@@ -688,7 +688,7 @@ public class RobotContainer {
     safeButton7
         .and(normalMode)
         .and(coralMode)
-        .and(conditionalArmRaiseReefReady) // Use conditional trigger
+        .and(conditionalArmRaiseReefReady)
         .onTrue(rotaryPart.coralScore().alongWith(elevator.toL2()))
         .onFalse(intake.outTake());
 
@@ -739,7 +739,7 @@ public class RobotContainer {
     safeButton6
         .and(normalMode)
         .and(coralMode)
-        .and(conditionalArmRaiseReefReady) // Use conditional trigger
+        .and(conditionalArmRaiseReefReady)
         .onTrue(rotaryPart.coralScore().alongWith(elevator.toL3()))
         .onFalse(intake.outTake());
 
@@ -790,20 +790,20 @@ public class RobotContainer {
     safeButton5
         .and(normalMode)
         .and(coralMode)
-        .and(conditionalArmRaiseReefReady) // Use conditional trigger
+        .and(conditionalArmRaiseReefReady)
         .onTrue(rotaryPart.coralScore().alongWith(elevator.toL4()));
 
     safeButton5
         .and(normalMode)
         .and(coralMode)
-        .and(conditionalArmRaiseReefReady) // Use conditional trigger
+        .and(conditionalArmRaiseReefReady)
         .and(l4ArmReady)
         .onTrue(rotaryPart.l4coralScore().alongWith(intake.coralHold()));
 
     safeButton5
         .and(normalMode)
         .and(coralMode)
-        .and(conditionalArmReefReady) // Use conditional trigger
+        .and(conditionalArmReefReady)
         .and(l4ScoreReady)
         .onFalse(intake.outTake());
 
